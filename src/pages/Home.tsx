@@ -1,11 +1,49 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
 import { MOCK_POSTS } from "@/lib/mock-data";
+
+function fuzzyMatch(text: string, query: string): boolean {
+  const t = text.toLowerCase();
+  const q = query.toLowerCase();
+  // exact substring
+  if (t.includes(q)) return true;
+  // word-start matching: each query word must match start of some word in text
+  const qWords = q.split(/\s+/).filter(Boolean);
+  const tWords = t.split(/\s+/);
+  return qWords.every(qw => tWords.some(tw => tw.startsWith(qw)));
+}
+
+function searchScore(post: typeof MOCK_POSTS[0], query: string): number {
+  const q = query.toLowerCase();
+  let score = 0;
+  // title match is strongest
+  if (post.title.toLowerCase().includes(q)) score += 10;
+  // category match
+  if (post.category.toLowerCase().includes(q)) score += 8;
+  // flair match
+  if (post.flair?.toLowerCase().includes(q)) score += 7;
+  // course/company/college exact
+  if (post.course_code?.toLowerCase().includes(q)) score += 6;
+  if (post.course_name?.toLowerCase().includes(q)) score += 6;
+  if (post.company_name?.toLowerCase().includes(q)) score += 6;
+  if (post.college_name?.toLowerCase().includes(q)) score += 6;
+  // author
+  if (post.author_name?.toLowerCase().includes(q)) score += 5;
+  if (post.author_batch?.toLowerCase().includes(q)) score += 4;
+  // body match
+  if (post.body.toLowerCase().includes(q)) score += 3;
+  // fuzzy fallback on title
+  if (score === 0 && fuzzyMatch(post.title, q)) score += 2;
+  if (score === 0 && fuzzyMatch(post.body, q)) score += 1;
+  return score;
+}
 
 export default function Home() {
   const navigate = useNavigate();
@@ -20,16 +58,15 @@ export default function Home() {
       posts = posts.filter((p) => p.category === category);
     }
 
-    if (search) {
-      const q = search.toLowerCase();
-      posts = posts.filter(
-        (p) =>
-          p.title.toLowerCase().includes(q) ||
-          p.body.toLowerCase().includes(q) ||
-          p.course_name?.toLowerCase().includes(q) ||
-          p.company_name?.toLowerCase().includes(q) ||
-          p.college_name?.toLowerCase().includes(q)
-      );
+    if (search.trim()) {
+      const q = search.trim();
+      // Score and filter
+      const scored = posts
+        .map(p => ({ post: p, score: searchScore(p, q) }))
+        .filter(x => x.score > 0);
+      // If searching, sort by relevance first
+      scored.sort((a, b) => b.score - a.score);
+      return scored.map(x => x.post);
     }
 
     if (sort === "new") {
@@ -56,17 +93,50 @@ export default function Home() {
       <div className="flex gap-6">
         {/* Main feed */}
         <div className="flex-1 min-w-0">
+          {/* Search */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search posts, courses, companies, authors…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 pr-9 h-10 bg-card border-border text-sm rounded-full hover:bg-accent focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-border"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Category tabs */}
+          <div className="mb-3">
+            <CategoryTabs selected={category} onSelect={setCategory} />
+          </div>
+
           {/* Sort bar */}
           <div className="flex items-center justify-between mb-3">
             <SortBar selected={sort} onSelect={setSort} />
+            {search.trim() && (
+              <span className="text-xs text-muted-foreground">
+                {filteredPosts.length} result{filteredPosts.length !== 1 ? "s" : ""}
+              </span>
+            )}
           </div>
 
           {/* Posts */}
           <div>
             {filteredPosts.length === 0 ? (
               <div className="text-center py-16 bg-card border border-border rounded-lg">
-                <p className="text-sm font-medium text-foreground mb-1">No threads found</p>
-                <p className="text-xs text-muted-foreground">Be the first to start a conversation</p>
+                <p className="text-sm font-medium text-foreground mb-1">
+                  {search.trim() ? `No results for "${search}"` : "No threads found"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {search.trim() ? "Try different keywords or check spelling" : "Be the first to start a conversation"}
+                </p>
               </div>
             ) : (
               filteredPosts.map((post) => (
@@ -124,12 +194,6 @@ export default function Home() {
                 Create Post
               </Button>
             </div>
-          </div>
-
-          {/* Category filter */}
-          <div className="bg-card border border-border rounded-lg p-4">
-            <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Communities</h3>
-            <CategoryTabs selected={category} onSelect={setCategory} />
           </div>
 
           {/* Rules */}
