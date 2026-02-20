@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,8 +14,8 @@ interface VoteButtonsProps {
 }
 
 export default function VoteButtons({
-  score: initialScore,
-  userVote: initialVote,
+  score,
+  userVote,
   onUpvote,
   onDownvote,
   size = "md",
@@ -23,25 +23,11 @@ export default function VoteButtons({
 }: VoteButtonsProps) {
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
-  const [localVote, setLocalVote] = useState<1 | -1 | null>(initialVote ?? null);
-  const [localScore, setLocalScore] = useState(initialScore);
-
-  useEffect(() => {
-    setLocalVote(initialVote ?? null);
-    setLocalScore(initialScore);
-  }, [initialVote, initialScore]);
 
   const handleUpvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) { setShowAuth(true); return; }
-    if (localVote === 1) {
-      setLocalScore(localScore - 1);
-      setLocalVote(null);
-    } else {
-      setLocalScore(localScore + (localVote === -1 ? 2 : 1));
-      setLocalVote(1);
-    }
     onUpvote();
   };
 
@@ -49,13 +35,6 @@ export default function VoteButtons({
     e.preventDefault();
     e.stopPropagation();
     if (!user) { setShowAuth(true); return; }
-    if (localVote === -1) {
-      setLocalScore(localScore + 1);
-      setLocalVote(null);
-    } else {
-      setLocalScore(localScore - (localVote === 1 ? 2 : 1));
-      setLocalVote(-1);
-    }
     onDownvote();
   };
 
@@ -74,28 +53,28 @@ export default function VoteButtons({
           onClick={handleUpvote}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-accent",
-            localVote === 1 ? "text-orange-500" : "text-muted-foreground hover:text-orange-500"
+            userVote === 1 ? "text-orange-500" : "text-muted-foreground hover:text-orange-500"
           )}
           aria-label="Upvote"
         >
-          <ArrowBigUp className={cn(iconSize, localVote === 1 && "fill-current")} />
+          <ArrowBigUp className={cn(iconSize, userVote === 1 && "fill-current")} />
         </button>
         <span className={cn("font-bold min-w-[2ch] text-center", textSize, {
-          "text-orange-500": localVote === 1,
-          "text-blue-500": localVote === -1,
-          "text-foreground": !localVote,
+          "text-orange-500": userVote === 1,
+          "text-blue-500": userVote === -1,
+          "text-foreground": !userVote,
         })}>
-          {localScore}
+          {score}
         </span>
         <button
           onClick={handleDownvote}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-accent",
-            localVote === -1 ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
+            userVote === -1 ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
           )}
           aria-label="Downvote"
         >
-          <ArrowBigDown className={cn(iconSize, localVote === -1 && "fill-current")} />
+          <ArrowBigDown className={cn(iconSize, userVote === -1 && "fill-current")} />
         </button>
       </div>
       <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="vote on posts" />

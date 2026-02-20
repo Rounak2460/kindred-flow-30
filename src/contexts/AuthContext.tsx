@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
@@ -34,13 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
       .select("name, batch, section, credits, founding_contributor, avatar_url, free_views_used")
       .eq("user_id", userId)
-      .single();
+      .maybeSingle();
     setProfile(data);
   };
 
@@ -49,27 +50,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Use onAuthStateChange as single source of truth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          await fetchProfile(currentUser.id);
         } else {
           setProfile(null);
         }
-        setLoading(false);
+        if (!initialized.current) {
+          initialized.current = true;
+          setLoading(false);
+        }
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+    // Fallback: if onAuthStateChange hasn't fired within 2s, stop loading
+    const timeout = setTimeout(() => {
+      if (!initialized.current) {
+        initialized.current = true;
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    }, 2000);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   return (

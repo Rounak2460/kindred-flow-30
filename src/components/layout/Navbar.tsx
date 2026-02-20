@@ -60,7 +60,7 @@ export default function Navbar() {
           </Button>
           {user ? (
             <>
-              <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground hover:bg-accent">
+              <Button variant="ghost" size="sm" className="h-9 px-3 text-muted-foreground hover:bg-accent" onClick={() => { import("sonner").then(m => m.toast.info("Notifications coming soon!")); }}>
                 <Bell className="h-4 w-4" />
               </Button>
               <Button size="sm" className="gap-1.5 h-8 text-xs rounded-full" onClick={() => navigate("/submit")}>
@@ -125,7 +125,16 @@ export default function Navbar() {
           <div className="p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search Digital Mitra" className="pl-9 h-9 bg-secondary border-none text-sm rounded-full" />
+              <Input
+                placeholder="Search Digital Mitra"
+                className="pl-9 h-9 bg-secondary border-none text-sm rounded-full"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                    navigate("/?q=" + encodeURIComponent((e.target as HTMLInputElement).value.trim()));
+                    setMobileOpen(false);
+                  }
+                }}
+              />
             </div>
           </div>
           <nav className="flex flex-col p-2 gap-0.5">

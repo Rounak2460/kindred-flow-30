@@ -22,6 +22,9 @@ const queryClient = new QueryClient({
       staleTime: 30000,
       refetchOnWindowFocus: false,
     },
+    mutations: {
+      networkMode: 'always',
+    },
   },
 });
 

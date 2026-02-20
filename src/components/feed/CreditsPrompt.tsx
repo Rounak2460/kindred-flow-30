@@ -16,7 +16,7 @@ export default function CreditsPrompt({ freeViewsRemaining }: CreditsPromptProps
       <Lock className="h-8 w-8 text-primary mx-auto mb-3" />
       <h3 className="font-bold text-foreground mb-1">Content Locked</h3>
       <p className="text-sm text-muted-foreground mb-4">
-        You've used all {5 - freeViewsRemaining > 5 ? 5 : 5} free views. Contribute to unlock unlimited access!
+        You've used all 5 free views. Contribute to unlock unlimited access!
       </p>
       
       <div className="space-y-2 mb-4 text-left max-w-xs mx-auto">

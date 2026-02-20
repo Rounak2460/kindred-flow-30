@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/feed/PostCard";
 import SortBar from "@/components/feed/SortBar";
@@ -28,7 +28,7 @@ export default function Subreddit() {
   const catInfo = category ? SUBREDDIT_INFO[category] : null;
   const catLabel = CATEGORIES.find(c => c.key === category)?.label || category;
 
-  const { data: posts = [], isLoading } = usePosts(category, sort);
+  const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort);
 
   if (!catInfo) {
     return (
@@ -76,7 +76,15 @@ export default function Subreddit() {
             <span className="text-xs text-muted-foreground">{posts.length} posts</span>
           </div>
           <div>
-            {isLoading ? (
+            {isError ? (
+              <div className="text-center py-16 bg-card border border-border rounded-lg">
+                <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
+                <p className="text-xs text-muted-foreground mb-3">Could not load posts</p>
+                <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-full gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5" /> Try Again
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="flex justify-center py-16">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>

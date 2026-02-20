@@ -12,6 +12,8 @@ interface LeaderboardEntry {
 export default function LeaderboardWidget() {
   const { data: leaders = [] } = useQuery({
     queryKey: ["leaderboard"],
+    networkMode: "always" as const,
+    retry: 2,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
@@ -24,7 +26,6 @@ export default function LeaderboardWidget() {
     staleTime: 60000,
   });
 
-  // Only show if there are real users with credits
   const activeLeaders = leaders.filter(l => l.credits > 0);
   if (activeLeaders.length === 0) return null;
 

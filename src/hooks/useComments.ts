@@ -37,6 +37,8 @@ function buildTree(flat: Omit<Comment, "replies">[]): Comment[] {
 export function useComments(postId: string | undefined) {
   return useQuery({
     queryKey: ["comments", postId],
+    networkMode: "always" as const,
+    retry: 2,
     queryFn: async () => {
       if (!postId) return [];
       const { data, error } = await supabase

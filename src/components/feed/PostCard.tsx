@@ -131,7 +131,7 @@ export default function PostCard({
             </button>
             <button
               className="flex items-center text-muted-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toast.info("More options coming soon!"); }}
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
