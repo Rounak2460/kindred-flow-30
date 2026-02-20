@@ -18,6 +18,7 @@ export interface Post {
   college_name: string | null;
   created_at: string;
   moderation_status: string;
+  file_url: string | null;
 }
 
 type SortOption = "hot" | "new" | "top";

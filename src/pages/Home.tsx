@@ -10,7 +10,7 @@ import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { usePosts } from "@/hooks/usePosts";
-import { useVote } from "@/hooks/useVote";
+
 import { CATEGORIES } from "@/lib/mock-data";
 
 const COMMUNITIES = [

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageSquare, ChevronDown, ChevronUp as ChevronUpIcon, MoreHorizontal, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/mock-data";
 import type { Comment } from "@/hooks/useComments";
 import VoteButtons from "./VoteButtons";
+import { useVote } from "@/hooks/useVote";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
@@ -25,8 +26,11 @@ export default function CommentItem({ comment, postId, depth = 0 }: CommentItemP
   const [replyText, setReplyText] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const score = comment.upvote_count - comment.downvote_count;
+  const initialScore = comment.upvote_count - comment.downvote_count;
+  const { score, userVote, vote, loadVote } = useVote(comment.id, "comment", initialScore);
   const anonHandle = generateAnonHandle(comment.user_id);
+
+  useEffect(() => { loadVote(); }, [loadVote]);
 
   const handleReply = async () => {
     if (!replyText.trim() || !user) return;
@@ -82,7 +86,7 @@ export default function CommentItem({ comment, postId, depth = 0 }: CommentItemP
             </div>
 
             <div className="flex items-center gap-1 text-xs">
-              <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} size="sm" horizontal />
+              <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} size="sm" horizontal />
               <button
                 onClick={handleReplyClick}
                 className="flex items-center gap-1.5 text-muted-foreground hover:bg-accent px-2 py-1 rounded-full transition-colors font-medium"
