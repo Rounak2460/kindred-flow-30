@@ -60,7 +60,7 @@ export default function Submit() {
         course_name: courseName || null,
         company_name: companyName || null,
         college_name: collegeName || null,
-        moderation_status: "pending",
+        moderation_status: "approved",
       }).select("id").single();
 
       if (error) throw error;
