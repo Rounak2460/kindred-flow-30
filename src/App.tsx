@@ -11,9 +11,19 @@ import Submit from "@/pages/Submit";
 import Auth from "@/pages/Auth";
 import Forms from "@/pages/Forms";
 import Subreddit from "@/pages/Subreddit";
+import Profile from "@/pages/Profile";
 import NotFound from "@/pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      networkMode: 'always',
+      retry: 2,
+      staleTime: 30000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,6 +39,7 @@ const App = () => (
               <Route path="/post/:id" element={<PostDetail />} />
               <Route path="/submit" element={<Submit />} />
               <Route path="/forms" element={<Forms />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
