@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { MessageSquare, ChevronDown, ChevronUp as ChevronUpIcon } from "lucide-react";
+import { MessageSquare, ChevronDown, ChevronUp as ChevronUpIcon, MoreHorizontal, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/mock-data";
 import type { MockComment } from "@/lib/types";
 import VoteButtons from "./VoteButtons";
+import { toast } from "sonner";
 
 interface CommentItemProps {
   comment: MockComment;
@@ -13,57 +14,92 @@ interface CommentItemProps {
 export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [showReply, setShowReply] = useState(false);
+  const [replyText, setReplyText] = useState("");
   const score = comment.upvote_count - comment.downvote_count;
 
+  const handleReply = () => {
+    if (replyText.trim()) {
+      toast.success("Reply posted!");
+      setReplyText("");
+      setShowReply(false);
+    }
+  };
+
   return (
-    <div className={cn("relative", depth > 0 && "ml-5 pl-4 border-l-2 border-border/40")}>
-      <div className="py-2">
+    <div className={cn("relative", depth > 0 && "ml-4")}>
+      {depth > 0 && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute left-0 top-0 bottom-0 w-4 group"
+        >
+          <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border group-hover:bg-primary transition-colors" />
+        </button>
+      )}
+
+      <div className={cn("py-2", depth > 0 && "pl-5")}>
         {/* Header */}
         <div className="flex items-center gap-2 mb-1">
-          <button onClick={() => setCollapsed(!collapsed)} className="text-muted-foreground hover:text-foreground">
-            {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUpIcon className="h-3.5 w-3.5" />}
-          </button>
-          <span className="text-sm font-medium text-foreground">{comment.author_name}</span>
-          {comment.author_batch && (
-            <span className="text-[11px] text-muted-foreground">{comment.author_batch}</span>
+          {depth === 0 && (
+            <button onClick={() => setCollapsed(!collapsed)} className="text-muted-foreground hover:text-foreground">
+              {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUpIcon className="h-3.5 w-3.5" />}
+            </button>
           )}
-          <span className="text-[11px] text-muted-foreground">· {timeAgo(comment.created_at)}</span>
+          <span className="text-xs font-bold text-foreground hover:underline cursor-pointer">
+            u/{comment.author_name?.replace(" ", "").toLowerCase()}
+          </span>
+          {comment.author_batch && (
+            <span className="text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-full">{comment.author_batch}</span>
+          )}
+          <span className="text-[11px] text-muted-foreground">• {timeAgo(comment.created_at)}</span>
         </div>
 
         {!collapsed && (
           <>
             {/* Body */}
-            <div className="ml-6 mb-1.5">
+            <div className="mb-1.5">
               <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{comment.body}</p>
             </div>
 
             {/* Actions */}
-            <div className="ml-6 flex items-center gap-3 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} size="sm" />
-              </div>
+            <div className="flex items-center gap-1 text-xs">
+              <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} size="sm" horizontal />
               <button
                 onClick={() => setShowReply(!showReply)}
-                className="flex items-center gap-1 hover:text-foreground transition-colors py-1"
+                className="flex items-center gap-1.5 text-muted-foreground hover:bg-accent px-2 py-1 rounded-full transition-colors font-medium"
               >
-                <MessageSquare className="h-3 w-3" />
+                <MessageSquare className="h-3.5 w-3.5" />
                 Reply
+              </button>
+              <button
+                onClick={() => { navigator.clipboard.writeText(comment.body); toast.success("Copied!"); }}
+                className="flex items-center gap-1.5 text-muted-foreground hover:bg-accent px-2 py-1 rounded-full transition-colors"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </button>
+              <button className="text-muted-foreground hover:bg-accent p-1 rounded-full transition-colors">
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            {/* Reply input (placeholder) */}
+            {/* Reply input */}
             {showReply && (
-              <div className="ml-6 mt-2 mb-2">
+              <div className="mt-2 mb-2 border border-border rounded-lg overflow-hidden">
                 <textarea
-                  className="w-full bg-muted/50 border border-border rounded-lg p-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                  placeholder="Write a reply..."
+                  className="w-full bg-secondary p-3 text-sm resize-none focus:outline-none placeholder:text-muted-foreground min-h-[80px]"
+                  placeholder="What are your thoughts?"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
                   rows={3}
                 />
-                <div className="flex justify-end gap-2 mt-2">
-                  <button onClick={() => setShowReply(false)} className="text-sm text-muted-foreground hover:text-foreground px-3 py-1.5">
+                <div className="flex justify-end gap-2 px-3 py-2 bg-secondary border-t border-border">
+                  <button onClick={() => { setShowReply(false); setReplyText(""); }} className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 rounded-full hover:bg-accent transition-colors">
                     Cancel
                   </button>
-                  <button className="text-sm font-medium bg-primary text-primary-foreground px-4 py-1.5 rounded-lg hover:bg-primary/90 transition-colors">
+                  <button
+                    onClick={handleReply}
+                    disabled={!replyText.trim()}
+                    className="text-xs font-bold bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Reply
                   </button>
                 </div>

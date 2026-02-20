@@ -1,4 +1,5 @@
-import { ChevronUp, ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ArrowBigUp, ArrowBigDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface VoteButtonsProps {
@@ -7,38 +8,73 @@ interface VoteButtonsProps {
   onUpvote: () => void;
   onDownvote: () => void;
   size?: "sm" | "md";
+  horizontal?: boolean;
 }
 
-export default function VoteButtons({ score, userVote, onUpvote, onDownvote, size = "md" }: VoteButtonsProps) {
-  const iconSize = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
-  const textSize = size === "sm" ? "text-[10px]" : "text-xs";
+export default function VoteButtons({ score: initialScore, userVote: initialVote, onUpvote, onDownvote, size = "md", horizontal = false }: VoteButtonsProps) {
+  const [localVote, setLocalVote] = useState<1 | -1 | null>(initialVote ?? null);
+  const [localScore, setLocalScore] = useState(initialScore);
+
+  const handleUpvote = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (localVote === 1) {
+      setLocalVote(null);
+      setLocalScore(initialScore);
+    } else {
+      setLocalVote(1);
+      setLocalScore(initialScore + 1 + (localVote === -1 ? 1 : 0));
+    }
+    onUpvote();
+  };
+
+  const handleDownvote = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (localVote === -1) {
+      setLocalVote(null);
+      setLocalScore(initialScore);
+    } else {
+      setLocalVote(-1);
+      setLocalScore(initialScore - 1 - (localVote === 1 ? 1 : 0));
+    }
+    onDownvote();
+  };
+
+  const iconSize = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  const textSize = size === "sm" ? "text-xs" : "text-xs";
 
   return (
-    <div className="flex flex-col items-center gap-0">
+    <div className={cn(
+      "flex items-center gap-0.5 rounded-full bg-secondary",
+      horizontal ? "flex-row px-1 py-0.5" : "flex-col py-1 px-0.5"
+    )}>
       <button
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onUpvote(); }}
+        onClick={handleUpvote}
         className={cn(
-          "p-0.5 rounded transition-colors",
-          userVote === 1
-            ? "text-primary"
-            : "text-muted-foreground/60 hover:text-primary"
+          "p-1 rounded-full transition-colors hover:bg-accent",
+          localVote === 1 ? "text-upvote" : "text-muted-foreground hover:text-upvote"
         )}
+        aria-label="Upvote"
       >
-        <ChevronUp className={iconSize} />
+        <ArrowBigUp className={cn(iconSize, localVote === 1 && "fill-current")} />
       </button>
-      <span className={cn("font-semibold tabular-nums leading-none", textSize, score > 0 ? "text-foreground" : "text-muted-foreground")}>
-        {score}
+      <span className={cn(
+        "font-bold tabular-nums leading-none min-w-[1.5rem] text-center",
+        textSize,
+        localVote === 1 ? "text-upvote" : localVote === -1 ? "text-downvote" : "text-foreground"
+      )}>
+        {localScore}
       </span>
       <button
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); onDownvote(); }}
+        onClick={handleDownvote}
         className={cn(
-          "p-0.5 rounded transition-colors",
-          userVote === -1
-            ? "text-destructive"
-            : "text-muted-foreground/60 hover:text-destructive"
+          "p-1 rounded-full transition-colors hover:bg-accent",
+          localVote === -1 ? "text-downvote" : "text-muted-foreground hover:text-downvote"
         )}
+        aria-label="Downvote"
       >
-        <ChevronDown className={iconSize} />
+        <ArrowBigDown className={cn(iconSize, localVote === -1 && "fill-current")} />
       </button>
     </div>
   );

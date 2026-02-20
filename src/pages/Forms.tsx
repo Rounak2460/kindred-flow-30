@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { ArrowLeft, Copy, Check, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -7,7 +7,7 @@ import { toast } from "sonner";
 const forms = [
   {
     title: "Course Review",
-    category: "academics",
+    category: "d/academics",
     credits: 20,
     description: "Share your experience with a course — ratings, tips, professor insights",
     fields: [
@@ -21,7 +21,7 @@ const forms = [
   },
   {
     title: "Internship Report",
-    category: "internships",
+    category: "d/internships",
     credits: 25,
     description: "Share your internship experience — work culture, learning, stipend, PPO",
     fields: [
@@ -36,7 +36,7 @@ const forms = [
   },
   {
     title: "Exchange Diary",
-    category: "exchange",
+    category: "d/exchange",
     credits: 25,
     description: "Share your exchange semester experience — academics, living, travel",
     fields: [
@@ -50,7 +50,7 @@ const forms = [
   },
   {
     title: "Exam Paper",
-    category: "papers",
+    category: "d/papers",
     credits: 30,
     description: "Share past exam papers with solutions or analysis",
     fields: [
@@ -61,7 +61,7 @@ const forms = [
   },
   {
     title: "Campus Tip",
-    category: "campus",
+    category: "d/campus",
     credits: 5,
     description: "Share tips about campus life — food, study spots, transport",
     fields: [
@@ -78,7 +78,7 @@ export default function Forms() {
   const copyFields = (fields: string[], title: string, index: number) => {
     const text = `${title}\n\nPlease fill in the following:\n\n${fields.map((f, i) => `${i + 1}. ${f}`).join("\n\n")}`;
     navigator.clipboard.writeText(text).then(() => {
-      toast.success("Copied!");
+      toast.success("Copied to clipboard!");
       setCopiedIndex(index);
       setTimeout(() => setCopiedIndex(null), 2000);
     });
@@ -96,67 +96,79 @@ export default function Forms() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-4 max-w-2xl">
-      <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3 transition-colors">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      <Link to="/" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-4 transition-colors">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to feed
       </Link>
 
-      <div className="mb-6">
-        <h1 className="text-base font-semibold mb-1">Data Collection Forms</h1>
-        <p className="text-xs text-muted-foreground mb-3">
-          Copy these templates, create Google Forms, and circulate among batchmates to seed initial data.
-        </p>
-        <Button onClick={copyAllForms} variant="outline" size="sm" className="gap-1.5 text-xs">
-          <Copy className="h-3 w-3" /> Copy All
+      <div className="bg-card border border-border rounded-lg p-5 mb-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-bold text-lg text-foreground">Data Collection Forms</h1>
+            <p className="text-xs text-muted-foreground">Copy templates → create Google Forms → circulate in batch groups</p>
+          </div>
+        </div>
+        <Button onClick={copyAllForms} variant="outline" size="sm" className="gap-1.5 text-xs rounded-full">
+          <Copy className="h-3 w-3" /> Copy All Templates
         </Button>
       </div>
 
       <div className="space-y-3">
         {forms.map((form, index) => (
-          <div key={form.title} className="border border-border rounded-md bg-card p-4">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h2 className="text-sm font-semibold">{form.title}</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">{form.description}</p>
+          <div key={form.title} className="bg-card border border-border rounded-lg overflow-hidden">
+            <div className="p-4">
+              <div className="flex items-start justify-between mb-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="font-bold text-sm text-foreground">{form.title}</h2>
+                    <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                      +{form.credits} credits
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{form.description}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1">Posts to {form.category}</p>
+                </div>
               </div>
-              <span className="text-[10px] font-medium text-primary bg-accent px-1.5 py-0.5 rounded flex-shrink-0">
-                +{form.credits} cr
-              </span>
             </div>
-            <div className="bg-muted/40 rounded p-3 mb-3">
-              <ol className="space-y-1">
+            <div className="bg-secondary/50 px-4 py-3">
+              <ol className="space-y-1.5">
                 {form.fields.map((field, i) => (
-                  <li key={i} className="text-xs text-foreground/70 flex gap-1.5">
-                    <span className="text-muted-foreground font-mono w-4 flex-shrink-0">{i + 1}.</span>
+                  <li key={i} className="text-xs text-foreground/70 flex gap-2">
+                    <span className="text-muted-foreground font-mono w-5 flex-shrink-0 text-right">{i + 1}.</span>
                     {field}
                   </li>
                 ))}
               </ol>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1 text-xs h-7"
-              onClick={() => copyFields(form.fields, form.title, index)}
-            >
-              {copiedIndex === index ? (
-                <><Check className="h-3 w-3" /> Copied</>
-              ) : (
-                <><Copy className="h-3 w-3" /> Copy Template</>
-              )}
-            </Button>
+            <div className="px-4 py-3 border-t border-border">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-xs rounded-full"
+                onClick={() => copyFields(form.fields, form.title, index)}
+              >
+                {copiedIndex === index ? (
+                  <><Check className="h-3 w-3 text-online" /> Copied</>
+                ) : (
+                  <><Copy className="h-3 w-3" /> Copy Template</>
+                )}
+              </Button>
+            </div>
           </div>
         ))}
       </div>
 
       {/* Instructions */}
-      <div className="mt-6 border border-border rounded-md p-4 bg-muted/30">
-        <h3 className="text-sm font-semibold mb-2">How to use</h3>
-        <ol className="space-y-1 text-xs text-muted-foreground">
-          <li>1. Copy a template above</li>
-          <li>2. Create a Google Form with those fields</li>
-          <li>3. Share the link in batch WhatsApp groups</li>
-          <li>4. Use responses to create threads on Digital Mitra</li>
+      <div className="mt-4 bg-card border border-border rounded-lg p-4">
+        <h3 className="font-bold text-sm text-foreground mb-3">How to use these templates</h3>
+        <ol className="space-y-2 text-xs text-muted-foreground">
+          <li className="flex gap-2"><span className="text-foreground font-bold">1.</span> Copy a template above</li>
+          <li className="flex gap-2"><span className="text-foreground font-bold">2.</span> Create a Google Form with those fields</li>
+          <li className="flex gap-2"><span className="text-foreground font-bold">3.</span> Share the link in batch WhatsApp groups</li>
+          <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> Use responses to create threads on Digital Mitra</li>
         </ol>
       </div>
     </div>
