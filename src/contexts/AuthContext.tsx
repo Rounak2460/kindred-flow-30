@@ -52,11 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Use onAuthStateChange as single source of truth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
-          await fetchProfile(currentUser.id);
+          fetchProfile(currentUser.id);
         } else {
           setProfile(null);
         }
