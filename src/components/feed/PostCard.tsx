@@ -5,6 +5,7 @@ import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { toast } from "sonner";
+import { generateAnonHandle } from "@/lib/anonymity";
 
 interface PostCardProps {
   id: string;
@@ -23,6 +24,7 @@ interface PostCardProps {
   created_at: string;
   author_name?: string;
   author_batch?: string;
+  user_id?: string;
   userVote?: 1 | -1 | null;
   onUpvote?: () => void;
   onDownvote?: () => void;
@@ -31,7 +33,7 @@ interface PostCardProps {
 export default function PostCard({
   id, title, body, category, flair, upvote_count, downvote_count,
   comment_count, pinned, course_code, course_name, company_name,
-  college_name, created_at, author_name, author_batch,
+  college_name, created_at, author_name, author_batch, user_id,
   userVote, onUpvote, onDownvote,
 }: PostCardProps) {
   const navigate = useNavigate();
@@ -39,6 +41,9 @@ export default function PostCard({
   const contextLabel = course_name || company_name || college_name;
   const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
   const [saved, setSaved] = useState(false);
+
+  // Anonymous handle based on user_id + post_id
+  const anonHandle = generateAnonHandle(user_id || id, id);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -82,8 +87,7 @@ export default function PostCard({
             </button>
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">
-              Posted by {author_name && <span className="hover:underline">u/{author_name.replace(" ", "").toLowerCase()}</span>}
-              {author_batch && <span className="ml-1 text-muted-foreground/60">{author_batch}</span>}
+              Posted by <span className="hover:underline font-medium">{anonHandle}</span>
             </span>
             <span className="text-muted-foreground">• {timeAgo(created_at)}</span>
           </div>

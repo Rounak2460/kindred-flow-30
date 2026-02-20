@@ -7,6 +7,7 @@ import VoteButtons from "./VoteButtons";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
+import { generateAnonHandle } from "@/lib/anonymity";
 
 interface CommentItemProps {
   comment: MockComment;
@@ -20,6 +21,8 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
   const [replyText, setReplyText] = useState("");
   const [showAuth, setShowAuth] = useState(false);
   const score = comment.upvote_count - comment.downvote_count;
+
+  const anonHandle = generateAnonHandle(comment.user_id);
 
   const handleReply = () => {
     if (replyText.trim()) {
@@ -50,12 +53,9 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
               {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUpIcon className="h-3.5 w-3.5" />}
             </button>
           )}
-          <span className="text-xs font-bold text-foreground hover:underline cursor-pointer">
-            u/{comment.author_name?.replace(" ", "").toLowerCase()}
+          <span className="text-xs font-bold text-foreground">
+            {anonHandle}
           </span>
-          {comment.author_batch && (
-            <span className="text-[10px] text-primary/80 bg-primary/10 px-1.5 py-0.5 rounded-full">{comment.author_batch}</span>
-          )}
           <span className="text-[11px] text-muted-foreground">• {timeAgo(comment.created_at)}</span>
         </div>
 
