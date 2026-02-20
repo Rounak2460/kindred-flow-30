@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,8 @@ const categories = [
 
 export default function Submit() {
   const navigate = useNavigate();
-  const [category, setCategory] = useState("");
+  const [searchParams] = useSearchParams();
+  const [category, setCategory] = useState(searchParams.get("category") || "");
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [flair, setFlair] = useState("");

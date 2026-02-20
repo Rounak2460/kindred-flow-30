@@ -1,19 +1,26 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 import VoteButtons from "@/components/feed/VoteButtons";
 import CommentItem from "@/components/feed/CommentItem";
 import { MOCK_POSTS, MOCK_COMMENTS, timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthGuardDialog from "@/components/AuthGuardDialog";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const post = MOCK_POSTS.find((p) => p.id === id);
   const comments = id ? MOCK_COMMENTS[id] || [] : [];
   const [saved, setSaved] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
+  const [showAuth, setShowAuth] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   if (!post) {
     return (
@@ -27,16 +34,33 @@ export default function PostDetail() {
   const score = post.upvote_count - post.downvote_count;
   const contextLabel = post.course_name || post.company_name || post.college_name;
 
-  const handleComment = () => {
-    if (commentText.trim()) {
+  const handleComment = async () => {
+    if (!user) { setShowAuth(true); return; }
+    if (!commentText.trim()) return;
+    setSubmitting(true);
+    // For real posts, insert into DB. For mock posts, just show success.
+    if (id?.startsWith("mock-")) {
       toast.success("Comment posted!");
       setCommentText("");
+    } else {
+      const { error } = await supabase.from("comments").insert({
+        post_id: id!,
+        user_id: user.id,
+        body: commentText.trim(),
+      });
+      if (error) toast.error(error.message);
+      else { toast.success("Comment posted!"); setCommentText(""); }
     }
+    setSubmitting(false);
   };
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("Link copied!");
+  };
+
+  const handleCommentFocus = () => {
+    if (!user) { setShowAuth(true); }
   };
 
   const renderBody = (text: string) => {
@@ -66,11 +90,9 @@ export default function PostDetail() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back to feed
       </Link>
 
-      {/* Post */}
       <article className="bg-card border border-border rounded-lg p-4">
-        {/* Meta */}
         <div className="flex items-center gap-1.5 text-xs mb-2">
-          <span className="font-bold text-foreground hover:underline cursor-pointer">d/{post.category}</span>
+          <button onClick={() => navigate(`/d/${post.category}`)} className="font-bold text-foreground hover:underline">d/{post.category}</button>
           <span className="text-muted-foreground">•</span>
           <span className="text-muted-foreground">
             Posted by <span className="hover:underline cursor-pointer">u/{post.author_name?.replace(" ", "").toLowerCase()}</span>
@@ -79,56 +101,33 @@ export default function PostDetail() {
           <span className="text-muted-foreground">• {timeAgo(post.created_at)}</span>
         </div>
 
-        {/* Title */}
-        <h1 className="font-bold text-xl leading-tight mb-2 text-foreground">
-          {post.title}
-        </h1>
+        <h1 className="font-bold text-xl leading-tight mb-2 text-foreground">{post.title}</h1>
 
-        {/* Tags */}
         <div className="flex items-center gap-1.5 mb-4">
           {post.flair && (
-            <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-              {post.flair}
-            </span>
+            <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">{post.flair}</span>
           )}
           {post.course_code && (
-            <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-              {post.course_code}
-            </span>
+            <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{post.course_code}</span>
           )}
-          {contextLabel && (
-            <span className="text-[10px] text-muted-foreground">{contextLabel}</span>
-          )}
+          {contextLabel && <span className="text-[10px] text-muted-foreground">{contextLabel}</span>}
         </div>
 
-        {/* Body */}
-        <div className="mb-4 space-y-0.5">
-          {renderBody(post.body)}
-        </div>
+        <div className="mb-4 space-y-0.5">{renderBody(post.body)}</div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2 pt-3 border-t border-border">
           <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} horizontal />
           <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium">
-            <MessageSquare className="h-4 w-4" />
-            {post.comment_count} Comments
+            <MessageSquare className="h-4 w-4" /> {post.comment_count} Comments
+          </button>
+          <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium" onClick={handleShare}>
+            <Share2 className="h-4 w-4" /> Share
           </button>
           <button
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium"
-            onClick={handleShare}
-          >
-            <Share2 className="h-4 w-4" />
-            Share
-          </button>
-          <button
-            className={cn(
-              "flex items-center gap-1.5 text-xs hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium",
-              saved ? "text-primary" : "text-muted-foreground"
-            )}
+            className={cn("flex items-center gap-1.5 text-xs hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium", saved ? "text-primary" : "text-muted-foreground")}
             onClick={() => { setSaved(!saved); toast.success(saved ? "Unsaved" : "Saved!"); }}
           >
-            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
-            {saved ? "Saved" : "Save"}
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} /> {saved ? "Saved" : "Save"}
           </button>
           <button className="text-muted-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto">
             <MoreHorizontal className="h-4 w-4" />
@@ -140,18 +139,25 @@ export default function PostDetail() {
       <div className="mt-3 bg-card border border-border rounded-lg overflow-hidden">
         <textarea
           className="w-full bg-transparent p-3 text-sm resize-none focus:outline-none placeholder:text-muted-foreground min-h-[100px]"
-          placeholder="What are your thoughts?"
+          placeholder={user ? "What are your thoughts?" : "Sign in to share your thoughts..."}
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
+          onFocus={handleCommentFocus}
+          readOnly={!user}
         />
-        <div className="flex justify-end px-3 py-2 border-t border-border">
-          <button
-            onClick={handleComment}
-            disabled={!commentText.trim()}
-            className="text-xs font-bold bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Comment
-          </button>
+        <div className="flex items-center justify-between px-3 py-2 border-t border-border">
+          {!user && (
+            <p className="text-[11px] text-muted-foreground">Sign in with your @iimb.ac.in email to comment</p>
+          )}
+          <div className="ml-auto">
+            <button
+              onClick={handleComment}
+              disabled={!commentText.trim() || submitting}
+              className="text-xs font-bold bg-primary text-primary-foreground px-4 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Posting..." : "Comment"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -188,6 +194,8 @@ export default function PostDetail() {
           </div>
         )}
       </div>
+
+      <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="comment on posts" />
     </div>
   );
 }
