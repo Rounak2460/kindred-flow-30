@@ -8,19 +8,18 @@ interface CategoryTabsProps {
 
 export default function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
   return (
-    <div className="flex items-center gap-1 overflow-x-auto pb-1 scrollbar-hide">
+    <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide border-b border-border">
       {CATEGORIES.map((cat) => (
         <button
           key={cat.key}
           onClick={() => onSelect(cat.key)}
           className={cn(
-            "flex items-center gap-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
+            "px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
             selected === cat.key
-              ? "bg-primary text-primary-foreground shadow-sm"
-              : "bg-secondary/70 text-muted-foreground hover:bg-secondary hover:text-foreground"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
           )}
         >
-          <span className="text-sm">{cat.icon}</span>
           {cat.label}
         </button>
       ))}

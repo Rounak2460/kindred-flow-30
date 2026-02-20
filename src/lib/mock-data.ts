@@ -1,12 +1,12 @@
 import { type MockPost, type MockComment } from "./types";
 
 export const CATEGORIES = [
-  { key: "all", label: "All", icon: "🏠" },
-  { key: "academics", label: "Academics", icon: "📚" },
-  { key: "exchange", label: "Exchange", icon: "🌍" },
-  { key: "internships", label: "Internships", icon: "💼" },
-  { key: "campus", label: "Campus Life", icon: "🎓" },
-  { key: "papers", label: "Exam Papers", icon: "📄" },
+  { key: "all", label: "All" },
+  { key: "academics", label: "Academics" },
+  { key: "exchange", label: "Exchange" },
+  { key: "internships", label: "Internships" },
+  { key: "campus", label: "Campus Life" },
+  { key: "papers", label: "Exam Papers" },
 ] as const;
 
 export const FLAIRS: Record<string, string[]> = {
@@ -56,7 +56,7 @@ export const MOCK_POSTS: MockPost[] = [
     user_id: "mock-user-3",
     category: "exchange",
     title: "HEC Paris exchange — A semester that changed my perspective",
-    body: "Spent Term 5 at HEC Paris. Here's everything you need to know:\n\n**Academics**: Courses are more discussion-based than IIMB. Luxury Brand Management and European Business Environment were standout courses. Grading is lenient compared to IIMB.\n\n**Living**: Campus is in Jouy-en-Josas, 30 mins from Paris by RER. Dorm rooms are decent. Budget ≈ €1200/month (with cooking). Eating out in Paris gets expensive fast.\n\n**Social life**: The international cohort is amazing — 80+ nationalities. Thursday parties at the student bar are legendary. Weekend trips to other European cities are easy and cheap with FlixBus/Ryanair.\n\n**Travel**: Did Barcelona, Amsterdam, Rome, and London over weekends. Pro tip: Book 2 months in advance.\n\n**Application tips**: Apply early, maintain 3.0+ GPA, and write a genuine SOP about what you want from the exchange.\n\nWould I do it again? In a heartbeat. 🇫🇷",
+    body: "Spent Term 5 at HEC Paris. Here's everything you need to know:\n\n**Academics**: Courses are more discussion-based than IIMB. Luxury Brand Management and European Business Environment were standout courses. Grading is lenient compared to IIMB.\n\n**Living**: Campus is in Jouy-en-Josas, 30 mins from Paris by RER. Dorm rooms are decent. Budget ≈ €1200/month (with cooking). Eating out in Paris gets expensive fast.\n\n**Social life**: The international cohort is amazing — 80+ nationalities. Thursday parties at the student bar are legendary. Weekend trips to other European cities are easy and cheap with FlixBus/Ryanair.\n\n**Travel**: Did Barcelona, Amsterdam, Rome, and London over weekends. Pro tip: Book 2 months in advance.\n\n**Application tips**: Apply early, maintain 3.0+ GPA, and write a genuine SOP about what you want from the exchange.\n\nWould I do it again? In a heartbeat.",
     flair: "Experience Diary",
     upvote_count: 63,
     downvote_count: 2,
@@ -72,7 +72,7 @@ export const MOCK_POSTS: MockPost[] = [
     user_id: "mock-user-4",
     category: "campus",
     title: "Ultimate food guide for new PGP students — save this post",
-    body: "After 2 years at IIMB, here's the definitive food ranking:\n\n**On Campus:**\n1. 🥇 Prakruthi — Best coffee and sandwiches. The cold brew is addictive.\n2. 🥈 MDC Mess — Hit or miss but Thursday paneer is elite\n3. 🥉 CCD — For when you need sugar and caffeine at 2am\n\n**Near Campus (Bannerghatta Road):**\n1. Vidyarthi Bhavan (weekends only, go early) — Masala dosa that changes lives\n2. Meghana Foods — Biryani for ₹250. Andhra meals are fire too.\n3. Third Wave Coffee — Best workspace outside campus\n\n**Delivery essentials:**\n- Swiggy One is worth it if you order 3+ times a week\n- Zomato Pro Plus gets you priority delivery during late-night cram sessions\n\n**Pro tips:**\n- Keep instant noodles for post-midnight study sessions\n- The fruits vendor near the back gate has the best prices\n- Friday night is pizza night at Domino's — they know IIMB students by name at this point 😂",
+    body: "After 2 years at IIMB, here's the definitive food ranking:\n\n**On Campus:**\n1. Prakruthi — Best coffee and sandwiches. The cold brew is addictive.\n2. MDC Mess — Hit or miss but Thursday paneer is elite\n3. CCD — For when you need sugar and caffeine at 2am\n\n**Near Campus (Bannerghatta Road):**\n1. Vidyarthi Bhavan (weekends only, go early) — Masala dosa that changes lives\n2. Meghana Foods — Biryani for ₹250. Andhra meals are fire too.\n3. Third Wave Coffee — Best workspace outside campus\n\n**Delivery essentials:**\n- Swiggy One is worth it if you order 3+ times a week\n- Zomato Pro Plus gets you priority delivery during late-night cram sessions\n\n**Pro tips:**\n- Keep instant noodles for post-midnight study sessions\n- The fruits vendor near the back gate has the best prices\n- Friday night is pizza night at Domino's — they know IIMB students by name at this point",
     flair: "Food & Cafes",
     upvote_count: 112,
     downvote_count: 4,
@@ -87,7 +87,7 @@ export const MOCK_POSTS: MockPost[] = [
     user_id: "mock-user-5",
     category: "academics",
     title: "Which marketing electives are actually useful? Need advice for Term 4",
-    body: "Hey everyone, I'm a Term 3 student trying to decide on marketing electives for next term. I'm interested in brand management roles post-MBA.\n\nOptions I'm considering:\n1. **Consumer Behaviour** (Prof. Sharma) — heard it's theory-heavy but foundational\n2. **Digital Marketing Analytics** (Prof. Patel) — more hands-on with tools\n3. **Brand Management** (Prof. Rao) — directly relevant but heard grading is tough\n\nAnyone who's taken these — what would you recommend? Especially interested in which ones actually helped in placements or gave practical skills.\n\nAlso open to suggestions I haven't considered. Thanks! 🙏",
+    body: "Hey everyone, I'm a Term 3 student trying to decide on marketing electives for next term. I'm interested in brand management roles post-MBA.\n\nOptions I'm considering:\n1. **Consumer Behaviour** (Prof. Sharma) — heard it's theory-heavy but foundational\n2. **Digital Marketing Analytics** (Prof. Patel) — more hands-on with tools\n3. **Brand Management** (Prof. Rao) — directly relevant but heard grading is tough\n\nAnyone who's taken these — what would you recommend? Especially interested in which ones actually helped in placements or gave practical skills.\n\nAlso open to suggestions I haven't considered. Thanks!",
     flair: "Question",
     upvote_count: 28,
     downvote_count: 1,
@@ -292,7 +292,8 @@ export function timeAgo(dateString: string): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 4) return `${weeks}w ago`;
+  return date.toLocaleDateString();
 }

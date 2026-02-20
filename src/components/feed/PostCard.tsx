@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { MessageSquare, Pin } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -27,14 +26,6 @@ interface PostCardProps {
   onDownvote?: () => void;
 }
 
-const categoryColors: Record<string, string> = {
-  academics: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-  exchange: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
-  internships: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-  campus: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-  papers: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
-};
-
 export default function PostCard({
   id, title, body, category, flair, upvote_count, downvote_count,
   comment_count, pinned, course_code, course_name, company_name,
@@ -43,18 +34,18 @@ export default function PostCard({
 }: PostCardProps) {
   const score = upvote_count - downvote_count;
   const contextLabel = course_name || company_name || college_name;
-  const preview = body.length > 200 ? body.slice(0, 200) + "..." : body;
+  const preview = body.length > 180 ? body.slice(0, 180) + "…" : body;
 
   return (
     <Link to={`/post/${id}`}>
       <article
         className={cn(
-          "group flex gap-3 p-4 rounded-xl bg-card border border-border/50 shadow-soft card-hover cursor-pointer",
-          pinned && "ring-1 ring-primary/20 bg-accent/30"
+          "group flex gap-3 py-2.5 px-3 rounded-md hover:bg-muted/60 transition-colors cursor-pointer",
+          pinned && "bg-accent/40"
         )}
       >
         {/* Vote column */}
-        <div className="flex-shrink-0 pt-1">
+        <div className="flex-shrink-0 pt-0.5">
           <VoteButtons
             score={score}
             userVote={userVote}
@@ -65,54 +56,53 @@ export default function PostCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Meta row */}
-          <div className="flex items-center gap-2 flex-wrap mb-1.5">
+          {/* Meta line */}
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-0.5">
             {pinned && (
-              <span className="flex items-center gap-1 text-xs text-primary font-medium">
-                <Pin className="h-3 w-3" /> Pinned
+              <span className="flex items-center gap-0.5 text-primary font-medium">
+                <Pin className="h-2.5 w-2.5" /> pinned
               </span>
             )}
-            <span className={cn("text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded", categoryColors[category])}>
-              {category}
-            </span>
+            <span className="font-medium text-foreground/60">r/{category}</span>
+            <span>·</span>
+            {author_name && <span>Posted by {author_name}</span>}
+            {author_batch && <span>({author_batch})</span>}
+            <span>· {timeAgo(created_at)}</span>
+          </div>
+
+          {/* Title */}
+          <h3 className="font-semibold text-sm leading-snug text-foreground group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+
+          {/* Inline tags */}
+          <div className="flex items-center gap-1.5 mt-0.5">
             {flair && (
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+              <span className="text-[10px] font-medium text-primary/80 bg-accent px-1.5 py-0.5 rounded">
                 {flair}
-              </Badge>
+              </span>
             )}
             {course_code && (
               <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                 {course_code}
               </span>
             )}
-            <span className="text-[11px] text-muted-foreground">
-              {author_name && <span className="font-medium text-foreground/70">{author_name}</span>}
-              {author_batch && <span> · {author_batch}</span>}
-              <span> · {timeAgo(created_at)}</span>
-            </span>
+            {contextLabel && (
+              <span className="text-[10px] text-muted-foreground">
+                — {contextLabel}
+              </span>
+            )}
           </div>
 
-          {/* Title */}
-          <h3 className="font-semibold text-[15px] leading-snug text-foreground group-hover:text-primary transition-colors mb-1">
-            {title}
-          </h3>
-
-          {/* Context tag */}
-          {contextLabel && (
-            <span className="text-xs text-muted-foreground mb-1 inline-block">
-              re: {contextLabel}
-            </span>
-          )}
-
           {/* Preview */}
-          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 mb-2">
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mt-1">
             {preview.replace(/[*#_]/g, "")}
           </p>
 
           {/* Footer */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
             <span className="flex items-center gap-1 hover:text-foreground transition-colors">
-              <MessageSquare className="h-3.5 w-3.5" />
+              <MessageSquare className="h-3 w-3" />
               {comment_count} {comment_count === 1 ? "comment" : "comments"}
             </span>
           </div>
