@@ -1,41 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
-import { MOCK_POSTS } from "@/lib/mock-data";
+import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
-
-function fuzzyMatch(text: string, query: string): boolean {
-  const t = text.toLowerCase();
-  const q = query.toLowerCase();
-  if (t.includes(q)) return true;
-  const qWords = q.split(/\s+/).filter(Boolean);
-  const tWords = t.split(/\s+/);
-  return qWords.every(qw => tWords.some(tw => tw.startsWith(qw)));
-}
-
-function searchScore(post: typeof MOCK_POSTS[0], query: string): number {
-  const q = query.toLowerCase();
-  let score = 0;
-  if (post.title.toLowerCase().includes(q)) score += 10;
-  if (post.category.toLowerCase().includes(q)) score += 8;
-  if (post.flair?.toLowerCase().includes(q)) score += 7;
-  if (post.course_code?.toLowerCase().includes(q)) score += 6;
-  if (post.course_name?.toLowerCase().includes(q)) score += 6;
-  if (post.company_name?.toLowerCase().includes(q)) score += 6;
-  if (post.college_name?.toLowerCase().includes(q)) score += 6;
-  if (post.author_name?.toLowerCase().includes(q)) score += 5;
-  if (post.author_batch?.toLowerCase().includes(q)) score += 4;
-  if (post.body.toLowerCase().includes(q)) score += 3;
-  if (score === 0 && fuzzyMatch(post.title, q)) score += 2;
-  if (score === 0 && fuzzyMatch(post.body, q)) score += 1;
-  return score;
-}
+import { usePosts } from "@/hooks/usePosts";
+import { useVote } from "@/hooks/useVote";
+import { CATEGORIES } from "@/lib/mock-data";
 
 const COMMUNITIES = [
   { key: "academics", label: "Academics", icon: "📚", members: "1.8k" },
@@ -47,41 +23,13 @@ const COMMUNITIES = [
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
   const [search, setSearch] = useState("");
   const [showAuth, setShowAuth] = useState(false);
 
-  const filteredPosts = useMemo(() => {
-    let posts = [...MOCK_POSTS];
-    if (category !== "all") posts = posts.filter((p) => p.category === category);
-
-    if (search.trim()) {
-      const q = search.trim();
-      const scored = posts.map(p => ({ post: p, score: searchScore(p, q) })).filter(x => x.score > 0);
-      scored.sort((a, b) => b.score - a.score);
-      return scored.map(x => x.post);
-    }
-
-    if (sort === "new") {
-      posts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (sort === "top") {
-      posts.sort((a, b) => (b.upvote_count - b.downvote_count) - (a.upvote_count - a.downvote_count));
-    } else {
-      posts.sort((a, b) => {
-        const scoreA = (a.upvote_count - a.downvote_count) + a.comment_count * 2;
-        const scoreB = (b.upvote_count - b.downvote_count) + b.comment_count * 2;
-        const ageA = (Date.now() - new Date(a.created_at).getTime()) / 3600000;
-        const ageB = (Date.now() - new Date(b.created_at).getTime()) / 3600000;
-        return (scoreB / Math.pow(ageB + 2, 1.5)) - (scoreA / Math.pow(ageA + 2, 1.5));
-      });
-    }
-
-    const pinned = posts.filter((p) => p.pinned);
-    const unpinned = posts.filter((p) => !p.pinned);
-    return [...pinned, ...unpinned];
-  }, [category, sort, search]);
+  const { data: posts = [], isLoading } = usePosts(category, sort, search);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-4">
@@ -91,7 +39,7 @@ export default function Home() {
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search posts, courses, companies, authors…"
+              placeholder="Search posts, courses, companies…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 pr-9 h-10 bg-card border-border text-sm rounded-full hover:bg-accent focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-border"
@@ -103,32 +51,34 @@ export default function Home() {
             )}
           </div>
 
-          {/* Category tabs */}
           <div className="mb-3">
             <CategoryTabs selected={category} onSelect={setCategory} />
           </div>
 
-          {/* Sort bar */}
           <div className="flex items-center justify-between mb-3">
             <SortBar selected={sort} onSelect={setSort} />
             {search.trim() && (
-              <span className="text-xs text-muted-foreground">{filteredPosts.length} result{filteredPosts.length !== 1 ? "s" : ""}</span>
+              <span className="text-xs text-muted-foreground">{posts.length} result{posts.length !== 1 ? "s" : ""}</span>
             )}
           </div>
 
           {/* Posts */}
           <div>
-            {filteredPosts.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : posts.length === 0 ? (
               <div className="text-center py-16 bg-card border border-border rounded-lg">
                 <p className="text-sm font-medium text-foreground mb-1">
                   {search.trim() ? `No results for "${search}"` : "No threads found"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {search.trim() ? "Try different keywords or check spelling" : "Be the first to start a conversation"}
+                  {search.trim() ? "Try different keywords" : "Be the first to start a conversation"}
                 </p>
               </div>
             ) : (
-              filteredPosts.map((post) => (
+              posts.map((post) => (
                 <PostCard
                   key={post.id}
                   id={post.id}
@@ -145,8 +95,7 @@ export default function Home() {
                   company_name={post.company_name}
                   college_name={post.college_name}
                   created_at={post.created_at}
-                  author_name={post.author_name}
-                  author_batch={post.author_batch}
+                  user_id={post.user_id}
                 />
               ))
             )}
@@ -155,7 +104,7 @@ export default function Home() {
 
         {/* Sidebar */}
         <aside className="hidden lg:block w-80 flex-shrink-0 space-y-3">
-          {/* Community card */}
+          {/* About card */}
           <div className="bg-card border border-border rounded-lg overflow-hidden">
             <div className="bg-primary h-8" />
             <div className="p-4">
@@ -163,19 +112,25 @@ export default function Home() {
               <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                 The unofficial student community for IIM Bangalore. Share reviews, experiences, and insider knowledge.
               </p>
-              <div className="grid grid-cols-2 gap-3 py-3 border-t border-border">
-                <div>
-                  <p className="font-bold text-sm text-foreground">2.1k</p>
-                  <p className="text-[10px] text-muted-foreground">Members</p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    <p className="font-bold text-sm text-foreground">147</p>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">Online</p>
-                </div>
+              {/* Early adopter banner */}
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-3">
+                <p className="text-[11px] font-bold text-primary mb-1">🔥 Early Adopter Bonus Active</p>
+                <p className="text-[10px] text-muted-foreground">
+                  First 50 posters get <span className="text-foreground font-bold">Founding Contributor</span> badge + <span className="text-foreground font-bold">2× credits</span> per post!
+                </p>
               </div>
+              {profile && (
+                <div className="grid grid-cols-2 gap-3 py-3 border-t border-border">
+                  <div>
+                    <p className="font-bold text-sm text-foreground">{profile.credits}</p>
+                    <p className="text-[10px] text-muted-foreground">Your Credits</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm text-foreground">{Math.max(0, 5 - profile.free_views_used)}</p>
+                    <p className="text-[10px] text-muted-foreground">Free Views Left</p>
+                  </div>
+                </div>
+              )}
               <Button
                 className="w-full rounded-full mt-2 font-bold text-xs"
                 onClick={() => {
@@ -188,7 +143,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Communities list */}
+          {/* Leaderboard */}
+          <LeaderboardWidget />
+
+          {/* Communities */}
           <div className="bg-card border border-border rounded-lg p-4">
             <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Communities</h3>
             <div className="space-y-1">
