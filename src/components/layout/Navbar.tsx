@@ -1,24 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Plus, Search, Coins, User, LogOut } from "lucide-react";
+import { Menu, X, Plus, Coins, User, LogOut, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-
-const navLinks = [
-  { label: "Academics", path: "/academics" },
-  { label: "Exam Papers", path: "/papers" },
-  { label: "Exchange", path: "/exchange" },
-  { label: "Internships", path: "/internships" },
-  { label: "Campus Life", path: "/campus" },
-];
 
 export default function Navbar() {
   const location = useLocation();
@@ -75,121 +67,108 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 glass">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
+      <div className="container mx-auto flex items-center justify-between h-14 px-4 max-w-3xl">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight text-foreground">
-          <span className="text-primary">D</span>igital Mitra
+        <Link to="/" className="flex items-center gap-1.5 font-display text-lg font-bold tracking-tight text-foreground">
+          <span className="text-primary">D</span>M
         </Link>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = location.pathname.startsWith(link.path);
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? "text-primary bg-accent"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-
         {/* Right side */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground gap-1.5 text-xs"
+            onClick={() => navigate("/forms")}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Forms
+          </Button>
           {user ? (
             <>
-              <div className="flex items-center gap-1.5 bg-secondary px-3 py-1.5 rounded-full text-sm font-medium">
-                <Coins className="h-3.5 w-3.5 text-primary" />
+              <div className="flex items-center gap-1.5 bg-secondary px-2.5 py-1 rounded-full text-xs font-medium">
+                <Coins className="h-3 w-3 text-primary" />
                 <span>{profile?.credits ?? 0}</span>
               </div>
-              <Button size="sm" className="rounded-full gap-1.5" onClick={() => navigate("/contribute")}>
-                <Plus className="h-3.5 w-3.5" />
-                Contribute
+              <Button size="sm" className="rounded-full gap-1.5 h-8 text-xs" onClick={() => navigate("/submit")}>
+                <Plus className="h-3 w-3" />
+                Post
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="rounded-full">
-                    <Avatar className="h-8 w-8 border-2 border-border">
-                      <AvatarFallback className="text-xs font-medium bg-secondary">
+                    <Avatar className="h-7 w-7 border border-border">
+                      <AvatarFallback className="text-[10px] font-medium bg-secondary">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
-                    <User className="h-4 w-4 mr-2" />
-                    Profile
+                    <User className="h-3.5 w-3.5 mr-2" /> Profile
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign out
+                    <LogOut className="h-3.5 w-3.5 mr-2" /> Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => navigate("/auth")}>
                 Sign in
               </Button>
-              <Button size="sm" className="rounded-full" onClick={() => navigate("/auth?tab=signup")}>
-                Get Started
+              <Button size="sm" className="rounded-full h-8 text-xs" onClick={() => navigate("/auth?tab=signup")}>
+                Join IIMB
               </Button>
             </div>
           )}
         </div>
 
-        {/* Mobile hamburger */}
-        <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        {/* Mobile */}
+        <div className="flex md:hidden items-center gap-2">
+          {user && (
+            <Button size="sm" className="rounded-full gap-1 h-7 text-xs px-2.5" onClick={() => navigate("/submit")}>
+              <Plus className="h-3 w-3" />
+            </Button>
+          )}
+          <button className="p-1.5" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
-          <nav className="flex flex-col p-4 gap-1">
-            {navLinks.map((link) => {
-              const isActive = location.pathname.startsWith(link.path);
-              return (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  onClick={() => setMobileOpen(false)}
-                  className={`px-3 py-2.5 text-sm font-medium rounded-lg ${
-                    isActive ? "text-primary bg-accent" : "text-muted-foreground"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
-            <div className="border-t border-border mt-2 pt-3">
+          <nav className="flex flex-col p-3 gap-1">
+            <Link to="/forms" onClick={() => setMobileOpen(false)}
+              className="px-3 py-2 text-sm text-muted-foreground rounded-lg hover:bg-muted">
+              📋 Data Forms
+            </Link>
+            <div className="border-t border-border mt-1 pt-2">
               {user ? (
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 px-3 py-2">
-                    <Coins className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">{profile?.credits ?? 0} credits</span>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 px-3 py-2 text-sm">
+                    <Coins className="h-3.5 w-3.5 text-primary" />
+                    {profile?.credits ?? 0} credits
                   </div>
-                  <Button size="sm" className="rounded-full" onClick={() => { navigate("/contribute"); setMobileOpen(false); }}>
-                    <Plus className="h-3.5 w-3.5 mr-1" /> Contribute
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <button
+                    onClick={() => { navigate("/profile"); setMobileOpen(false); }}
+                    className="px-3 py-2 text-sm text-left rounded-lg hover:bg-muted"
+                  >
+                    Profile
+                  </button>
+                  <button onClick={handleLogout} className="px-3 py-2 text-sm text-left text-muted-foreground rounded-lg hover:bg-muted">
                     Sign out
-                  </Button>
+                  </button>
                 </div>
               ) : (
-                <div className="flex flex-col gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Sign in</Button>
-                  <Button size="sm" className="rounded-full" onClick={() => { navigate("/auth?tab=signup"); setMobileOpen(false); }}>Get Started</Button>
+                <div className="flex flex-col gap-1">
+                  <Button variant="ghost" size="sm" className="justify-start" onClick={() => { navigate("/auth"); setMobileOpen(false); }}>Sign in</Button>
+                  <Button size="sm" className="rounded-full" onClick={() => { navigate("/auth?tab=signup"); setMobileOpen(false); }}>Join IIMB</Button>
                 </div>
               )}
             </div>

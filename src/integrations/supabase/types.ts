@@ -79,6 +79,57 @@ export type Database = {
         }
         Relationships: []
       }
+      comments: {
+        Row: {
+          body: string
+          created_at: string
+          downvote_count: number
+          id: string
+          parent_id: string | null
+          post_id: string
+          updated_at: string
+          upvote_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          downvote_count?: number
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          updated_at?: string
+          upvote_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          downvote_count?: number
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          updated_at?: string
+          upvote_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_views: {
         Row: {
           content_id: string
@@ -490,6 +541,66 @@ export type Database = {
           },
         ]
       }
+      posts: {
+        Row: {
+          body: string
+          category: string
+          college_name: string | null
+          comment_count: number
+          company_name: string | null
+          course_code: string | null
+          course_name: string | null
+          created_at: string
+          downvote_count: number
+          file_url: string | null
+          flair: string | null
+          id: string
+          pinned: boolean
+          title: string
+          updated_at: string
+          upvote_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          category: string
+          college_name?: string | null
+          comment_count?: number
+          company_name?: string | null
+          course_code?: string | null
+          course_name?: string | null
+          created_at?: string
+          downvote_count?: number
+          file_url?: string | null
+          flair?: string | null
+          id?: string
+          pinned?: boolean
+          title: string
+          updated_at?: string
+          upvote_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          category?: string
+          college_name?: string | null
+          comment_count?: number
+          company_name?: string | null
+          course_code?: string | null
+          course_name?: string | null
+          created_at?: string
+          downvote_count?: number
+          file_url?: string | null
+          flair?: string | null
+          id?: string
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+          upvote_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -529,6 +640,33 @@ export type Database = {
           section?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      votes: {
+        Row: {
+          created_at: string
+          id: string
+          target_id: string
+          target_type: string
+          user_id: string
+          vote_type: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_id: string
+          target_type: string
+          user_id: string
+          vote_type: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_id?: string
+          target_type?: string
+          user_id?: string
+          vote_type?: number
         }
         Relationships: []
       }
