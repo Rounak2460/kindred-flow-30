@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { FLAIRS } from "@/lib/mock-data";
 import { toast } from "sonner";
@@ -14,11 +12,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const categories = [
-  { key: "academics", label: "📚 Academics", description: "Course reviews, study tips, professor insights" },
-  { key: "exchange", label: "🌍 Exchange", description: "Exchange diaries, application advice, living abroad" },
-  { key: "internships", label: "💼 Internships", description: "Company reviews, interview prep, stipend info" },
-  { key: "campus", label: "🎓 Campus Life", description: "Food, study spots, getaways, pro tips" },
-  { key: "papers", label: "📄 Exam Papers", description: "Past papers, solutions, study material" },
+  { key: "academics", label: "Academics" },
+  { key: "exchange", label: "Exchange" },
+  { key: "internships", label: "Internships" },
+  { key: "campus", label: "Campus Life" },
+  { key: "papers", label: "Exam Papers" },
 ];
 
 export default function Submit() {
@@ -65,7 +63,7 @@ export default function Submit() {
       });
 
       if (error) throw error;
-      toast.success("Thread created! 🎉");
+      toast.success("Thread created!");
       navigate("/");
     } catch (error: any) {
       toast.error(error.message);
@@ -75,129 +73,114 @@ export default function Submit() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-2xl">
+    <div className="container mx-auto px-4 py-4 max-w-2xl">
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
-      <Card className="shadow-elevated border-border/50">
-        <CardHeader>
-          <CardTitle className="font-display text-xl">Create a Thread</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Category Selection */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Category *</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => { setCategory(cat.key); setFlair(""); }}
-                    className={cn(
-                      "text-left p-3 rounded-xl border transition-all text-sm",
-                      category === cat.key
-                        ? "border-primary bg-accent shadow-sm"
-                        : "border-border/50 hover:border-border hover:bg-muted/50"
-                    )}
-                  >
-                    <span className="font-medium">{cat.label}</span>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{cat.description}</p>
+      <div className="border border-border rounded-md bg-card p-5">
+        <h1 className="text-base font-semibold mb-4">Create a post</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Category */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Community</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {categories.map((cat) => (
+                <button
+                  key={cat.key}
+                  type="button"
+                  onClick={() => { setCategory(cat.key); setFlair(""); }}
+                  className={cn(
+                    "px-3 py-1.5 rounded text-xs font-medium transition-colors border",
+                    category === cat.key
+                      ? "border-primary text-primary bg-accent"
+                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                  )}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Flair */}
+          {availableFlairs.length > 0 && (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Flair</Label>
+              <div className="flex flex-wrap gap-1">
+                {availableFlairs.map((f) => (
+                  <button key={f} type="button" onClick={() => setFlair(flair === f ? "" : f)}>
+                    <Badge variant={flair === f ? "default" : "outline"} className="cursor-pointer text-[10px]">
+                      {f}
+                    </Badge>
                   </button>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Flair */}
-            {availableFlairs.length > 0 && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Flair</Label>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableFlairs.map((f) => (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => setFlair(flair === f ? "" : f)}
-                    >
-                      <Badge
-                        variant={flair === f ? "default" : "secondary"}
-                        className="cursor-pointer text-xs"
-                      >
-                        {f}
-                      </Badge>
-                    </button>
-                  ))}
-                </div>
+          {/* Context fields */}
+          {(category === "academics" || category === "papers") && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Course Code</Label>
+                <Input placeholder="FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="h-8 text-sm" />
               </div>
-            )}
-
-            {/* Context fields */}
-            {(category === "academics" || category === "papers") && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Course Code</Label>
-                  <Input placeholder="e.g. FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="rounded-lg" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Course Name</Label>
-                  <Input placeholder="e.g. Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="rounded-lg" />
-                </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">Course Name</Label>
+                <Input placeholder="Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="h-8 text-sm" />
               </div>
-            )}
-            {category === "internships" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">Company Name</Label>
-                <Input placeholder="e.g. McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="rounded-lg" />
-              </div>
-            )}
-            {category === "exchange" && (
-              <div className="space-y-1.5">
-                <Label className="text-xs">College Name</Label>
-                <Input placeholder="e.g. HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="rounded-lg" />
-              </div>
-            )}
-
-            {/* Title */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Title *</Label>
-              <Input
-                placeholder="An interesting, descriptive title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="rounded-lg text-base"
-                required
-              />
             </div>
-
-            {/* Body */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">Body *</Label>
-              <Textarea
-                placeholder="Share your detailed experience, review, or question. Use **bold** for emphasis and bullet points with - for lists."
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                className="rounded-lg min-h-[200px] text-sm"
-                required
-              />
-              <p className="text-[11px] text-muted-foreground">
-                Tip: Be detailed and specific — the best threads share concrete experiences and actionable advice.
-              </p>
+          )}
+          {category === "internships" && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">Company Name</Label>
+              <Input placeholder="McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-8 text-sm" />
             </div>
-
-            {/* Submit */}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="ghost" onClick={() => navigate(-1)}>Cancel</Button>
-              <Button type="submit" className="rounded-full px-6" disabled={loading}>
-                {loading ? "Posting..." : "Create Thread"}
-              </Button>
+          )}
+          {category === "exchange" && (
+            <div className="space-y-1">
+              <Label className="text-xs text-muted-foreground">College Name</Label>
+              <Input placeholder="HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="h-8 text-sm" />
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          )}
+
+          {/* Title */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</Label>
+            <Input
+              placeholder="An interesting, descriptive title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="text-sm"
+              required
+            />
+          </div>
+
+          {/* Body */}
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Text</Label>
+            <Textarea
+              placeholder="Share your experience, review, or question…"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="min-h-[160px] text-sm"
+              required
+            />
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end gap-2 pt-1">
+            <Button type="button" variant="ghost" size="sm" onClick={() => navigate(-1)}>Cancel</Button>
+            <Button type="submit" size="sm" disabled={loading}>
+              {loading ? "Posting…" : "Post"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

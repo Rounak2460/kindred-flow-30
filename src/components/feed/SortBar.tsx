@@ -16,16 +16,16 @@ const options = [
 
 export default function SortBar({ selected, onSelect }: SortBarProps) {
   return (
-    <div className="flex items-center gap-1 bg-card border border-border/50 rounded-xl p-1 shadow-soft">
+    <div className="flex items-center gap-0.5">
       {options.map((opt) => (
         <button
           key={opt.key}
           onClick={() => onSelect(opt.key)}
           className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+            "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
             selected === opt.key
-              ? "bg-secondary text-foreground"
-              : "text-muted-foreground hover:text-foreground"
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
           )}
         >
           <opt.icon className="h-3.5 w-3.5" />
