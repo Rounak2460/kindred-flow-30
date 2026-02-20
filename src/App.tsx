@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "@/components/layout/AppLayout";
 import Home from "@/pages/Home";
+import PostDetail from "@/pages/PostDetail";
+import Submit from "@/pages/Submit";
 import Auth from "@/pages/Auth";
+import Forms from "@/pages/Forms";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -19,6 +22,9 @@ const App = () => (
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/post/:id" element={<PostDetail />} />
+            <Route path="/submit" element={<Submit />} />
+            <Route path="/forms" element={<Forms />} />
           </Route>
           <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
