@@ -36,7 +36,7 @@ export default function CommentItem({ comment, postId, depth = 0 }: CommentItemP
       parent_id: comment.id,
       user_id: user.id,
       body: replyText.trim(),
-      moderation_status: "pending",
+      moderation_status: "approved",
     }).select("id").single();
     if (error) { toast.error(error.message); }
     else {

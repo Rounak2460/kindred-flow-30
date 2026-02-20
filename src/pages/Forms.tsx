@@ -151,7 +151,7 @@ export default function Forms() {
                 onClick={() => copyFields(form.fields, form.title, index)}
               >
                 {copiedIndex === index ? (
-                  <><Check className="h-3 w-3 text-online" /> Copied</>
+                  <><Check className="h-3 w-3 text-primary" /> Copied</>
                 ) : (
                   <><Copy className="h-3 w-3" /> Copy Template</>
                 )}

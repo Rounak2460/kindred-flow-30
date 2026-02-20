@@ -1,11 +1,12 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare, Share2, Bookmark, Pin, MoreHorizontal } from "lucide-react";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { toast } from "sonner";
 import { generateAnonHandle } from "@/lib/anonymity";
+import { useVote } from "@/hooks/useVote";
 
 interface PostCardProps {
   id: string;
@@ -31,11 +32,14 @@ export default function PostCard({
   college_name, created_at, user_id,
 }: PostCardProps) {
   const navigate = useNavigate();
-  const score = upvote_count - downvote_count;
+  const initialScore = upvote_count - downvote_count;
+  const { score, userVote, vote, loadVote } = useVote(id, "post", initialScore);
   const contextLabel = course_name || company_name || college_name;
   const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
   const [saved, setSaved] = useState(false);
   const anonHandle = generateAnonHandle(user_id || id, id);
+
+  useEffect(() => { loadVote(); }, [loadVote]);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -102,7 +106,7 @@ export default function PostCard({
           </p>
 
           <div className="flex items-center gap-2">
-            <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} horizontal size="sm" />
+            <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} horizontal size="sm" />
             <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/post/${id}`); }}>
               <MessageSquare className="h-4 w-4" />
