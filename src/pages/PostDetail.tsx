@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { generateAnonHandle } from "@/lib/anonymity";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -33,12 +34,12 @@ export default function PostDetail() {
 
   const score = post.upvote_count - post.downvote_count;
   const contextLabel = post.course_name || post.company_name || post.college_name;
+  const anonHandle = generateAnonHandle(post.user_id);
 
   const handleComment = async () => {
     if (!user) { setShowAuth(true); return; }
     if (!commentText.trim()) return;
     setSubmitting(true);
-    // For real posts, insert into DB. For mock posts, just show success.
     if (id?.startsWith("mock-")) {
       toast.success("Comment posted!");
       setCommentText("");
@@ -53,7 +54,6 @@ export default function PostDetail() {
       else {
         toast.success("Comment posted! AI moderator is reviewing…");
         setCommentText("");
-        // Run AI moderation in background
         supabase.functions.invoke("moderate-content", {
           body: { content_type: "comment", content_id: commentData.id, title: null, body: commentText.trim() },
         }).then(({ data: modData, error: modErr }) => {
@@ -108,9 +108,8 @@ export default function PostDetail() {
           <button onClick={() => navigate(`/d/${post.category}`)} className="font-bold text-foreground hover:underline">d/{post.category}</button>
           <span className="text-muted-foreground">•</span>
           <span className="text-muted-foreground">
-            Posted by <span className="hover:underline cursor-pointer">u/{post.author_name?.replace(" ", "").toLowerCase()}</span>
+            Posted by <span className="font-medium">{anonHandle}</span>
           </span>
-          {post.author_batch && <span className="text-muted-foreground/60">{post.author_batch}</span>}
           <span className="text-muted-foreground">• {timeAgo(post.created_at)}</span>
         </div>
 
