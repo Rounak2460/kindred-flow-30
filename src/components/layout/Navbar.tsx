@@ -44,6 +44,11 @@ export default function Navbar() {
             <Input
               placeholder="Search Digital Mitra"
               className="pl-9 h-9 bg-secondary border-none text-sm rounded-full hover:bg-accent focus-visible:bg-accent focus-visible:ring-1 focus-visible:ring-border"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.target as HTMLInputElement).value.trim()) {
+                  navigate("/?q=" + encodeURIComponent((e.target as HTMLInputElement).value.trim()));
+                }
+              }}
             />
           </div>
         </div>

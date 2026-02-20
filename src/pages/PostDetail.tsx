@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal, Loader2, Award } from "lucide-react";
 import VoteButtons from "@/components/feed/VoteButtons";
@@ -13,6 +13,7 @@ import { generateAnonHandle } from "@/lib/anonymity";
 import { usePost } from "@/hooks/usePosts";
 import { useComments } from "@/hooks/useComments";
 import { useQueryClient } from "@tanstack/react-query";
+import { useVote } from "@/hooks/useVote";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,11 @@ export default function PostDetail() {
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
   const [showAuth, setShowAuth] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const initialScore = (post?.upvote_count ?? 0) - (post?.downvote_count ?? 0);
+  const { score, userVote, vote, loadVote } = useVote(id ?? "", "post", initialScore);
+
+  useEffect(() => { if (post) loadVote(); }, [post, loadVote]);
 
   if (isLoading) {
     return (
@@ -44,7 +50,6 @@ export default function PostDetail() {
     );
   }
 
-  const score = post.upvote_count - post.downvote_count;
   const contextLabel = post.course_name || post.company_name || post.college_name;
   const anonHandle = generateAnonHandle(post.user_id);
 
@@ -135,7 +140,7 @@ export default function PostDetail() {
         <div className="mb-4 space-y-0.5">{renderBody(post.body)}</div>
 
         <div className="flex items-center gap-2 pt-3 border-t border-border">
-          <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} horizontal />
+          <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} horizontal />
           <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium">
             <MessageSquare className="h-4 w-4" /> {post.comment_count} Comments
           </button>
