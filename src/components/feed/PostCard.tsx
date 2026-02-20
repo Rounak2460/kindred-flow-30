@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare, Share2, Bookmark, Pin, MoreHorizontal } from "lucide-react";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
@@ -34,6 +34,7 @@ export default function PostCard({
   college_name, created_at, author_name, author_batch,
   userVote, onUpvote, onDownvote,
 }: PostCardProps) {
+  const navigate = useNavigate();
   const score = upvote_count - downvote_count;
   const contextLabel = course_name || company_name || college_name;
   const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
@@ -53,6 +54,12 @@ export default function PostCard({
     toast.success(saved ? "Unsaved" : "Post saved!");
   };
 
+  const handleCategoryClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/d/${category}`);
+  };
+
   return (
     <Link to={`/post/${id}`}>
       <article
@@ -61,7 +68,6 @@ export default function PostCard({
           pinned && "border-primary/30"
         )}
       >
-        {/* Pinned banner */}
         {pinned && (
           <div className="flex items-center gap-1.5 px-3 pt-2 text-[11px] text-primary font-medium">
             <Pin className="h-3 w-3" /> Pinned by moderators
@@ -71,7 +77,9 @@ export default function PostCard({
         <div className="p-3">
           {/* Subreddit + author meta */}
           <div className="flex items-center gap-1.5 text-xs mb-2">
-            <span className="font-bold text-foreground hover:underline">d/{category}</span>
+            <button onClick={handleCategoryClick} className="font-bold text-foreground hover:underline">
+              d/{category}
+            </button>
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">
               Posted by {author_name && <span className="hover:underline">u/{author_name.replace(" ", "").toLowerCase()}</span>}
@@ -98,9 +106,7 @@ export default function PostCard({
               </span>
             )}
             {contextLabel && (
-              <span className="text-[10px] text-muted-foreground">
-                {contextLabel}
-              </span>
+              <span className="text-[10px] text-muted-foreground">{contextLabel}</span>
             )}
           </div>
 

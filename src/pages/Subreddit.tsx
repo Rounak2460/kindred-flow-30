@@ -1,0 +1,152 @@
+import { useState, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import PostCard from "@/components/feed/PostCard";
+import SortBar from "@/components/feed/SortBar";
+import { MOCK_POSTS, CATEGORIES } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthGuardDialog from "@/components/AuthGuardDialog";
+
+const SUBREDDIT_INFO: Record<string, { desc: string; members: string; icon: string }> = {
+  academics: { desc: "Course reviews, professor insights, study tips, and elective advice from fellow IIMB students.", members: "1.8k", icon: "📚" },
+  exchange: { desc: "Exchange semester experiences, application tips, and living abroad guides.", members: "920", icon: "✈️" },
+  internships: { desc: "Company reviews, interview prep, stipend info, and PPO experiences.", members: "1.5k", icon: "💼" },
+  campus: { desc: "Food spots, study locations, weekend getaways, and campus life tips.", members: "2.1k", icon: "🏫" },
+  papers: { desc: "Exam papers, solutions, quizzes, and study materials shared by students.", members: "1.2k", icon: "📝" },
+};
+
+export default function Subreddit() {
+  const { category } = useParams<{ category: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
+  const [showAuth, setShowAuth] = useState(false);
+
+  const catInfo = category ? SUBREDDIT_INFO[category] : null;
+  const catLabel = CATEGORIES.find(c => c.key === category)?.label || category;
+
+  const posts = useMemo(() => {
+    let filtered = MOCK_POSTS.filter(p => p.category === category);
+    if (sort === "new") {
+      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    } else if (sort === "top") {
+      filtered.sort((a, b) => (b.upvote_count - b.downvote_count) - (a.upvote_count - a.downvote_count));
+    } else {
+      filtered.sort((a, b) => {
+        const scoreA = (a.upvote_count - a.downvote_count) + a.comment_count * 2;
+        const scoreB = (b.upvote_count - b.downvote_count) + b.comment_count * 2;
+        const ageA = (Date.now() - new Date(a.created_at).getTime()) / 3600000;
+        const ageB = (Date.now() - new Date(b.created_at).getTime()) / 3600000;
+        return (scoreB / Math.pow(ageB + 2, 1.5)) - (scoreA / Math.pow(ageA + 2, 1.5));
+      });
+    }
+    return filtered;
+  }, [category, sort]);
+
+  if (!catInfo) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <p className="text-lg font-bold text-foreground mb-2">Community not found</p>
+        <p className="text-sm text-muted-foreground mb-4">d/{category} doesn't exist yet.</p>
+        <Button variant="outline" onClick={() => navigate("/")}>Back to Home</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-5xl mx-auto px-4 py-4">
+      {/* Subreddit Banner */}
+      <div className="bg-card border border-border rounded-lg overflow-hidden mb-4">
+        <div className="h-20 bg-gradient-to-r from-primary/30 to-primary/10" />
+        <div className="p-4 -mt-6">
+          <div className="flex items-end gap-3 mb-3">
+            <div className="h-14 w-14 rounded-full bg-card border-4 border-card flex items-center justify-center text-2xl shadow-md">
+              {catInfo.icon}
+            </div>
+            <div className="flex-1 min-w-0 pb-1">
+              <h1 className="font-bold text-xl text-foreground">d/{category}</h1>
+              <p className="text-xs text-muted-foreground">{catLabel} • {catInfo.members} members</p>
+            </div>
+            <Button
+              size="sm"
+              className="rounded-full font-bold text-xs"
+              onClick={() => {
+                if (!user) { setShowAuth(true); return; }
+                navigate(`/submit?category=${category}`);
+              }}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" /> Create Post
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground">{catInfo.desc}</p>
+        </div>
+      </div>
+
+      <div className="flex gap-6">
+        {/* Feed */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <SortBar selected={sort} onSelect={setSort} />
+            <span className="text-xs text-muted-foreground">{posts.length} posts</span>
+          </div>
+          <div>
+            {posts.length === 0 ? (
+              <div className="text-center py-16 bg-card border border-border rounded-lg">
+                <p className="text-sm font-medium text-foreground mb-1">No posts in d/{category} yet</p>
+                <p className="text-xs text-muted-foreground">Be the first to start a conversation</p>
+              </div>
+            ) : (
+              posts.map(post => (
+                <PostCard
+                  key={post.id}
+                  id={post.id}
+                  title={post.title}
+                  body={post.body}
+                  category={post.category}
+                  flair={post.flair}
+                  upvote_count={post.upvote_count}
+                  downvote_count={post.downvote_count}
+                  comment_count={post.comment_count}
+                  pinned={post.pinned}
+                  course_code={post.course_code}
+                  course_name={post.course_name}
+                  company_name={post.company_name}
+                  college_name={post.college_name}
+                  created_at={post.created_at}
+                  author_name={post.author_name}
+                  author_batch={post.author_batch}
+                />
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <aside className="hidden lg:block w-80 flex-shrink-0 space-y-3">
+          <div className="bg-card border border-border rounded-lg p-4">
+            <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">About d/{category}</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">{catInfo.desc}</p>
+            <div className="flex gap-4 py-3 border-t border-border">
+              <div>
+                <p className="font-bold text-sm text-foreground">{catInfo.members}</p>
+                <p className="text-[10px] text-muted-foreground">Members</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border rounded-lg p-4">
+            <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Rules</h3>
+            <ol className="space-y-2 text-xs text-muted-foreground">
+              <li className="flex gap-2"><span className="text-foreground font-bold">1.</span> Be respectful and constructive</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">2.</span> Tag posts with correct flair</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">3.</span> No placement-specific numbers</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> No doxxing or personal attacks</li>
+            </ol>
+          </div>
+        </aside>
+      </div>
+      <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="create a post" />
+    </div>
+  );
+}

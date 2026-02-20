@@ -5,6 +5,8 @@ import { timeAgo } from "@/lib/mock-data";
 import type { MockComment } from "@/lib/types";
 import VoteButtons from "./VoteButtons";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthGuardDialog from "@/components/AuthGuardDialog";
 
 interface CommentItemProps {
   comment: MockComment;
@@ -12,9 +14,11 @@ interface CommentItemProps {
 }
 
 export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [showReply, setShowReply] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [showAuth, setShowAuth] = useState(false);
   const score = comment.upvote_count - comment.downvote_count;
 
   const handleReply = () => {
@@ -25,13 +29,15 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
     }
   };
 
+  const handleReplyClick = () => {
+    if (!user) { setShowAuth(true); return; }
+    setShowReply(!showReply);
+  };
+
   return (
     <div className={cn("relative", depth > 0 && "ml-4")}>
       {depth > 0 && (
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute left-0 top-0 bottom-0 w-4 group"
-        >
+        <button onClick={() => setCollapsed(!collapsed)} className="absolute left-0 top-0 bottom-0 w-4 group">
           <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border group-hover:bg-primary transition-colors" />
         </button>
       )}
@@ -55,7 +61,6 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
 
         {!collapsed && (
           <>
-            {/* Body */}
             <div className="mb-1.5">
               <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-line">{comment.body}</p>
             </div>
@@ -64,7 +69,7 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
             <div className="flex items-center gap-1 text-xs">
               <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} size="sm" horizontal />
               <button
-                onClick={() => setShowReply(!showReply)}
+                onClick={handleReplyClick}
                 className="flex items-center gap-1.5 text-muted-foreground hover:bg-accent px-2 py-1 rounded-full transition-colors font-medium"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
@@ -117,6 +122,7 @@ export default function CommentItem({ comment, depth = 0 }: CommentItemProps) {
           </>
         )}
       </div>
+      <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="reply to comments" />
     </div>
   );
 }
