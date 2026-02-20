@@ -50,7 +50,7 @@ export default function Submit() {
         return;
       }
 
-      const { error } = await supabase.from("posts").insert({
+      const { data: postData, error } = await supabase.from("posts").insert({
         user_id: session.user.id,
         category,
         title,
@@ -60,10 +60,23 @@ export default function Submit() {
         course_name: courseName || null,
         company_name: companyName || null,
         college_name: collegeName || null,
-      });
+        moderation_status: "pending",
+      }).select("id").single();
 
       if (error) throw error;
-      toast.success("Thread created!");
+
+      // Run AI moderation in background
+      toast.success("Post submitted! AI moderator is reviewing…");
+      
+      supabase.functions.invoke("moderate-content", {
+        body: { content_type: "post", content_id: postData.id, title, body },
+      }).then(({ data, error: modErr }) => {
+        if (modErr) console.error("Moderation error:", modErr);
+        else if (data && !data.approved) {
+          toast.error("Your post was flagged by our AI moderator: " + data.reason);
+        }
+      });
+
       navigate("/");
     } catch (error: any) {
       toast.error(error.message);

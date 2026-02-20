@@ -43,13 +43,26 @@ export default function PostDetail() {
       toast.success("Comment posted!");
       setCommentText("");
     } else {
-      const { error } = await supabase.from("comments").insert({
+      const { data: commentData, error } = await supabase.from("comments").insert({
         post_id: id!,
         user_id: user.id,
         body: commentText.trim(),
-      });
-      if (error) toast.error(error.message);
-      else { toast.success("Comment posted!"); setCommentText(""); }
+        moderation_status: "pending",
+      }).select("id").single();
+      if (error) { toast.error(error.message); }
+      else {
+        toast.success("Comment posted! AI moderator is reviewing…");
+        setCommentText("");
+        // Run AI moderation in background
+        supabase.functions.invoke("moderate-content", {
+          body: { content_type: "comment", content_id: commentData.id, title: null, body: commentText.trim() },
+        }).then(({ data: modData, error: modErr }) => {
+          if (modErr) console.error("Moderation error:", modErr);
+          else if (modData && !modData.approved) {
+            toast.error("Your comment was flagged: " + modData.reason);
+          }
+        });
+      }
     }
     setSubmitting(false);
   };
