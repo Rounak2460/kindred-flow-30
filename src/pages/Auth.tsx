@@ -41,7 +41,7 @@ export default function Auth() {
         toast.success("Welcome back!");
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -50,7 +50,12 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast.success("Check your email for a confirmation link!");
+        if (data.session) {
+          toast.success("Account created! Welcome to Digital Mitra!");
+          navigate("/");
+        } else {
+          toast.success("Check your email for a confirmation link!");
+        }
       }
     } catch (error: any) {
       toast.error(error.message);
