@@ -104,7 +104,7 @@ export default function PostCard({
           <div className="flex items-center gap-2">
             <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} horizontal size="sm" />
             <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/post/${id}`); }}>
               <MessageSquare className="h-4 w-4" />
               <span className="font-medium">{comment_count}</span>
             </button>

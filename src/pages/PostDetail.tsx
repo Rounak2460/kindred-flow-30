@@ -56,7 +56,7 @@ export default function PostDetail() {
       post_id: id!,
       user_id: user.id,
       body: commentText.trim(),
-      moderation_status: "pending",
+      moderation_status: "approved",
     }).select("id").single();
     if (error) { toast.error(error.message); }
     else {
