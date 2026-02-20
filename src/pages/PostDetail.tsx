@@ -1,27 +1,39 @@
 import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal } from "lucide-react";
+import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal, Loader2, Award } from "lucide-react";
 import VoteButtons from "@/components/feed/VoteButtons";
 import CommentItem from "@/components/feed/CommentItem";
-import { MOCK_POSTS, MOCK_COMMENTS, timeAgo } from "@/lib/mock-data";
+import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateAnonHandle } from "@/lib/anonymity";
+import { usePost } from "@/hooks/usePosts";
+import { useComments } from "@/hooks/useComments";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
-  const post = MOCK_POSTS.find((p) => p.id === id);
-  const comments = id ? MOCK_COMMENTS[id] || [] : [];
+  const { data: post, isLoading } = usePost(id);
+  const { data: comments = [], isLoading: commentsLoading } = useComments(id);
   const [saved, setSaved] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
   const [showAuth, setShowAuth] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  if (isLoading) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 flex justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!post) {
     return (
@@ -40,29 +52,24 @@ export default function PostDetail() {
     if (!user) { setShowAuth(true); return; }
     if (!commentText.trim()) return;
     setSubmitting(true);
-    if (id?.startsWith("mock-")) {
-      toast.success("Comment posted!");
+    const { data: commentData, error } = await supabase.from("comments").insert({
+      post_id: id!,
+      user_id: user.id,
+      body: commentText.trim(),
+      moderation_status: "pending",
+    }).select("id").single();
+    if (error) { toast.error(error.message); }
+    else {
+      toast.success("Comment posted! AI moderator is reviewing…");
       setCommentText("");
-    } else {
-      const { data: commentData, error } = await supabase.from("comments").insert({
-        post_id: id!,
-        user_id: user.id,
-        body: commentText.trim(),
-        moderation_status: "pending",
-      }).select("id").single();
-      if (error) { toast.error(error.message); }
-      else {
-        toast.success("Comment posted! AI moderator is reviewing…");
-        setCommentText("");
-        supabase.functions.invoke("moderate-content", {
-          body: { content_type: "comment", content_id: commentData.id, title: null, body: commentText.trim() },
-        }).then(({ data: modData, error: modErr }) => {
-          if (modErr) console.error("Moderation error:", modErr);
-          else if (modData && !modData.approved) {
-            toast.error("Your comment was flagged: " + modData.reason);
-          }
-        });
-      }
+      queryClient.invalidateQueries({ queryKey: ["comments", id] });
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      supabase.functions.invoke("moderate-content", {
+        body: { content_type: "comment", content_id: commentData.id, title: null, body: commentText.trim() },
+      }).then(({ error: modErr }) => {
+        if (modErr) console.error("Moderation error:", modErr);
+        queryClient.invalidateQueries({ queryKey: ["comments", id] });
+      });
     }
     setSubmitting(false);
   };
@@ -192,10 +199,14 @@ export default function PostDetail() {
 
       {/* Comments */}
       <div>
-        {comments.length > 0 ? (
+        {commentsLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : comments.length > 0 ? (
           <div>
             {comments.map((comment) => (
-              <CommentItem key={comment.id} comment={comment} />
+              <CommentItem key={comment.id} comment={comment} postId={id!} />
             ))}
           </div>
         ) : (

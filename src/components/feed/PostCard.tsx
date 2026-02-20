@@ -22,27 +22,19 @@ interface PostCardProps {
   company_name?: string | null;
   college_name?: string | null;
   created_at: string;
-  author_name?: string;
-  author_batch?: string;
   user_id?: string;
-  userVote?: 1 | -1 | null;
-  onUpvote?: () => void;
-  onDownvote?: () => void;
 }
 
 export default function PostCard({
   id, title, body, category, flair, upvote_count, downvote_count,
   comment_count, pinned, course_code, course_name, company_name,
-  college_name, created_at, author_name, author_batch, user_id,
-  userVote, onUpvote, onDownvote,
+  college_name, created_at, user_id,
 }: PostCardProps) {
   const navigate = useNavigate();
   const score = upvote_count - downvote_count;
   const contextLabel = course_name || company_name || college_name;
   const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
   const [saved, setSaved] = useState(false);
-
-  // Anonymous handle based on user_id + post_id
   const anonHandle = generateAnonHandle(user_id || id, id);
 
   const handleShare = (e: React.MouseEvent) => {
@@ -80,7 +72,6 @@ export default function PostCard({
         )}
 
         <div className="p-3">
-          {/* Subreddit + author meta */}
           <div className="flex items-center gap-1.5 text-xs mb-2">
             <button onClick={handleCategoryClick} className="font-bold text-foreground hover:underline">
               d/{category}
@@ -92,43 +83,26 @@ export default function PostCard({
             <span className="text-muted-foreground">• {timeAgo(created_at)}</span>
           </div>
 
-          {/* Title */}
-          <h3 className="font-semibold text-[15px] leading-snug text-foreground mb-1.5">
-            {title}
-          </h3>
+          <h3 className="font-semibold text-[15px] leading-snug text-foreground mb-1.5">{title}</h3>
 
-          {/* Tags */}
           <div className="flex items-center gap-1.5 mb-2">
             {flair && (
-              <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                {flair}
-              </span>
+              <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">{flair}</span>
             )}
             {course_code && (
-              <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                {course_code}
-              </span>
+              <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{course_code}</span>
             )}
             {contextLabel && (
               <span className="text-[10px] text-muted-foreground">{contextLabel}</span>
             )}
           </div>
 
-          {/* Preview */}
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-3">
             {preview.replace(/[*#_]/g, "")}
           </p>
 
-          {/* Action bar */}
           <div className="flex items-center gap-2">
-            <VoteButtons
-              score={score}
-              userVote={userVote}
-              onUpvote={onUpvote ?? (() => {})}
-              onDownvote={onDownvote ?? (() => {})}
-              horizontal
-              size="sm"
-            />
+            <VoteButtons score={score} onUpvote={() => {}} onDownvote={() => {}} horizontal size="sm" />
             <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
               <MessageSquare className="h-4 w-4" />

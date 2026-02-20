@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import PostCard from "@/components/feed/PostCard";
 import SortBar from "@/components/feed/SortBar";
-import { MOCK_POSTS, CATEGORIES } from "@/lib/mock-data";
+import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
+import { CATEGORIES } from "@/lib/mock-data";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
+import { usePosts } from "@/hooks/usePosts";
 
 const SUBREDDIT_INFO: Record<string, { desc: string; members: string; icon: string }> = {
   academics: { desc: "Course reviews, professor insights, study tips, and elective advice from fellow IIMB students.", members: "1.8k", icon: "📚" },
@@ -26,23 +28,7 @@ export default function Subreddit() {
   const catInfo = category ? SUBREDDIT_INFO[category] : null;
   const catLabel = CATEGORIES.find(c => c.key === category)?.label || category;
 
-  const posts = useMemo(() => {
-    let filtered = MOCK_POSTS.filter(p => p.category === category);
-    if (sort === "new") {
-      filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    } else if (sort === "top") {
-      filtered.sort((a, b) => (b.upvote_count - b.downvote_count) - (a.upvote_count - a.downvote_count));
-    } else {
-      filtered.sort((a, b) => {
-        const scoreA = (a.upvote_count - a.downvote_count) + a.comment_count * 2;
-        const scoreB = (b.upvote_count - b.downvote_count) + b.comment_count * 2;
-        const ageA = (Date.now() - new Date(a.created_at).getTime()) / 3600000;
-        const ageB = (Date.now() - new Date(b.created_at).getTime()) / 3600000;
-        return (scoreB / Math.pow(ageB + 2, 1.5)) - (scoreA / Math.pow(ageA + 2, 1.5));
-      });
-    }
-    return filtered;
-  }, [category, sort]);
+  const { data: posts = [], isLoading } = usePosts(category, sort);
 
   if (!catInfo) {
     return (
@@ -56,7 +42,7 @@ export default function Subreddit() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-4">
-      {/* Subreddit Banner */}
+      {/* Banner */}
       <div className="bg-card border border-border rounded-lg overflow-hidden mb-4">
         <div className="h-20 bg-gradient-to-r from-primary/30 to-primary/10" />
         <div className="p-4 -mt-6">
@@ -84,14 +70,17 @@ export default function Subreddit() {
       </div>
 
       <div className="flex gap-6">
-        {/* Feed */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-3">
             <SortBar selected={sort} onSelect={setSort} />
             <span className="text-xs text-muted-foreground">{posts.length} posts</span>
           </div>
           <div>
-            {posts.length === 0 ? (
+            {isLoading ? (
+              <div className="flex justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : posts.length === 0 ? (
               <div className="text-center py-16 bg-card border border-border rounded-lg">
                 <p className="text-sm font-medium text-foreground mb-1">No posts in d/{category} yet</p>
                 <p className="text-xs text-muted-foreground">Be the first to start a conversation</p>
@@ -114,15 +103,13 @@ export default function Subreddit() {
                   company_name={post.company_name}
                   college_name={post.college_name}
                   created_at={post.created_at}
-                  author_name={post.author_name}
-                  author_batch={post.author_batch}
+                  user_id={post.user_id}
                 />
               ))
             )}
           </div>
         </div>
 
-        {/* Sidebar */}
         <aside className="hidden lg:block w-80 flex-shrink-0 space-y-3">
           <div className="bg-card border border-border rounded-lg p-4">
             <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">About d/{category}</h3>
@@ -134,6 +121,8 @@ export default function Subreddit() {
               </div>
             </div>
           </div>
+
+          <LeaderboardWidget />
 
           <div className="bg-card border border-border rounded-lg p-4">
             <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Rules</h3>
