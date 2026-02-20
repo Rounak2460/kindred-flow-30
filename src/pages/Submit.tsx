@@ -1,22 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Image as ImageIcon, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { FLAIRS } from "@/lib/mock-data";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 const categories = [
-  { key: "academics", label: "Academics" },
-  { key: "exchange", label: "Exchange" },
-  { key: "internships", label: "Internships" },
-  { key: "campus", label: "Campus Life" },
-  { key: "papers", label: "Exam Papers" },
+  { key: "academics", label: "d/academics", desc: "Course reviews, tips, questions" },
+  { key: "exchange", label: "d/exchange", desc: "Exchange semester experiences" },
+  { key: "internships", label: "d/internships", desc: "Internship reviews & prep" },
+  { key: "campus", label: "d/campus", desc: "Campus life & tips" },
+  { key: "papers", label: "d/papers", desc: "Exam papers & materials" },
 ];
 
 export default function Submit() {
@@ -73,49 +72,61 @@ export default function Submit() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-4 max-w-2xl">
+    <div className="max-w-2xl mx-auto px-4 py-4">
       <button
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3 transition-colors"
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-4 transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
-      <div className="border border-border rounded-md bg-card p-5">
-        <h1 className="text-base font-semibold mb-4">Create a post</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Category */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Community</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {categories.map((cat) => (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => { setCategory(cat.key); setFlair(""); }}
-                  className={cn(
-                    "px-3 py-1.5 rounded text-xs font-medium transition-colors border",
-                    category === cat.key
-                      ? "border-primary text-primary bg-accent"
-                      : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  )}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      <h1 className="font-bold text-lg text-foreground mb-4">Create a post</h1>
 
+      {/* Community selector */}
+      <div className="bg-card border border-border rounded-lg p-4 mb-3">
+        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3 block">Choose a community</Label>
+        <div className="grid gap-2">
+          {categories.map((cat) => (
+            <button
+              key={cat.key}
+              type="button"
+              onClick={() => { setCategory(cat.key); setFlair(""); }}
+              className={cn(
+                "flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors border",
+                category === cat.key
+                  ? "border-primary bg-primary/10"
+                  : "border-border hover:border-muted-foreground/30 hover:bg-accent"
+              )}
+            >
+              <div>
+                <p className={cn("text-sm font-bold", category === cat.key ? "text-primary" : "text-foreground")}>{cat.label}</p>
+                <p className="text-xs text-muted-foreground">{cat.desc}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
           {/* Flair */}
           {availableFlairs.length > 0 && (
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Flair</Label>
-              <div className="flex flex-wrap gap-1">
+            <div className="px-4 pt-4 pb-2">
+              <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 block">Flair</Label>
+              <div className="flex flex-wrap gap-1.5">
                 {availableFlairs.map((f) => (
-                  <button key={f} type="button" onClick={() => setFlair(flair === f ? "" : f)}>
-                    <Badge variant={flair === f ? "default" : "outline"} className="cursor-pointer text-[10px]">
-                      {f}
-                    </Badge>
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setFlair(flair === f ? "" : f)}
+                    className={cn(
+                      "text-xs font-medium px-2.5 py-1 rounded-full transition-colors border",
+                      flair === f
+                        ? "border-primary text-primary bg-primary/10"
+                        : "border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground/50"
+                    )}
+                  >
+                    {f}
                   </button>
                 ))}
               </div>
@@ -124,63 +135,70 @@ export default function Submit() {
 
           {/* Context fields */}
           {(category === "academics" || category === "papers") && (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Course Code</Label>
-                <Input placeholder="FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="h-8 text-sm" />
+            <div className="grid grid-cols-2 gap-3 px-4 py-3">
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Course Code</Label>
+                <Input placeholder="FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="bg-secondary border-none text-sm" />
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">Course Name</Label>
-                <Input placeholder="Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="h-8 text-sm" />
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Course Name</Label>
+                <Input placeholder="Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="bg-secondary border-none text-sm" />
               </div>
             </div>
           )}
           {category === "internships" && (
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">Company Name</Label>
-              <Input placeholder="McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-8 text-sm" />
+            <div className="px-4 py-3">
+              <Label className="text-xs text-muted-foreground mb-1 block">Company Name</Label>
+              <Input placeholder="McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="bg-secondary border-none text-sm" />
             </div>
           )}
           {category === "exchange" && (
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">College Name</Label>
-              <Input placeholder="HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="h-8 text-sm" />
+            <div className="px-4 py-3">
+              <Label className="text-xs text-muted-foreground mb-1 block">College Name</Label>
+              <Input placeholder="HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="bg-secondary border-none text-sm" />
             </div>
           )}
 
           {/* Title */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</Label>
+          <div className="px-4 pt-3">
             <Input
-              placeholder="An interesting, descriptive title"
+              placeholder="Title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-sm"
+              className="bg-transparent border-none text-lg font-semibold placeholder:text-muted-foreground focus-visible:ring-0 px-0"
               required
             />
           </div>
 
           {/* Body */}
-          <div className="space-y-1">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Text</Label>
+          <div className="px-4 pb-2">
             <Textarea
-              placeholder="Share your experience, review, or question…"
+              placeholder="Text (optional)"
               value={body}
               onChange={(e) => setBody(e.target.value)}
-              className="min-h-[160px] text-sm"
-              required
+              className="bg-transparent border-none text-sm min-h-[200px] placeholder:text-muted-foreground resize-none focus-visible:ring-0 px-0"
             />
           </div>
 
-          {/* Submit */}
-          <div className="flex justify-end gap-2 pt-1">
-            <Button type="button" variant="ghost" size="sm" onClick={() => navigate(-1)}>Cancel</Button>
-            <Button type="submit" size="sm" disabled={loading}>
-              {loading ? "Posting…" : "Post"}
-            </Button>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <div className="flex items-center gap-1">
+              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors">
+                <ImageIcon className="h-4 w-4" />
+              </button>
+              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors">
+                <LinkIcon className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={() => navigate(-1)}>Cancel</Button>
+              <Button type="submit" size="sm" className="rounded-full font-bold" disabled={loading || !category || !title}>
+                {loading ? "Posting…" : "Post"}
+              </Button>
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
     </div>
   );
 }

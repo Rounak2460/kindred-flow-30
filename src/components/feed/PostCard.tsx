@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
-import { MessageSquare, Pin } from "lucide-react";
+import { MessageSquare, Share2, Bookmark, Pin, MoreHorizontal } from "lucide-react";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface PostCardProps {
   id: string;
@@ -34,77 +36,117 @@ export default function PostCard({
 }: PostCardProps) {
   const score = upvote_count - downvote_count;
   const contextLabel = course_name || company_name || college_name;
-  const preview = body.length > 180 ? body.slice(0, 180) + "…" : body;
+  const preview = body.length > 200 ? body.slice(0, 200) + "…" : body;
+  const [saved, setSaved] = useState(false);
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${window.location.origin}/post/${id}`);
+    toast.success("Link copied to clipboard!");
+  };
+
+  const handleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSaved(!saved);
+    toast.success(saved ? "Unsaved" : "Post saved!");
+  };
 
   return (
     <Link to={`/post/${id}`}>
       <article
         className={cn(
-          "group flex gap-3 py-2.5 px-3 rounded-md hover:bg-muted/60 transition-colors cursor-pointer",
-          pinned && "bg-accent/40"
+          "group bg-card border border-border rounded-lg hover:border-muted-foreground/30 transition-colors cursor-pointer mb-2.5",
+          pinned && "border-primary/30"
         )}
       >
-        {/* Vote column */}
-        <div className="flex-shrink-0 pt-0.5">
-          <VoteButtons
-            score={score}
-            userVote={userVote}
-            onUpvote={onUpvote ?? (() => {})}
-            onDownvote={onDownvote ?? (() => {})}
-          />
-        </div>
+        {/* Pinned banner */}
+        {pinned && (
+          <div className="flex items-center gap-1.5 px-3 pt-2 text-[11px] text-primary font-medium">
+            <Pin className="h-3 w-3" /> Pinned by moderators
+          </div>
+        )}
 
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          {/* Meta line */}
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mb-0.5">
-            {pinned && (
-              <span className="flex items-center gap-0.5 text-primary font-medium">
-                <Pin className="h-2.5 w-2.5" /> pinned
-              </span>
-            )}
-            <span className="font-medium text-foreground/60">r/{category}</span>
-            <span>·</span>
-            {author_name && <span>Posted by {author_name}</span>}
-            {author_batch && <span>({author_batch})</span>}
-            <span>· {timeAgo(created_at)}</span>
+        <div className="p-3">
+          {/* Subreddit + author meta */}
+          <div className="flex items-center gap-1.5 text-xs mb-2">
+            <span className="font-bold text-foreground hover:underline">d/{category}</span>
+            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">
+              Posted by {author_name && <span className="hover:underline">u/{author_name.replace(" ", "").toLowerCase()}</span>}
+              {author_batch && <span className="ml-1 text-muted-foreground/60">{author_batch}</span>}
+            </span>
+            <span className="text-muted-foreground">• {timeAgo(created_at)}</span>
           </div>
 
           {/* Title */}
-          <h3 className="font-semibold text-sm leading-snug text-foreground group-hover:text-primary transition-colors">
+          <h3 className="font-semibold text-[15px] leading-snug text-foreground mb-1.5">
             {title}
           </h3>
 
-          {/* Inline tags */}
-          <div className="flex items-center gap-1.5 mt-0.5">
+          {/* Tags */}
+          <div className="flex items-center gap-1.5 mb-2">
             {flair && (
-              <span className="text-[10px] font-medium text-primary/80 bg-accent px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
                 {flair}
               </span>
             )}
             {course_code && (
-              <span className="text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+              <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
                 {course_code}
               </span>
             )}
             {contextLabel && (
               <span className="text-[10px] text-muted-foreground">
-                — {contextLabel}
+                {contextLabel}
               </span>
             )}
           </div>
 
           {/* Preview */}
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 mt-1">
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3 mb-3">
             {preview.replace(/[*#_]/g, "")}
           </p>
 
-          {/* Footer */}
-          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
-            <span className="flex items-center gap-1 hover:text-foreground transition-colors">
-              <MessageSquare className="h-3 w-3" />
-              {comment_count} {comment_count === 1 ? "comment" : "comments"}
-            </span>
+          {/* Action bar */}
+          <div className="flex items-center gap-2">
+            <VoteButtons
+              score={score}
+              userVote={userVote}
+              onUpvote={onUpvote ?? (() => {})}
+              onDownvote={onDownvote ?? (() => {})}
+              horizontal
+              size="sm"
+            />
+            <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+              <MessageSquare className="h-4 w-4" />
+              <span className="font-medium">{comment_count}</span>
+            </button>
+            <button
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
+              onClick={handleShare}
+            >
+              <Share2 className="h-4 w-4" />
+              <span className="font-medium hidden sm:inline">Share</span>
+            </button>
+            <button
+              className={cn(
+                "flex items-center gap-1.5 text-xs hover:bg-accent px-3 py-1.5 rounded-full transition-colors",
+                saved ? "text-primary" : "text-muted-foreground"
+              )}
+              onClick={handleSave}
+            >
+              <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
+              <span className="font-medium hidden sm:inline">{saved ? "Saved" : "Save"}</span>
+            </button>
+            <button
+              className="flex items-center text-muted-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </article>
