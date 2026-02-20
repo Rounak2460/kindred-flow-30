@@ -85,6 +85,8 @@ export type Database = {
           created_at: string
           downvote_count: number
           id: string
+          moderation_reason: string | null
+          moderation_status: string
           parent_id: string | null
           post_id: string
           updated_at: string
@@ -96,6 +98,8 @@ export type Database = {
           created_at?: string
           downvote_count?: number
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           parent_id?: string | null
           post_id: string
           updated_at?: string
@@ -107,6 +111,8 @@ export type Database = {
           created_at?: string
           downvote_count?: number
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           parent_id?: string | null
           post_id?: string
           updated_at?: string
@@ -555,6 +561,8 @@ export type Database = {
           file_url: string | null
           flair: string | null
           id: string
+          moderation_reason: string | null
+          moderation_status: string
           pinned: boolean
           title: string
           updated_at: string
@@ -574,6 +582,8 @@ export type Database = {
           file_url?: string | null
           flair?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           pinned?: boolean
           title: string
           updated_at?: string
@@ -593,6 +603,8 @@ export type Database = {
           file_url?: string | null
           flair?: string | null
           id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
           pinned?: boolean
           title?: string
           updated_at?: string
