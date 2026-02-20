@@ -22,16 +22,8 @@ export default function Auth() {
     });
   }, [navigate]);
 
-  const validateEmail = (email: string) => {
-    return email.endsWith("@iimb.ac.in");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateEmail(email)) {
-      toast.error("Please use your @iimb.ac.in email address");
-      return;
-    }
     setLoading(true);
 
     try {
@@ -58,7 +50,7 @@ export default function Auth() {
         }
       }
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -83,8 +75,8 @@ export default function Auth() {
             </CardTitle>
             <CardDescription>
               {isLogin
-                ? "Sign in with your IIMB email"
-                : "Create your account with your IIMB email"}
+                ? "Sign in with your email"
+                : "Create your account"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -106,7 +98,7 @@ export default function Auth() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="yourname@iimb.ac.in"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -146,10 +138,6 @@ export default function Auth() {
             </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Only @iimb.ac.in email addresses are accepted
-        </p>
       </div>
     </div>
   );

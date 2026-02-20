@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal, Loader2, Award } from "lucide-react";
+import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal, Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import VoteButtons from "@/components/feed/VoteButtons";
 import CommentItem from "@/components/feed/CommentItem";
 import { timeAgo } from "@/lib/mock-data";
@@ -11,17 +12,34 @@ import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { generateAnonHandle } from "@/lib/anonymity";
 import { usePost } from "@/hooks/usePosts";
-import { useComments } from "@/hooks/useComments";
+import { useComments, Comment } from "@/hooks/useComments";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVote } from "@/hooks/useVote";
+
+function sortComments(comments: Comment[], sort: "best" | "new" | "top"): Comment[] {
+  const sorted = [...comments];
+  if (sort === "new") {
+    sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } else if (sort === "top") {
+    sorted.sort((a, b) => (b.upvote_count - b.downvote_count) - (a.upvote_count - a.downvote_count));
+  } else {
+    // best: combo of votes + recency
+    sorted.sort((a, b) => {
+      const scoreA = (a.upvote_count - a.downvote_count) + a.replies.length;
+      const scoreB = (b.upvote_count - b.downvote_count) + b.replies.length;
+      return scoreB - scoreA;
+    });
+  }
+  return sorted;
+}
 
 export default function PostDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const { data: post, isLoading } = usePost(id);
-  const { data: comments = [], isLoading: commentsLoading } = useComments(id);
+  const { data: post, isLoading, isError, refetch } = usePost(id);
+  const { data: comments = [], isLoading: commentsLoading, isError: commentsError, refetch: refetchComments } = useComments(id);
   const [saved, setSaved] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
@@ -32,6 +50,20 @@ export default function PostDetail() {
   const { score, userVote, vote, loadVote } = useVote(id ?? "", "post", initialScore);
 
   useEffect(() => { if (post) loadVote(); }, [post, loadVote]);
+
+  const sortedComments = useMemo(() => sortComments(comments, commentSort), [comments, commentSort]);
+
+  if (isError) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+        <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
+        <p className="text-xs text-muted-foreground mb-3">Could not load this post</p>
+        <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-full gap-1.5">
+          <RefreshCw className="h-3.5 w-3.5" /> Try Again
+        </Button>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -57,15 +89,15 @@ export default function PostDetail() {
     if (!user) { setShowAuth(true); return; }
     if (!commentText.trim()) return;
     setSubmitting(true);
-    const { data: commentData, error } = await supabase.from("comments").insert({
-      post_id: id!,
-      user_id: user.id,
-      body: commentText.trim(),
-      moderation_status: "approved",
-    }).select("id").single();
-    if (error) { toast.error(error.message); }
-    else {
-      toast.success("Comment posted! AI moderator is reviewing…");
+    try {
+      const { data: commentData, error } = await supabase.from("comments").insert({
+        post_id: id!,
+        user_id: user.id,
+        body: commentText.trim(),
+        moderation_status: "approved",
+      }).select("id").single();
+      if (error) throw error;
+      toast.success("Comment posted!");
       setCommentText("");
       queryClient.invalidateQueries({ queryKey: ["comments", id] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -75,8 +107,11 @@ export default function PostDetail() {
         if (modErr) console.error("Moderation error:", modErr);
         queryClient.invalidateQueries({ queryKey: ["comments", id] });
       });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to post comment");
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
   const handleShare = () => {
@@ -153,7 +188,7 @@ export default function PostDetail() {
           >
             <Bookmark className={cn("h-4 w-4", saved && "fill-current")} /> {saved ? "Saved" : "Save"}
           </button>
-          <button className="text-muted-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto">
+          <button className="text-muted-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto" onClick={() => toast.info("More options coming soon!")}>
             <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
@@ -171,7 +206,7 @@ export default function PostDetail() {
         />
         <div className="flex items-center justify-between px-3 py-2 border-t border-border">
           {!user && (
-            <p className="text-[11px] text-muted-foreground">Sign in with your @iimb.ac.in email to comment</p>
+            <p className="text-[11px] text-muted-foreground">Sign in to comment</p>
           )}
           <div className="ml-auto">
             <button
@@ -204,13 +239,20 @@ export default function PostDetail() {
 
       {/* Comments */}
       <div>
-        {commentsLoading ? (
+        {commentsError ? (
+          <div className="text-center py-8 bg-card border border-border rounded-lg">
+            <p className="text-sm text-muted-foreground mb-2">Could not load comments</p>
+            <Button onClick={() => refetchComments()} size="sm" variant="outline" className="rounded-full gap-1.5">
+              <RefreshCw className="h-3.5 w-3.5" /> Try Again
+            </Button>
+          </div>
+        ) : commentsLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : comments.length > 0 ? (
+        ) : sortedComments.length > 0 ? (
           <div>
-            {comments.map((comment) => (
+            {sortedComments.map((comment) => (
               <CommentItem key={comment.id} comment={comment} postId={id!} />
             ))}
           </div>

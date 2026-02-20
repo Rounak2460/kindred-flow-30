@@ -36,8 +36,8 @@ export default function Submit() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!category || !title || !body) {
-      toast.error("Please fill in all required fields");
+    if (!category || !title) {
+      toast.error("Please select a community and add a title");
       return;
     }
 
@@ -54,7 +54,7 @@ export default function Submit() {
         user_id: session.user.id,
         category,
         title,
-        body,
+        body: body || "",
         flair: flair || null,
         course_code: courseCode || null,
         course_name: courseName || null,
@@ -65,7 +65,6 @@ export default function Submit() {
 
       if (error) throw error;
 
-      // Run AI moderation in background
       toast.success("Post submitted! AI moderator is reviewing…");
       
       supabase.functions.invoke("moderate-content", {
@@ -79,7 +78,7 @@ export default function Submit() {
 
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -197,10 +196,10 @@ export default function Submit() {
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-border">
             <div className="flex items-center gap-1">
-              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors">
+              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors" onClick={() => toast.info("Image upload coming soon!")}>
                 <ImageIcon className="h-4 w-4" />
               </button>
-              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors">
+              <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors" onClick={() => toast.info("Link insertion coming soon!")}>
                 <LinkIcon className="h-4 w-4" />
               </button>
             </div>

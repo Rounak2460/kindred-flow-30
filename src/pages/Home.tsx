@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, RefreshCw } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
@@ -23,13 +23,17 @@ const COMMUNITIES = [
 
 export default function Home() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, profile } = useAuth();
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
-  const [search, setSearch] = useState("");
+  const urlSearch = searchParams.get("q") || "";
+  const [search, setSearch] = useState(urlSearch);
   const [showAuth, setShowAuth] = useState(false);
 
-  const { data: posts = [], isLoading } = usePosts(category, sort, search);
+  useEffect(() => { setSearch(urlSearch); }, [urlSearch]);
+
+  const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort, search);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-4">
@@ -64,7 +68,15 @@ export default function Home() {
 
           {/* Posts */}
           <div>
-            {isLoading ? (
+            {isError ? (
+              <div className="text-center py-16 bg-card border border-border rounded-lg">
+                <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
+                <p className="text-xs text-muted-foreground mb-3">Could not load posts</p>
+                <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-full gap-1.5">
+                  <RefreshCw className="h-3.5 w-3.5" /> Try Again
+                </Button>
+              </div>
+            ) : isLoading ? (
               <div className="flex justify-center py-16">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
@@ -170,11 +182,10 @@ export default function Home() {
           <div className="bg-card border border-border rounded-lg p-4">
             <h3 className="font-bold text-xs text-muted-foreground uppercase tracking-wider mb-3">Rules</h3>
             <ol className="space-y-2 text-xs text-muted-foreground">
-              <li className="flex gap-2"><span className="text-foreground font-bold">1.</span> Use @iimb.ac.in email to verify</li>
-              <li className="flex gap-2"><span className="text-foreground font-bold">2.</span> Be respectful and constructive</li>
-              <li className="flex gap-2"><span className="text-foreground font-bold">3.</span> No placement-specific numbers</li>
-              <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> Tag posts with correct flair</li>
-              <li className="flex gap-2"><span className="text-foreground font-bold">5.</span> No doxxing or personal attacks</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">1.</span> Be respectful and constructive</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">2.</span> No placement-specific numbers</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">3.</span> Tag posts with correct flair</li>
+              <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> No doxxing or personal attacks</li>
             </ol>
           </div>
         </aside>

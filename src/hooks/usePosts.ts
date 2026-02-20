@@ -46,6 +46,8 @@ function sortPosts(posts: Post[], sort: SortOption): Post[] {
 export function usePosts(category?: string, sort: SortOption = "hot", search?: string) {
   return useQuery({
     queryKey: ["posts", category, sort, search],
+    networkMode: "always" as const,
+    retry: 2,
     queryFn: async () => {
       let query = supabase
         .from("posts")
@@ -71,15 +73,17 @@ export function usePosts(category?: string, sort: SortOption = "hot", search?: s
 export function usePost(id: string | undefined) {
   return useQuery({
     queryKey: ["post", id],
+    networkMode: "always" as const,
+    retry: 2,
     queryFn: async () => {
       if (!id) return null;
       const { data, error } = await supabase
         .from("posts")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
-      return data as Post;
+      return data as Post | null;
     },
     enabled: !!id,
   });
