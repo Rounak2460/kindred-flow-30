@@ -1,151 +1,94 @@
 
 
-# Dynamic Section Views with Tailored Review Cards
+# Logo Redesign, IIMB Branding & Search Overhaul
 
-## Problem
+## 1. Elegant New DM Logo
 
-Every section (Academics, Exchange, Internships, Exam Papers, Campus Life) currently has empty database tables. Clicking sample cards navigates to detail pages that query the DB by sample IDs (e.g., "sample-1") and get nothing back -- showing "Not found". The review cards themselves are plain text blobs that don't surface the structured data each section stores (ratings, stipend, tags, tips, etc.).
+Replace the crude SVG monogram with a modern, designer-quality logo:
 
-## Solution Overview
+- **Design**: A refined squircle container with a subtle gradient (not flat fill). The "D" letterform is stylized as a geometric half-circle + vertical bar, and the "M" uses clean angular strokes with optical kerning. Remove the random underline bar.
+- **Color**: Uses CSS `primary` color with a subtle lighter gradient stop for depth. Works in both dark and light themes.
+- **File**: Rewrite `src/components/DMLogo.tsx`
 
-Create a rich, section-specific review experience by:
-1. Adding sample detail data so sample cards have something to show
-2. Designing unique review card layouts per section based on each section's data model
-3. Fixing detail pages to fall back to sample data when DB is empty
-4. Standardizing remaining inconsistencies (max-w, rounded-lg, navigate(-1))
+## 2. IIMB Institutional Identity
 
----
+- **Navbar** (`Navbar.tsx`): Add a small "IIMB" badge/pill next to "Digi Mitra" text
+- **Auth page** (`Auth.tsx`): Add "An IIM Bangalore student platform" subtitle under logo
+- **FeedWelcome** (`FeedWelcome.tsx`): Keep and refine the existing "IIM Bangalore" label
 
-## Section-by-Section Review Card Designs
+## 3. Search Overhaul -- Two-Tier Approach
 
-### 1. Academics (CourseDetail) -- "The Report Card"
+The current search has critical problems:
+- Words under 3 characters are ignored (`filter(w => w.length > 2)`), so "Macro" as a single 5-letter word works but partial typing like "Ma" gets no candidates
+- Every keystroke triggers an expensive AI edge function call (350ms debounce is too short)
+- Searching "Macro" returns empty because the ILIKE filter requires exact case-insensitive substring but doesn't do fuzzy matching
 
-**Data available per review:** overall_rating, difficulty_rating, relevance_rating, workload_rating, review_text, tags[], tips
+### New architecture: Instant DB search + optional AI refinement
 
-**Card layout:**
-```text
-+------------------------------------------+
-| AnonymousHandle              2 days ago   |
-| [****-] 4.0  Overall                     |
-| +--------+----------+---------+          |
-| |Diff 3.5|Relev 4.2 |Work 3.8 |  (mini) |
-| +--------+----------+---------+          |
-| "Great course for understanding..."       |
-| Tip: "Start assignments early"            |
-| [Tag] [Tag] [Tag]                        |
-+------------------------------------------+
-```
+**Tier 1 -- Instant local search (new):** Query the database directly from the client using Supabase `.ilike()` with no minimum character length. This returns results instantly as you type with a 200ms debounce. No AI involved -- pure database substring matching.
 
-- Show 3 sub-ratings as compact colored pills (green/amber/red based on value)
-- Tips shown in a highlighted callout box with a lightbulb icon
-- Tags as small accent-colored chips
+**Tier 2 -- AI deep search (on demand):** Keep the AI edge function but only trigger it when the user explicitly presses Enter or clicks a "Deep search" button, or after 1.5 seconds of no typing. This handles semantic queries like "best marketing electives."
 
-### 2. Exchange (ExchangeDetail) -- "The Travel Diary"
+### Changes:
 
-**Data available per review:** academics_rating, living_costs_rating, social_life_rating, travel_rating, review_text
+**`src/hooks/useAISearch.ts`** -- Rename to `src/hooks/useSearch.ts` with two modes:
+- `instantSearch(query)`: Direct Supabase `.or()` ilike query on posts table, returns matches instantly. No minimum word length -- even "M" will match. Uses `.ilike` across title, body, course_code, course_name, company_name, college_name.
+- `deepSearch(query)`: The existing AI edge function call for semantic ranking.
 
-**Card layout:**
-```text
-+------------------------------------------+
-| AnonymousHandle              1 week ago   |
-| +------+------+------+------+            |
-| |Acad  |Living|Social|Travel|  (4 mini   |
-| |4.2   |3.5   |4.8   |4.0  |   bars)    |
-| +------+------+------+------+            |
-| "The semester at HEC was incredible..."   |
-+------------------------------------------+
-```
+**`src/components/search/AISearchDialog.tsx`** -- Complete redesign:
+- Cleaner, more polished UI with proper dark-mode colors (current category colors are light-mode-only `bg-blue-50 text-blue-700`)
+- Type to see instant results (Tier 1). Results appear immediately.
+- Show a subtle "AI refine" button or auto-trigger AI after 1.5s idle
+- Better empty state and loading states
+- Fix category pill colors to dark-mode-safe (`bg-blue-500/10 text-blue-400`)
 
-- 4 sub-ratings as a horizontal mini-bar chart row
-- Each bar uses its own color (blue/amber/pink/emerald)
+**`supabase/functions/ai-search/index.ts`** -- Fix the keyword filter:
+- Remove the `w.length > 2` filter so short words still match
+- Add trigram/prefix matching: use `ilike.%${k}%` for all keywords regardless of length
 
-### 3. Internships (InternshipDetail) -- "The Intel Report"
-
-**Data available per review:** work_culture_rating, learning_rating, mentorship_rating, ppo_rating, stipend, review_text
-
-**Card layout:**
-```text
-+------------------------------------------+
-| AnonymousHandle              3 days ago   |
-| Stipend: 2.5L/mo                         |
-| +----------+----------+                  |
-| |Culture 4.5|Learn 4.2 |                 |
-| |Mentor 3.8 |PPO   4.0 |  (2x2 grid)    |
-| +----------+----------+                  |
-| "The consulting experience was..."        |
-+------------------------------------------+
-```
-
-- Stipend shown prominently with a currency icon
-- 4 ratings in a compact 2x2 grid with color-coded values
-- Each rating has an icon (Building, BookOpen, Users, Award)
-
-### 4. Campus Life -- "The Tip Card" (already exists, enhance)
-
-**Data available per tip:** name, category, rating, tip_text, useful_count
-
-**Enhancement:**
-- Add a "thumbs up" interaction button for useful_count
-- Show category with matching section color
-- Tip text gets a subtle quote-style left border
-
-### 5. Exam Papers -- "The Resource Row" (already good, minor polish)
-
-**Enhancement:**
-- Add dark-mode-safe type badge colors (current colors are light-mode only)
-- Keep the compact list layout -- it's already well-designed
-
----
-
-## Sample Detail Data
-
-Create `src/lib/sample-detail-data.ts` with mock reviews for each section so that clicking sample cards shows realistic content:
-
-- 3 sample course reviews (for sample course IDs)
-- 3 sample exchange diaries (for sample college IDs)  
-- 3 sample internship reviews (for sample company IDs)
-
-Each detail page checks if the ID starts with "sample-" and uses the mock data instead of querying the DB.
-
----
-
-## Files to Create
-
-| File | Purpose |
-|------|---------|
-| `src/lib/sample-detail-data.ts` | Mock reviews for sample items across all sections |
-
-## Files to Modify
+## 4. Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/pages/CourseDetail.tsx` | Sample fallback, rich review cards with sub-rating pills + tip callout |
-| `src/pages/ExchangeDetail.tsx` | Sample fallback, horizontal mini-bar ratings per review, max-w-2xl, navigate(-1), rounded-lg |
-| `src/pages/InternshipDetail.tsx` | Sample fallback, 2x2 rating grid + stipend badge per review, max-w-2xl, navigate(-1), rounded-lg, font-semibold |
-| `src/pages/CampusLife.tsx` | Enhanced tip cards with left-border quote style |
-| `src/pages/ExamPapers.tsx` | Dark-mode-safe badge colors |
+| `src/components/DMLogo.tsx` | Complete redesign -- premium gradient squircle with refined DM letterforms |
+| `src/components/layout/Navbar.tsx` | Add IIMB badge, keep logo swap |
+| `src/pages/Auth.tsx` | Add "An IIM Bangalore student platform" subtitle |
+| `src/components/feed/FeedWelcome.tsx` | Refine IIMB label styling |
+| `src/hooks/useAISearch.ts` | Add instant DB search tier alongside AI search |
+| `src/components/search/AISearchDialog.tsx` | Two-tier search UI, dark-mode-safe colors, faster UX |
+| `supabase/functions/ai-search/index.ts` | Remove `length > 2` filter, improve keyword matching |
 
 ## Technical Details
 
-### Sample Fallback Pattern (same for all detail pages)
+### Instant search query (client-side)
 
 ```typescript
-// In CourseDetail.tsx
-const isSample = courseId?.startsWith("sample-");
-const course = isSample 
-  ? SAMPLE_COURSES.find(c => c.id === courseId)
-  : dbCourse;
-const reviews = isSample
-  ? SAMPLE_COURSE_REVIEWS[courseId!] || []
-  : dbReviews;
+const { data } = await supabase
+  .from("posts")
+  .select("id, title, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count")
+  .eq("moderation_status", "approved")
+  .or(`title.ilike.%${query}%,course_code.ilike.%${query}%,course_name.ilike.%${query}%,company_name.ilike.%${query}%,college_name.ilike.%${query}%`)
+  .order("upvote_count", { ascending: false })
+  .limit(10);
 ```
 
-### Dark-Mode Badge Colors (ExamPapers)
+This returns results in under 100ms for any partial input -- "M", "Ma", "Mac", "Macro" all work instantly.
 
-Replace light-only `bg-red-50 text-red-700` with dark-safe `bg-red-500/10 text-red-500 border-red-500/20`.
+### Edge function fix
 
-### Remaining Style Fixes
+Change line 40 from:
+```typescript
+const keywords = query.trim().split(/\\s+/).filter((w) => w.length > 2);
+```
+to:
+```typescript
+const keywords = query.trim().split(/\\s+/).filter((w) => w.length > 0);
+```
 
-- ExchangeDetail: `max-w-3xl` to `max-w-2xl`, `font-bold` to `font-semibold`, hardcoded back to `navigate(-1)`, `rounded-full` to `rounded-lg`
-- InternshipDetail: same pattern fixes
+### Search UX flow
+
+1. User types "Ma" -- instant DB results appear in under 200ms
+2. User keeps typing "Macro" -- results refine instantly
+3. After 1.5s idle or pressing Enter -- AI semantic search triggers for deeper ranking
+4. AI results replace/merge with instant results, showing relevance reasons
 
