@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['"Playfair Display"', "Georgia", "serif"],
-        sans: ['"DM Sans"', "system-ui", "sans-serif"],
+        sans: ['"Inter"', "system-ui", "sans-serif"],
+        serif: ['"Instrument Serif"', "Georgia", "serif"],
+        display: ['"Instrument Serif"', "Georgia", "serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -74,9 +75,10 @@ export default {
         "2xl": "calc(var(--radius) + 8px)",
       },
       boxShadow: {
-        soft: "0 2px 16px -2px rgba(0,0,0,0.06), 0 1px 4px -1px rgba(0,0,0,0.04)",
-        elevated: "0 8px 32px -4px rgba(0,0,0,0.08), 0 2px 8px -2px rgba(0,0,0,0.04)",
-        glow: "0 0 24px -4px hsl(350 72% 45% / 0.15)",
+        soft: "0 2px 20px -4px rgba(0,0,0,0.15), 0 1px 6px -2px rgba(0,0,0,0.1)",
+        elevated: "0 8px 40px -8px rgba(0,0,0,0.25), 0 2px 12px -4px rgba(0,0,0,0.15)",
+        glow: "0 0 30px -6px hsl(4 80% 56% / 0.2)",
+        "card-hover": "0 12px 40px -12px rgba(0,0,0,0.35)",
       },
       keyframes: {
         "accordion-down": {
@@ -87,10 +89,15 @@ export default {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "vote-bounce": {
+          "0%, 100%": { transform: "scale(1)" },
+          "50%": { transform: "scale(1.25)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "vote-bounce": "vote-bounce 0.25s ease-out",
       },
     },
   },

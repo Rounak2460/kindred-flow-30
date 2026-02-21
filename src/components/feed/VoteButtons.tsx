@@ -23,11 +23,14 @@ export default function VoteButtons({
 }: VoteButtonsProps) {
   const { user } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
+  const [bouncing, setBouncing] = useState<"up" | "down" | null>(null);
 
   const handleUpvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     if (!user) { setShowAuth(true); return; }
+    setBouncing("up");
+    setTimeout(() => setBouncing(null), 250);
     onUpvote();
   };
 
@@ -35,6 +38,8 @@ export default function VoteButtons({
     e.preventDefault();
     e.stopPropagation();
     if (!user) { setShowAuth(true); return; }
+    setBouncing("down");
+    setTimeout(() => setBouncing(null), 250);
     onDownvote();
   };
 
@@ -45,7 +50,7 @@ export default function VoteButtons({
     <>
       <div
         className={cn(
-          "flex items-center gap-0.5 rounded-full bg-secondary",
+          "flex items-center gap-0.5 rounded-full bg-secondary/60",
           horizontal ? "flex-row px-1" : "flex-col py-1"
         )}
       >
@@ -53,13 +58,14 @@ export default function VoteButtons({
           onClick={handleUpvote}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-accent",
-            userVote === 1 ? "text-orange-500" : "text-muted-foreground hover:text-orange-500"
+            userVote === 1 ? "text-orange-500" : "text-muted-foreground hover:text-orange-500",
+            bouncing === "up" && "animate-vote-bounce"
           )}
           aria-label="Upvote"
         >
           <ArrowBigUp className={cn(iconSize, userVote === 1 && "fill-current")} />
         </button>
-        <span className={cn("font-bold min-w-[2ch] text-center", textSize, {
+        <span className={cn("font-bold min-w-[2ch] text-center tabular-nums", textSize, {
           "text-orange-500": userVote === 1,
           "text-blue-500": userVote === -1,
           "text-foreground": !userVote,
@@ -70,7 +76,8 @@ export default function VoteButtons({
           onClick={handleDownvote}
           className={cn(
             "p-1 rounded-full transition-colors hover:bg-accent",
-            userVote === -1 ? "text-blue-500" : "text-muted-foreground hover:text-blue-500"
+            userVote === -1 ? "text-blue-500" : "text-muted-foreground hover:text-blue-500",
+            bouncing === "down" && "animate-vote-bounce"
           )}
           aria-label="Downvote"
         >

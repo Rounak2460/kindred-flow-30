@@ -1,5 +1,11 @@
 import { cn } from "@/lib/utils";
-import { Flame, Clock, TrendingUp } from "lucide-react";
+import { ChevronDown, Flame, Clock, TrendingUp } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type SortOption = "hot" | "new" | "top";
 
@@ -15,23 +21,29 @@ const options = [
 ];
 
 export default function SortBar({ selected, onSelect }: SortBarProps) {
+  const current = options.find((o) => o.key === selected) || options[0];
+
   return (
-    <div className="flex items-center gap-0.5">
-      {options.map((opt) => (
-        <button
-          key={opt.key}
-          onClick={() => onSelect(opt.key)}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors",
-            selected === opt.key
-              ? "bg-muted text-foreground"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-          )}
-        >
-          <opt.icon className="h-3.5 w-3.5" />
-          {opt.label}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors border border-border/50">
+          <current.icon className="h-3.5 w-3.5" />
+          {current.label}
+          <ChevronDown className="h-3 w-3 opacity-50" />
         </button>
-      ))}
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[120px]">
+        {options.map((opt) => (
+          <DropdownMenuItem
+            key={opt.key}
+            onClick={() => onSelect(opt.key)}
+            className={cn("text-xs gap-2", selected === opt.key && "text-primary font-semibold")}
+          >
+            <opt.icon className="h-3.5 w-3.5" />
+            {opt.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
