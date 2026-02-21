@@ -132,9 +132,10 @@ export default function Auth() {
       <div className="hidden lg:flex flex-1 items-center justify-center bg-card relative overflow-hidden border-r border-border">
         <div className="relative z-10 text-center px-12">
           <DMLogo size={56} className="mx-auto mb-6" />
-          <h2 className="text-3xl font-semibold text-foreground mb-3">Digi Mitra</h2>
+          <h2 className="text-3xl font-semibold text-foreground mb-1">Digi Mitra</h2>
+          <p className="text-xs font-medium text-primary/70 mb-3 tracking-wide">An IIM Bangalore Student Platform</p>
           <p className="text-muted-foreground text-base leading-relaxed max-w-sm mx-auto">
-            Your campus companion at IIM Bangalore. Anonymous, honest, student-driven.
+            Anonymous, honest, student-driven.
           </p>
         </div>
       </div>
@@ -144,7 +145,7 @@ export default function Auth() {
           <div className="lg:hidden text-center mb-8">
             <DMLogo size={40} className="mx-auto mb-3" />
             <h1 className="text-xl font-semibold text-foreground">Digi Mitra</h1>
-            <p className="text-muted-foreground text-sm mt-1">Your Campus Companion</p>
+            <p className="text-xs font-medium text-primary/60 mt-0.5">IIM Bangalore</p>
           </div>
 
           {stepNumber > 0 && (
