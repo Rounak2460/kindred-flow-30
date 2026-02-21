@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, PenLine } from "lucide-react";
+import { ArrowLeft, Search, PenLine, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FilterPills from "@/components/shared/FilterPills";
@@ -44,9 +44,14 @@ export default function Academics() {
       </button>
 
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold">Academics</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Course reviews, tips & study strategies from your peers</p>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+            <GraduationCap className="h-5 w-5 text-blue-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Academics</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Peer-rated course reviews & tips</p>
+          </div>
         </div>
         <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=academics")}>
           <PenLine className="h-3.5 w-3.5" /> Add Review

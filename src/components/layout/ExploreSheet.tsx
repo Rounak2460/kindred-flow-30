@@ -1,14 +1,15 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Globe, Briefcase, FileText, MapPin } from "lucide-react";
+import { GraduationCap, Globe, Briefcase, FileText, MapPin } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useStats } from "@/hooks/useStats";
+import type { LucideIcon } from "lucide-react";
 
-const sections = [
-  { icon: BookOpen, label: "Academics", desc: "Course reviews & ratings", to: "/academics", countKey: "courseReviews" as const },
-  { icon: Globe, label: "Exchange", desc: "College diaries", to: "/exchange", countKey: "exchangeDiaries" as const },
-  { icon: Briefcase, label: "Internships", desc: "Company intel", to: "/internships", countKey: "internshipReports" as const },
-  { icon: FileText, label: "Exam Papers", desc: "Past papers", to: "/exam-papers", countKey: "examPapers" as const },
-  { icon: MapPin, label: "Campus Life", desc: "Survival guide", to: "/campus", countKey: null },
+const sections: { icon: LucideIcon; iconColor: string; iconBg: string; label: string; desc: string; to: string; countKey: "courseReviews" | "exchangeDiaries" | "internshipReports" | "examPapers" | null }[] = [
+  { icon: GraduationCap, iconColor: "text-blue-500", iconBg: "bg-blue-500/10", label: "Academics", desc: "Course reviews & ratings", to: "/academics", countKey: "courseReviews" },
+  { icon: Globe, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", label: "Exchange", desc: "College diaries", to: "/exchange", countKey: "exchangeDiaries" },
+  { icon: Briefcase, iconColor: "text-amber-500", iconBg: "bg-amber-500/10", label: "Internships", desc: "Company intel", to: "/internships", countKey: "internshipReports" },
+  { icon: FileText, iconColor: "text-violet-500", iconBg: "bg-violet-500/10", label: "Exam Papers", desc: "Past papers", to: "/exam-papers", countKey: "examPapers" },
+  { icon: MapPin, iconColor: "text-rose-500", iconBg: "bg-rose-500/10", label: "Campus Life", desc: "Survival guide", to: "/campus", countKey: null },
 ];
 
 interface ExploreSheetProps {
@@ -35,8 +36,8 @@ export default function ExploreSheet({ open, onOpenChange }: ExploreSheetProps) 
                 onClick={() => { onOpenChange(false); navigate(s.to); }}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors text-left"
               >
-                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                  <s.icon className="h-5 w-5 text-muted-foreground" />
+                <div className={`h-10 w-10 rounded-lg ${s.iconBg} flex items-center justify-center shrink-0`}>
+                  <s.icon className={`h-5 w-5 ${s.iconColor}`} />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{s.label}</p>

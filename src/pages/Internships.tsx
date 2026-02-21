@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, PenLine } from "lucide-react";
+import { ArrowLeft, PenLine, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FilterPills from "@/components/shared/FilterPills";
 import StarRating from "@/components/shared/StarRating";
@@ -34,9 +34,14 @@ export default function Internships() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold">Internship Intel</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Real internship reviews from your batchmates</p>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+            <Briefcase className="h-5 w-5 text-amber-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Internship Intel</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Company intel from your batchmates</p>
+          </div>
         </div>
         <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=internships")}>
           <PenLine className="h-3.5 w-3.5" /> Add Review

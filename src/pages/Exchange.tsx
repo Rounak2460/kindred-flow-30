@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, PenLine } from "lucide-react";
+import { ArrowLeft, PenLine, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FilterPills from "@/components/shared/FilterPills";
 import StarRating from "@/components/shared/StarRating";
@@ -32,9 +32,14 @@ export default function Exchange() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold">Exchange Programs</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Explore exchange colleges & read student diaries</p>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+            <Globe className="h-5 w-5 text-emerald-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Exchange Programs</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Global diaries from fellow students</p>
+          </div>
         </div>
         <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=exchange")}>
           <PenLine className="h-3.5 w-3.5" /> Add Diary

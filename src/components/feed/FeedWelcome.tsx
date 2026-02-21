@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import dmLogo from "@/assets/digitalmitra-logo.png";
+import DMLogo from "@/components/DMLogo";
 
 export default function FeedWelcome() {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ export default function FeedWelcome() {
   return (
     <div className="rounded-xl bg-card border border-border p-6 sm:p-8 mb-6">
       <div className="flex items-center gap-2.5 mb-4">
-        <img src={dmLogo} alt="Digi Mitra" className="h-8 w-8 rounded-full" />
+        <DMLogo size={32} />
         <span className="text-xs font-semibold text-primary uppercase tracking-wider">IIM Bangalore</span>
       </div>
       <h2 className="text-2xl sm:text-3xl font-semibold text-foreground mb-2">

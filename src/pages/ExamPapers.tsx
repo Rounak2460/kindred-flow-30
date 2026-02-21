@@ -37,9 +37,14 @@ export default function ExamPapers() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
       <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold">Exam Papers</h1>
-          <p className="text-xs text-muted-foreground mt-0.5">Past papers shared by students</p>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
+            <FileText className="h-5 w-5 text-violet-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold">Exam Papers</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Past papers shared by students</p>
+          </div>
         </div>
         <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=papers")}>
           <Upload className="h-3.5 w-3.5" /> Upload
