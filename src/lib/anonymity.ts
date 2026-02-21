@@ -44,3 +44,15 @@ export function generateAnonHandle(userId: string, _salt?: string): string {
 export function generateAnonShort(userId: string): string {
   return generateAnonHandle(userId);
 }
+
+/**
+ * Generate a per-post unique anonymous handle for gossip.
+ * Uses both userId and postId so the same user gets different handles per post.
+ */
+export function generateGossipHandle(userId: string, postId: string): string {
+  const hash = hashCode(userId + ":" + postId);
+  const adj = ADJECTIVES[hash % ADJECTIVES.length];
+  const animal = ANIMALS[(hash >> 5) % ANIMALS.length];
+  const num = (hash % 900) + 100;
+  return `${adj}${animal}${num}`;
+}

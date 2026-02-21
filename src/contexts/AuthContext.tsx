@@ -10,6 +10,8 @@ interface Profile {
   founding_contributor: boolean;
   avatar_url: string | null;
   free_views_used: number;
+  bio: string;
+  gossip_member: boolean;
 }
 
 interface AuthContextType {
@@ -39,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("name, batch, section, credits, founding_contributor, avatar_url, free_views_used")
+      .select("name, batch, section, credits, founding_contributor, avatar_url, free_views_used, bio, gossip_member")
       .eq("user_id", userId)
       .maybeSingle();
     setProfile(data);

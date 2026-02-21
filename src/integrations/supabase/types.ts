@@ -455,6 +455,96 @@ export type Database = {
           },
         ]
       }
+      gossip_comments: {
+        Row: {
+          body: string
+          created_at: string
+          downvote_count: number
+          gossip_id: string
+          id: string
+          moderation_reason: string | null
+          moderation_status: string
+          parent_id: string | null
+          upvote_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          downvote_count?: number
+          gossip_id: string
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          parent_id?: string | null
+          upvote_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          downvote_count?: number
+          gossip_id?: string
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          parent_id?: string | null
+          upvote_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gossip_comments_gossip_id_fkey"
+            columns: ["gossip_id"]
+            isOneToOne: false
+            referencedRelation: "gossip_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gossip_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "gossip_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gossip_posts: {
+        Row: {
+          body: string
+          comment_count: number
+          created_at: string
+          downvote_count: number
+          id: string
+          moderation_reason: string | null
+          moderation_status: string
+          upvote_count: number
+          user_id: string
+        }
+        Insert: {
+          body: string
+          comment_count?: number
+          created_at?: string
+          downvote_count?: number
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          upvote_count?: number
+          user_id: string
+        }
+        Update: {
+          body?: string
+          comment_count?: number
+          created_at?: string
+          downvote_count?: number
+          id?: string
+          moderation_reason?: string | null
+          moderation_status?: string
+          upvote_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       internship_companies: {
         Row: {
           avg_rating: number
@@ -617,10 +707,12 @@ export type Database = {
         Row: {
           avatar_url: string | null
           batch: string
+          bio: string
           created_at: string
           credits: number
           founding_contributor: boolean
           free_views_used: number
+          gossip_member: boolean
           id: string
           name: string
           section: string
@@ -630,10 +722,12 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           batch?: string
+          bio?: string
           created_at?: string
           credits?: number
           founding_contributor?: boolean
           free_views_used?: number
+          gossip_member?: boolean
           id?: string
           name?: string
           section?: string
@@ -643,10 +737,12 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           batch?: string
+          bio?: string
           created_at?: string
           credits?: number
           founding_contributor?: boolean
           free_views_used?: number
+          gossip_member?: boolean
           id?: string
           name?: string
           section?: string

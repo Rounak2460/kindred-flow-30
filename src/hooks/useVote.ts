@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export function useVote(targetId: string, targetType: "post" | "comment", initialScore: number) {
+export function useVote(targetId: string, targetType: "post" | "comment" | "gossip_post" | "gossip_comment", initialScore: number) {
   const { user } = useAuth();
   const [userVote, setUserVote] = useState<1 | -1 | null>(null);
   const [score, setScore] = useState(initialScore);

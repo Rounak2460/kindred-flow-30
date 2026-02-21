@@ -12,6 +12,7 @@ import Auth from "@/pages/Auth";
 import Forms from "@/pages/Forms";
 import Subreddit from "@/pages/Subreddit";
 import Profile from "@/pages/Profile";
+import Gossip from "@/pages/Gossip";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/post/:id" element={<PostDetail />} />
               <Route path="/submit" element={<Submit />} />
               <Route path="/forms" element={<Forms />} />
+              <Route path="/gossip" element={<Gossip />} />
               <Route path="/profile" element={<Profile />} />
             </Route>
             <Route path="/auth" element={<Auth />} />
