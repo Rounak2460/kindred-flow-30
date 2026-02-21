@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Plus, Trophy, User } from "lucide-react";
+import { Home, Search, Plus, EyeOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import AISearchDialog from "@/components/search/AISearchDialog";
@@ -9,7 +9,7 @@ const tabs = [
   { key: "/", icon: Home, label: "Home" },
   { key: "/search", icon: Search, label: "Search" },
   { key: "/submit", icon: Plus, label: "Post", accent: true },
-  { key: "/leaderboard", icon: Trophy, label: "Top" },
+  { key: "/gossip", icon: EyeOff, label: "Gossip" },
   { key: "/profile", icon: User, label: "Profile" },
 ];
 
@@ -26,10 +26,6 @@ export default function BottomNav() {
     }
     if ((key === "/submit" || key === "/profile") && !user) {
       navigate("/auth");
-      return;
-    }
-    if (key === "/leaderboard") {
-      navigate("/");
       return;
     }
     navigate(key);
