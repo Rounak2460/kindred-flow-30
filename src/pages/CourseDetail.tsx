@@ -20,13 +20,13 @@ export default function CourseDetail() {
   const avgWorkload = reviews.length ? reviews.reduce((s, r) => s + r.workload_rating, 0) / reviews.length : 0;
   const avgOverall = reviews.length ? reviews.reduce((s, r) => s + r.overall_rating, 0) / reviews.length : 0;
 
-  if (loadingCourse) return <div className="max-w-3xl mx-auto px-4 py-8"><Skeleton className="h-48 rounded-xl" /></div>;
-  if (!course) return <div className="max-w-3xl mx-auto px-4 py-20 text-center text-sm text-muted-foreground">Course not found</div>;
+  if (loadingCourse) return <div className="max-w-2xl mx-auto px-4 py-8"><Skeleton className="h-48 rounded-xl" /></div>;
+  if (!course) return <div className="max-w-2xl mx-auto px-4 py-20 text-center text-sm text-muted-foreground">Course not found</div>;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-4">
-      <button onClick={() => navigate("/academics")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Academics
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
@@ -34,7 +34,7 @@ export default function CourseDetail() {
           <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-0.5 rounded">{course.code}</span>
           <span className="text-xs text-muted-foreground capitalize">{course.category}</span>
         </div>
-        <h1 className="text-lg font-bold mb-1">{course.name}</h1>
+        <h1 className="text-lg font-semibold mb-1">{course.name}</h1>
         <p className="text-xs text-muted-foreground mb-3">{course.professor} · {course.term} · {course.domain}</p>
         <StarRating rating={Number(course.avg_rating)} size="md" />
       </div>
@@ -62,7 +62,7 @@ export default function CourseDetail() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Reviews ({reviews.length})</h2>
-        <Button size="sm" variant="outline" className="rounded-full gap-1.5 text-xs" onClick={() => navigate("/submit")}>
+        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=academics")}>
           <PenLine className="h-3.5 w-3.5" /> Write Review
         </Button>
       </div>
