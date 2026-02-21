@@ -57,7 +57,7 @@ export default function Internships() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {displayCompanies.map(c => (
-            <button key={c.id} onClick={() => !showSamples && navigate(`/internships/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors">
+            <button key={c.id} onClick={() => navigate(`/internships/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors">
               <div className="flex items-center gap-3 mb-2">
                 <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
                   {c.name.slice(0, 2).toUpperCase()}
