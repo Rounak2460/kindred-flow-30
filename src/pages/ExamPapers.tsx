@@ -17,10 +17,10 @@ const TYPE_OPTIONS = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  end_term: "bg-red-500/10 text-red-400",
-  mid_term: "bg-yellow-500/10 text-yellow-400",
-  quiz: "bg-blue-500/10 text-blue-400",
-  case_analysis: "bg-green-500/10 text-green-400",
+  end_term: "bg-red-50 text-red-700 border-red-200",
+  mid_term: "bg-amber-50 text-amber-700 border-amber-200",
+  quiz: "bg-blue-50 text-blue-700 border-blue-200",
+  case_analysis: "bg-emerald-50 text-emerald-700 border-emerald-200",
 };
 
 export default function ExamPapers() {
@@ -32,16 +32,16 @@ export default function ExamPapers() {
   const displayPapers = showSamples ? SAMPLE_PAPERS : papers;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-4">
-      <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">📝 Exam Papers</h1>
-          <p className="text-xs text-muted-foreground mt-1">Past papers shared by students</p>
+          <h1 className="text-xl font-semibold">Exam Papers</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Past papers shared by students</p>
         </div>
-        <Button size="sm" className="rounded-full gap-1.5 text-xs" onClick={() => navigate("/submit")}>
+        <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=papers")}>
           <Upload className="h-3.5 w-3.5" /> Upload
         </Button>
       </div>
@@ -49,19 +49,13 @@ export default function ExamPapers() {
         <FilterPills options={TYPE_OPTIONS} selected={examType} onSelect={setExamType} />
       </div>
 
-      {showSamples && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 text-center">
-          <p className="text-xs text-primary font-medium">👋 These are examples to show what this section will look like.</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Upload your past papers to earn karma credits!</p>
-        </div>
-      )}
-
       {isLoading ? (
         <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
       ) : displayPapers.length === 0 ? (
-        <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
-          <div className="text-4xl mb-3">📝</div>
+        <div className="text-center py-16 bg-card border border-border rounded-xl">
           <p className="text-sm font-medium">No papers found</p>
+          <p className="text-xs text-muted-foreground mt-1">Upload your past papers to help fellow students</p>
+          <Button size="sm" className="mt-4 rounded-lg" onClick={() => navigate("/submit?category=papers")}>Upload Paper</Button>
         </div>
       ) : (
         <div className="space-y-2">
@@ -71,9 +65,8 @@ export default function ExamPapers() {
               href={showSamples ? undefined : p.file_url}
               target={showSamples ? undefined : "_blank"}
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-primary/50 transition-colors relative"
+              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-primary/40 transition-colors"
             >
-              {showSamples && <Badge variant="secondary" className="absolute top-1 right-1 text-[9px]">Sample</Badge>}
               <FileText className="h-5 w-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{p.title}</p>
@@ -81,7 +74,7 @@ export default function ExamPapers() {
                   {(p.courses as any)?.code || "—"} · {(p.courses as any)?.name || "—"} · {p.year}
                 </p>
               </div>
-              <Badge variant="secondary" className={`text-[10px] shrink-0 ${TYPE_COLORS[p.exam_type] || ""}`}>
+              <Badge variant="secondary" className={`text-[10px] shrink-0 border ${TYPE_COLORS[p.exam_type] || ""}`}>
                 {p.exam_type.replace("_", " ")}
               </Badge>
               <div className="flex items-center gap-1 text-muted-foreground shrink-0">

@@ -43,18 +43,18 @@ export default function Profile() {
   return (
     <div className="max-w-lg mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-serif text-2xl text-foreground">Profile</h1>
+        <h1 className="text-xl font-semibold text-foreground">Profile</h1>
         <div className="flex items-center gap-2">
           {!editing && <button onClick={() => setEditing(true)} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"><Pencil className="h-4 w-4" /></button>}
           <button onClick={handleLogout} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"><LogOut className="h-4 w-4" /></button>
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-soft">
-        <div className="h-20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
-        <div className="px-5 pb-6 -mt-10">
-          <Avatar className="h-20 w-20 border-4 border-card shadow-lg">
-            <AvatarFallback className="text-xl font-bold bg-muted text-foreground">{initials}</AvatarFallback>
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        <div className="h-16 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent" />
+        <div className="px-5 pb-6 -mt-8">
+          <Avatar className="h-16 w-16 border-4 border-card shadow-lg">
+            <AvatarFallback className="text-lg font-semibold bg-muted text-foreground">{initials}</AvatarFallback>
           </Avatar>
           <div className="mt-3">
             {editing ? (
@@ -66,8 +66,8 @@ export default function Profile() {
                   <div><label className="text-xs text-muted-foreground mb-1 block">Section</label><Input value={form.section} onChange={(e) => setForm({ ...form, section: e.target.value })} placeholder="e.g. A" className="bg-background" /></div>
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1"><Check className="h-3 w-3" /> {saving ? "Saving..." : "Save"}</Button>
-                  <Button onClick={() => setEditing(false)} variant="ghost" size="sm" className="gap-1"><X className="h-3 w-3" /> Cancel</Button>
+                  <Button onClick={handleSave} disabled={saving} size="sm" className="gap-1 rounded-lg"><Check className="h-3 w-3" /> {saving ? "Saving..." : "Save"}</Button>
+                  <Button onClick={() => setEditing(false)} variant="ghost" size="sm" className="gap-1 rounded-lg"><X className="h-3 w-3" /> Cancel</Button>
                 </div>
               </div>
             ) : (
@@ -83,12 +83,12 @@ export default function Profile() {
             <>
               <div className="grid grid-cols-3 gap-3 mt-6">
                 <div className="bg-muted/50 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center gap-1 mb-0.5"><Star className="h-4 w-4 text-primary" /><p className="text-lg font-bold text-foreground tabular-nums">{profile.credits}</p></div>
+                  <div className="flex items-center justify-center gap-1 mb-0.5"><Star className="h-4 w-4 text-primary" /><p className="text-lg font-semibold text-foreground tabular-nums">{profile.credits}</p></div>
                   <p className="text-[11px] text-muted-foreground">Credits</p>
                 </div>
-                <div className="bg-muted/50 rounded-xl p-3 text-center"><p className="text-lg font-bold text-foreground mb-0.5">{profile.batch || "—"}</p><p className="text-[11px] text-muted-foreground">Batch</p></div>
+                <div className="bg-muted/50 rounded-xl p-3 text-center"><p className="text-lg font-semibold text-foreground mb-0.5">{profile.batch || "—"}</p><p className="text-[11px] text-muted-foreground">Batch</p></div>
                 <div className="bg-muted/50 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center gap-1 mb-0.5"><Eye className="h-4 w-4 text-muted-foreground" /><p className="text-lg font-bold text-foreground tabular-nums">{Math.max(0, 5 - profile.free_views_used)}</p></div>
+                  <div className="flex items-center justify-center gap-1 mb-0.5"><Eye className="h-4 w-4 text-muted-foreground" /><p className="text-lg font-semibold text-foreground tabular-nums">{Math.max(0, 5 - profile.free_views_used)}</p></div>
                   <p className="text-[11px] text-muted-foreground">Free Views</p>
                 </div>
               </div>

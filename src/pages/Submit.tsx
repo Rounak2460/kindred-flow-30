@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Image as ImageIcon, Link as LinkIcon, Check } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
 const categories = [
-  { key: "academics", label: "Academics", icon: "📚", desc: "Course reviews, tips, questions" },
-  { key: "exchange", label: "Exchange", icon: "✈️", desc: "Exchange semester experiences" },
-  { key: "internships", label: "Internships", icon: "💼", desc: "Internship reviews & prep" },
-  { key: "campus", label: "Campus Life", icon: "🏫", desc: "Campus life & tips" },
-  { key: "papers", label: "Exam Papers", icon: "📝", desc: "Exam papers & materials" },
+  { key: "academics", label: "Academics", desc: "Course reviews, tips, questions" },
+  { key: "exchange", label: "Exchange", desc: "Exchange semester experiences" },
+  { key: "internships", label: "Internships", desc: "Internship reviews & prep" },
+  { key: "campus", label: "Campus Life", desc: "Campus life & tips" },
+  { key: "papers", label: "Exam Papers", desc: "Exam papers & materials" },
 ];
 
 export default function Submit() {
@@ -102,18 +102,11 @@ export default function Submit() {
       </div>
 
       <AnimatePresence mode="wait">
-        {/* Step 1: Pick community */}
         {step === 1 && (
-          <motion.div
-            key="step1"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <h1 className="font-serif text-2xl text-foreground mb-1">Choose a community</h1>
+          <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
+            <h1 className="text-xl font-semibold text-foreground mb-1">Choose a community</h1>
             <p className="text-sm text-muted-foreground mb-5">Where does your post belong?</p>
-            <div className="grid gap-2.5">
+            <div className="grid gap-2">
               {categories.map((cat) => (
                 <button
                   key={cat.key}
@@ -123,12 +116,11 @@ export default function Submit() {
                     "flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-left transition-all border",
                     category === cat.key
                       ? "border-primary/40 bg-primary/5"
-                      : "border-border/40 hover:border-border hover:bg-accent/30"
+                      : "border-border hover:border-border/80 hover:bg-muted/30"
                   )}
                 >
-                  <span className="text-2xl">{cat.icon}</span>
                   <div>
-                    <p className={cn("text-sm font-semibold", category === cat.key ? "text-primary" : "text-foreground")}>{cat.label}</p>
+                    <p className={cn("text-sm font-medium", category === cat.key ? "text-primary" : "text-foreground")}>{cat.label}</p>
                     <p className="text-xs text-muted-foreground">{cat.desc}</p>
                   </div>
                   {category === cat.key && <Check className="h-4 w-4 text-primary ml-auto" />}
@@ -138,19 +130,12 @@ export default function Submit() {
           </motion.div>
         )}
 
-        {/* Step 2: Write content */}
         {step === 2 && (
-          <motion.div
-            key="step2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <h1 className="font-serif text-2xl text-foreground mb-5">Write your post</h1>
+          <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
+            <h1 className="text-xl font-semibold text-foreground mb-5">Write your post</h1>
             <div className="space-y-4">
               <Input
-                placeholder="What's on your mind?"
+                placeholder="Title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="bg-transparent border-none text-lg font-semibold placeholder:text-muted-foreground/60 focus-visible:ring-0 px-0 h-auto py-2"
@@ -163,43 +148,21 @@ export default function Submit() {
                 onChange={(e) => setBody(e.target.value)}
                 className="bg-transparent border-none text-sm min-h-[200px] placeholder:text-muted-foreground/50 resize-none focus-visible:ring-0 px-0 leading-relaxed"
               />
-              <div className="flex items-center gap-2 pt-2">
-                <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors" onClick={() => toast.info("Image upload coming soon!")}>
-                  <ImageIcon className="h-4 w-4" />
-                </button>
-                <button type="button" className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors" onClick={() => toast.info("Link insertion coming soon!")}>
-                  <LinkIcon className="h-4 w-4" />
-                </button>
-                <div className="ml-auto">
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="rounded-full font-semibold"
-                    disabled={!title}
-                    onClick={() => setStep(3)}
-                  >
-                    Continue
-                  </Button>
-                </div>
+              <div className="flex items-center justify-end pt-2">
+                <Button type="button" size="sm" className="rounded-lg font-semibold" disabled={!title} onClick={() => setStep(3)}>
+                  Continue
+                </Button>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Step 3: Metadata */}
         {step === 3 && (
-          <motion.div
-            key="step3"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <h1 className="font-serif text-2xl text-foreground mb-1">Add details</h1>
+          <motion.div key="step3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} transition={{ duration: 0.2 }}>
+            <h1 className="text-xl font-semibold text-foreground mb-1">Add details</h1>
             <p className="text-sm text-muted-foreground mb-5">Optional — helps others find your post</p>
 
             <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Flair */}
               {availableFlairs.length > 0 && (
                 <div>
                   <Label className="text-xs font-medium text-muted-foreground mb-2 block">Flair</Label>
@@ -210,10 +173,10 @@ export default function Submit() {
                         type="button"
                         onClick={() => setFlair(flair === f ? "" : f)}
                         className={cn(
-                          "text-xs font-medium px-3 py-1.5 rounded-full transition-all border",
+                          "text-xs font-medium px-3 py-1.5 rounded-lg transition-all border",
                           flair === f
                             ? "border-primary/40 text-primary bg-primary/10"
-                            : "border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
+                            : "border-border text-muted-foreground hover:text-foreground hover:border-border/80"
                         )}
                       >
                         {f}
@@ -223,35 +186,34 @@ export default function Submit() {
                 </div>
               )}
 
-              {/* Context fields */}
               {(category === "academics" || category === "papers") && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1.5 block">Course Code</Label>
-                    <Input placeholder="FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="bg-secondary/50 border-border/30 text-sm rounded-lg" />
+                    <Input placeholder="FIN301" value={courseCode} onChange={(e) => setCourseCode(e.target.value)} className="bg-muted/50 border-border text-sm rounded-lg" />
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground mb-1.5 block">Course Name</Label>
-                    <Input placeholder="Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="bg-secondary/50 border-border/30 text-sm rounded-lg" />
+                    <Input placeholder="Corporate Finance" value={courseName} onChange={(e) => setCourseName(e.target.value)} className="bg-muted/50 border-border text-sm rounded-lg" />
                   </div>
                 </div>
               )}
               {category === "internships" && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">Company Name</Label>
-                  <Input placeholder="McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="bg-secondary/50 border-border/30 text-sm rounded-lg" />
+                  <Input placeholder="McKinsey & Company" value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="bg-muted/50 border-border text-sm rounded-lg" />
                 </div>
               )}
               {category === "exchange" && (
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1.5 block">College Name</Label>
-                  <Input placeholder="HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="bg-secondary/50 border-border/30 text-sm rounded-lg" />
+                  <Input placeholder="HEC Paris" value={collegeName} onChange={(e) => setCollegeName(e.target.value)} className="bg-muted/50 border-border text-sm rounded-lg" />
                 </div>
               )}
 
               <div className="flex items-center gap-3 pt-2">
-                <Button type="button" variant="ghost" size="sm" className="rounded-full" onClick={() => navigate(-1)}>Cancel</Button>
-                <Button type="submit" size="sm" className="rounded-full font-semibold px-6" disabled={loading || !category || !title}>
+                <Button type="button" variant="ghost" size="sm" className="rounded-lg" onClick={() => navigate(-1)}>Cancel</Button>
+                <Button type="submit" size="sm" className="rounded-lg font-semibold px-6" disabled={loading || !category || !title}>
                   {loading ? "Posting…" : "Post"}
                 </Button>
               </div>

@@ -11,11 +11,11 @@ import { SAMPLE_EXCHANGE } from "@/lib/sample-data";
 
 const REGION_OPTIONS = [
   { value: "all", label: "All" },
-  { value: "europe", label: "🇪🇺 Europe" },
-  { value: "asia", label: "🌏 Asia" },
-  { value: "north_america", label: "🇺🇸 North America" },
-  { value: "oceania", label: "🌊 Oceania" },
-  { value: "south_america", label: "🌎 South America" },
+  { value: "europe", label: "Europe" },
+  { value: "asia", label: "Asia" },
+  { value: "north_america", label: "North America" },
+  { value: "oceania", label: "Oceania" },
+  { value: "south_america", label: "South America" },
 ];
 
 export default function Exchange() {
@@ -27,16 +27,16 @@ export default function Exchange() {
   const displayColleges = showSamples ? SAMPLE_EXCHANGE : colleges;
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-4">
-      <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+    <div className="max-w-2xl mx-auto px-4 py-4">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </button>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-xl font-bold flex items-center gap-2">🌍 Exchange Programs</h1>
-          <p className="text-xs text-muted-foreground mt-1">Explore exchange colleges & read student diaries</p>
+          <h1 className="text-xl font-semibold">Exchange Programs</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Explore exchange colleges & read student diaries</p>
         </div>
-        <Button size="sm" className="rounded-full gap-1.5 text-xs" onClick={() => navigate("/submit")}>
+        <Button size="sm" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=exchange")}>
           <PenLine className="h-3.5 w-3.5" /> Add Diary
         </Button>
       </div>
@@ -44,26 +44,19 @@ export default function Exchange() {
         <FilterPills options={REGION_OPTIONS} selected={region} onSelect={setRegion} />
       </div>
 
-      {showSamples && (
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 text-center">
-          <p className="text-xs text-primary font-medium">👋 These are examples to show what this section will look like.</p>
-          <p className="text-[11px] text-muted-foreground mt-0.5">Add your own exchange diaries to help future batches!</p>
-        </div>
-      )}
-
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-36 rounded-xl" />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{[1,2,3,4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}</div>
       ) : displayColleges.length === 0 ? (
-        <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
-          <div className="text-4xl mb-3">🌍</div>
+        <div className="text-center py-16 bg-card border border-border rounded-xl">
           <p className="text-sm font-medium">No colleges found</p>
+          <p className="text-xs text-muted-foreground mt-1">Be the first to share your exchange experience</p>
+          <Button size="sm" className="mt-4 rounded-lg" onClick={() => navigate("/submit?category=exchange")}>Add Diary</Button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {displayColleges.map(c => (
-            <button key={c.id} onClick={() => !showSamples && navigate(`/exchange/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 transition-colors relative">
-              {showSamples && <Badge variant="secondary" className="absolute top-2 right-2 text-[9px]">Sample</Badge>}
-              <h3 className="text-sm font-semibold mb-1">{c.name}</h3>
+            <button key={c.id} onClick={() => !showSamples && navigate(`/exchange/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors">
+              <h3 className="text-sm font-medium mb-1">{c.name}</h3>
               <p className="text-[11px] text-muted-foreground mb-2">{c.country} · {c.region.replace("_", " ")}</p>
               <div className="flex items-center justify-between mb-2">
                 <StarRating rating={Number(c.avg_rating)} />
