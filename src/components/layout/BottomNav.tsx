@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Search, Plus, Trophy, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import AISearchDialog from "@/components/search/AISearchDialog";
 
 const tabs = [
   { key: "/", icon: Home, label: "Home" },
@@ -15,10 +17,11 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const handleTap = (key: string) => {
     if (key === "/search") {
-      navigate("/?q=");
+      setSearchOpen(true);
       return;
     }
     if ((key === "/submit" || key === "/profile") && !user) {
@@ -33,6 +36,7 @@ export default function BottomNav() {
   };
 
   return (
+    <>
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-pb">
       <div className="flex items-center justify-around h-14 px-2">
         {tabs.map((tab) => {
@@ -65,5 +69,7 @@ export default function BottomNav() {
         })}
       </div>
     </nav>
+    <AISearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
+    </>
   );
 }
