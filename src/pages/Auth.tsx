@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Mail, ShieldCheck, Lock, KeyRound } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import dmLogo from "@/assets/digitalmitra-logo.png";
+import DMLogo from "@/components/DMLogo";
 
 type Step = "login" | "signup-email" | "verify-otp" | "set-password" | "forgot-otp";
 type OtpMode = "signup" | "forgot";
@@ -131,7 +131,7 @@ export default function Auth() {
     <div className="min-h-screen flex">
       <div className="hidden lg:flex flex-1 items-center justify-center bg-card relative overflow-hidden border-r border-border">
         <div className="relative z-10 text-center px-12">
-          <img src={dmLogo} alt="Digi Mitra" className="h-14 w-14 rounded-xl mx-auto mb-6" />
+          <DMLogo size={56} className="mx-auto mb-6" />
           <h2 className="text-3xl font-semibold text-foreground mb-3">Digi Mitra</h2>
           <p className="text-muted-foreground text-base leading-relaxed max-w-sm mx-auto">
             Your campus companion at IIM Bangalore. Anonymous, honest, student-driven.
@@ -142,7 +142,7 @@ export default function Auth() {
       <div className="flex-1 flex items-center justify-center px-4 py-8 bg-background">
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
-            <img src={dmLogo} alt="Digi Mitra" className="h-10 w-10 rounded-xl mx-auto mb-3" />
+            <DMLogo size={40} className="mx-auto mb-3" />
             <h1 className="text-xl font-semibold text-foreground">Digi Mitra</h1>
             <p className="text-muted-foreground text-sm mt-1">Your Campus Companion</p>
           </div>

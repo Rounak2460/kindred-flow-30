@@ -9,7 +9,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import dmLogo from "@/assets/digitalmitra-logo.png";
+import DMLogo from "@/components/DMLogo";
 import { cn } from "@/lib/utils";
 import AISearchDialog from "@/components/search/AISearchDialog";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -48,7 +48,7 @@ export default function Navbar() {
       )}>
         <div className="max-w-2xl mx-auto flex items-center h-14 px-4 gap-3">
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-            <img src={dmLogo} alt="Digi Mitra" className="h-7 w-7 rounded-full" />
+            <DMLogo size={28} />
             <span className="hidden sm:inline text-sm font-semibold text-foreground tracking-tight">Digi Mitra</span>
           </Link>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Plus } from "lucide-react";
+import { RefreshCw, Plus, GraduationCap, Globe, Briefcase, FileText, MapPin } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
@@ -30,11 +30,11 @@ export default function Home() {
   const { data: stats } = useStats();
 
   const quickActions = [
-    { emoji: "", title: "Courses", count: stats?.courseReviews ?? 0, countLabel: "reviews", to: "/academics", addTo: "/submit?category=academics" },
-    { emoji: "", title: "Exchange", count: stats?.exchangeDiaries ?? 0, countLabel: "diaries", to: "/exchange", addTo: "/submit?category=exchange" },
-    { emoji: "", title: "Internships", count: stats?.internshipReports ?? 0, countLabel: "reports", to: "/internships", addTo: "/submit?category=internships" },
-    { emoji: "", title: "Papers", count: stats?.examPapers ?? 0, countLabel: "papers", to: "/exam-papers", addTo: "/submit?category=papers" },
-    { emoji: "", title: "Campus", count: 0, countLabel: "tips", to: "/campus", addTo: "/submit?category=campus" },
+    { icon: GraduationCap, iconColor: "text-blue-500", iconBg: "bg-blue-500/10", title: "Courses", subtitle: "Peer-rated reviews", count: stats?.courseReviews ?? 0, countLabel: "reviews", to: "/academics", addTo: "/submit?category=academics" },
+    { icon: Globe, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", title: "Exchange", subtitle: "Global diaries", count: stats?.exchangeDiaries ?? 0, countLabel: "diaries", to: "/exchange", addTo: "/submit?category=exchange" },
+    { icon: Briefcase, iconColor: "text-amber-500", iconBg: "bg-amber-500/10", title: "Internships", subtitle: "Company intel", count: stats?.internshipReports ?? 0, countLabel: "reports", to: "/internships", addTo: "/submit?category=internships" },
+    { icon: FileText, iconColor: "text-violet-500", iconBg: "bg-violet-500/10", title: "Papers", subtitle: "Past exam papers", count: stats?.examPapers ?? 0, countLabel: "papers", to: "/exam-papers", addTo: "/submit?category=papers" },
+    { icon: MapPin, iconColor: "text-rose-500", iconBg: "bg-rose-500/10", title: "Campus", subtitle: "Survival guide", count: 0, countLabel: "tips", to: "/campus", addTo: "/submit?category=campus" },
   ];
 
   return (
@@ -51,7 +51,7 @@ export default function Home() {
             </Button>
           )}
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:grid md:grid-cols-5 md:overflow-visible">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {quickActions.map((a) => (
             <QuickActionCard key={a.title} {...a} />
           ))}
