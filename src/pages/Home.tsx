@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, BookOpen, Globe, Briefcase, FileText, Sparkles } from "lucide-react";
+import { RefreshCw, Sparkles, Plus } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
 import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
 import FeedWelcome from "@/components/feed/FeedWelcome";
 import SkeletonCard from "@/components/feed/SkeletonCard";
-import StatCard from "@/components/shared/StatCard";
-import QuickAccessCard from "@/components/shared/QuickAccessCard";
+import QuickActionCard from "@/components/home/QuickActionCard";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { usePosts } from "@/hooks/usePosts";
@@ -30,23 +29,32 @@ export default function Home() {
   const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort, search);
   const { data: stats } = useStats();
 
+  const quickActions = [
+    { emoji: "📚", title: "Courses", count: stats?.courseReviews ?? 0, countLabel: "reviews", to: "/academics", addTo: "/submit" },
+    { emoji: "🌍", title: "Exchange", count: stats?.exchangeDiaries ?? 0, countLabel: "diaries", to: "/exchange", addTo: "/submit" },
+    { emoji: "💼", title: "Internships", count: stats?.internshipReports ?? 0, countLabel: "reports", to: "/internships", addTo: "/submit" },
+    { emoji: "📝", title: "Papers", count: stats?.examPapers ?? 0, countLabel: "papers", to: "/exam-papers", addTo: "/submit" },
+    { emoji: "📍", title: "Campus", count: 0, countLabel: "tips", to: "/campus", addTo: "/submit" },
+  ];
+
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
       {!user && <FeedWelcome />}
 
-      {/* Dashboard Section */}
+      {/* Quick Actions */}
       <div className="mb-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-          <StatCard icon={BookOpen} label="Course Reviews" count={stats?.courseReviews ?? 0} />
-          <StatCard icon={Globe} label="Exchange Diaries" count={stats?.exchangeDiaries ?? 0} />
-          <StatCard icon={Briefcase} label="Internship Reports" count={stats?.internshipReports ?? 0} />
-          <StatCard icon={FileText} label="Exam Papers" count={stats?.examPapers ?? 0} />
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-foreground">Explore</h2>
+          {user && (
+            <Button variant="ghost" size="sm" className="h-7 text-xs rounded-full gap-1 text-primary hover:text-primary" onClick={() => navigate("/submit")}>
+              <Plus className="h-3 w-3" /> Contribute
+            </Button>
+          )}
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-          <QuickAccessCard icon={BookOpen} title="Academics" subtitle="Course reviews, tips & ratings" to="/academics" />
-          <QuickAccessCard icon={Globe} title="Exchange" subtitle="College diaries & comparisons" to="/exchange" />
-          <QuickAccessCard icon={Briefcase} title="Internships" subtitle="Company intel & reviews" to="/internships" />
+        <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide md:grid md:grid-cols-5 md:overflow-visible">
+          {quickActions.map((a) => (
+            <QuickActionCard key={a.title} {...a} />
+          ))}
         </div>
       </div>
 
@@ -82,12 +90,18 @@ export default function Home() {
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-20 bg-card border border-border rounded-xl">
+            <div className="text-4xl mb-3">💬</div>
             <p className="text-sm font-medium text-foreground mb-1">
               {search.trim() ? `No results for "${search}"` : "No threads yet"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mb-4">
               {search.trim() ? "Try different keywords" : "Be the first to start a conversation"}
             </p>
+            {!search.trim() && user && (
+              <Button size="sm" className="rounded-full gap-1.5" onClick={() => navigate("/submit")}>
+                <Plus className="h-3.5 w-3.5" /> Start a Thread
+              </Button>
+            )}
           </div>
         ) : (
           <>
@@ -106,6 +120,18 @@ export default function Home() {
           </>
         )}
       </div>
+
+      {/* Mobile FAB */}
+      {user && (
+        <button
+          onClick={() => navigate("/submit")}
+          className="fixed bottom-20 right-4 md:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-elevated flex items-center justify-center hover:scale-105 transition-transform z-40"
+          aria-label="Create post"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
+
       <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="create a post" />
     </div>
   );

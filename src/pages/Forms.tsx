@@ -88,11 +88,8 @@ export default function Forms() {
     const allText = forms.map(form => {
       return `${form.title}\n${form.description}\n\n${form.fields.map((f, i) => `${i + 1}. ${f}`).join("\n")}`;
     }).join("\n\n---\n\n");
-
-    const header = `Digital Mitra — Data Collection Forms\nIIM Bangalore\n\n`;
-    navigator.clipboard.writeText(header + allText).then(() => {
-      toast.success("All forms copied!");
-    });
+    const header = `Digi Mitra — Data Collection Forms\nIIM Bangalore\n\n`;
+    navigator.clipboard.writeText(header + allText).then(() => { toast.success("All forms copied!"); });
   };
 
   return (
@@ -124,9 +121,7 @@ export default function Forms() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h2 className="font-bold text-sm text-foreground">{form.title}</h2>
-                    <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                      +{form.credits} credits
-                    </span>
+                    <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">+{form.credits} credits</span>
                   </div>
                   <p className="text-xs text-muted-foreground">{form.description}</p>
                   <p className="text-[10px] text-muted-foreground/60 mt-1">Posts to {form.category}</p>
@@ -144,31 +139,21 @@ export default function Forms() {
               </ol>
             </div>
             <div className="px-4 py-3 border-t border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="gap-1.5 text-xs rounded-full"
-                onClick={() => copyFields(form.fields, form.title, index)}
-              >
-                {copiedIndex === index ? (
-                  <><Check className="h-3 w-3 text-primary" /> Copied</>
-                ) : (
-                  <><Copy className="h-3 w-3" /> Copy Template</>
-                )}
+              <Button variant="ghost" size="sm" className="gap-1.5 text-xs rounded-full" onClick={() => copyFields(form.fields, form.title, index)}>
+                {copiedIndex === index ? (<><Check className="h-3 w-3 text-primary" /> Copied</>) : (<><Copy className="h-3 w-3" /> Copy Template</>)}
               </Button>
             </div>
           </div>
         ))}
       </div>
 
-      {/* Instructions */}
       <div className="mt-4 bg-card border border-border rounded-lg p-4">
         <h3 className="font-bold text-sm text-foreground mb-3">How to use these templates</h3>
         <ol className="space-y-2 text-xs text-muted-foreground">
           <li className="flex gap-2"><span className="text-foreground font-bold">1.</span> Copy a template above</li>
           <li className="flex gap-2"><span className="text-foreground font-bold">2.</span> Create a Google Form with those fields</li>
           <li className="flex gap-2"><span className="text-foreground font-bold">3.</span> Share the link in batch WhatsApp groups</li>
-          <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> Use responses to create threads on Digital Mitra</li>
+          <li className="flex gap-2"><span className="text-foreground font-bold">4.</span> Use responses to create threads on Digi Mitra</li>
         </ol>
       </div>
     </div>
