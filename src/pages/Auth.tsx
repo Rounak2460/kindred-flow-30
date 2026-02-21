@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
 
@@ -17,7 +16,6 @@ export default function Auth() {
   const [step, setStep] = useState<"email" | "otp">("email");
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -45,7 +43,7 @@ export default function Auth() {
         options: { shouldCreateUser: true },
       });
       if (error) throw error;
-      toast.success("OTP sent! Check your email inbox.");
+      toast.success("Check your email for a one-time login link!");
       setStep("otp");
       setCooldown(60);
     } catch (error: any) {
@@ -55,27 +53,6 @@ export default function Auth() {
     }
   }, [email]);
 
-  const verifyOtp = useCallback(async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter the 6-digit code");
-      return;
-    }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: "email",
-      });
-      if (error) throw error;
-      toast.success("Welcome to Digital Mitra!");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error.message || "Invalid OTP. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [email, otp, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -99,12 +76,12 @@ export default function Auth() {
               )}
             </div>
             <CardTitle className="text-xl font-display">
-              {step === "email" ? "Sign in to Digital Mitra" : "Enter verification code"}
+              {step === "email" ? "Sign in to Digital Mitra" : "Check your email"}
             </CardTitle>
             <CardDescription>
               {step === "email"
                 ? "Use your @iimb.ac.in email to get started"
-                : `We sent a 6-digit code to ${email}`}
+                : `We sent a one-time login link to ${email}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -127,8 +104,8 @@ export default function Auth() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full rounded-xl" disabled={loading}>
-                  {loading ? "Sending OTP..." : "Send OTP"}
+            <Button type="submit" className="w-full rounded-xl" disabled={loading}>
+                  {loading ? "Sending link..." : "Send Login Link"}
                 </Button>
                 <p className="text-center text-[11px] text-muted-foreground">
                   Only @iimb.ac.in email addresses are accepted
@@ -136,32 +113,20 @@ export default function Auth() {
               </form>
             ) : (
               <div className="space-y-4">
-                <div className="flex flex-col items-center gap-3">
-                  <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Click the link in the email we sent to <span className="font-medium text-foreground">{email}</span> to sign in.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Don't see it? Check your spam folder.
+                  </p>
                 </div>
-                <Button
-                  className="w-full rounded-xl"
-                  disabled={loading || otp.length !== 6}
-                  onClick={verifyOtp}
-                >
-                  {loading ? "Verifying..." : "Verify & Sign In"}
-                </Button>
                 <div className="flex items-center justify-between">
                   <button
                     type="button"
                     className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
                     onClick={() => {
                       setStep("email");
-                      setOtp("");
                     }}
                   >
                     <ArrowLeft className="h-3 w-3" /> Change email
@@ -172,7 +137,7 @@ export default function Auth() {
                     disabled={cooldown > 0}
                     onClick={sendOtp}
                   >
-                    {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend OTP"}
+                    {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}
                   </button>
                 </div>
               </div>
