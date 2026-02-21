@@ -66,10 +66,12 @@ export default function CampusLife() {
                 <Badge variant="secondary" className="text-[10px] capitalize">{t.category.replace("_", " ")}</Badge>
                 <StarRating rating={t.rating} showValue={false} />
               </div>
-              <h3 className="text-sm font-medium mb-1">{t.name}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{t.tip_text}</p>
-              <div className="flex items-center gap-1 mt-2 text-muted-foreground">
-                <span className="text-[10px]">{t.useful_count} useful</span>
+              <h3 className="text-sm font-medium mb-1.5">{t.name}</h3>
+              <div className="border-l-2 border-rose-500/40 pl-3">
+                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{t.tip_text}</p>
+              </div>
+              <div className="flex items-center gap-1.5 mt-2.5 text-muted-foreground">
+                <span className="text-[10px]">👍 {t.useful_count} found useful</span>
               </div>
             </div>
           ))}
