@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MessageSquare, Share2, Bookmark, MoreHorizontal } from "lucide-react";
+import { MessageSquare, Share2 } from "lucide-react";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,14 @@ const FLAIR_COLORS: Record<string, string> = {
   "Pro Tip": "bg-lime-50 text-lime-700 border-lime-200",
 };
 
+const CATEGORIES: Record<string, string> = {
+  academics: "Academics",
+  exchange: "Exchange",
+  internships: "Internships",
+  campus: "Campus",
+  papers: "Papers",
+};
+
 export default function PostCard({
   id, title, body, category, flair, upvote_count, downvote_count,
   comment_count, pinned, course_code, course_name, company_name,
@@ -48,7 +56,6 @@ export default function PostCard({
   const { score, userVote, vote, loadVote } = useVote(id, "post", initialScore);
   const contextLabel = course_name || company_name || college_name;
   const anonHandle = generateAnonHandle(user_id || id, id);
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => { loadVote(); }, [loadVote]);
 
@@ -57,13 +64,6 @@ export default function PostCard({
     e.stopPropagation();
     navigator.clipboard.writeText(`${window.location.origin}/post/${id}`);
     toast.success("Link copied!");
-  };
-
-  const handleSave = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setSaved(!saved);
-    toast.success(saved ? "Unsaved" : "Saved!");
   };
 
   const flairColorClass = flair ? (FLAIR_COLORS[flair] || "bg-primary/5 text-primary border-primary/20") : "";
@@ -79,12 +79,9 @@ export default function PostCard({
       >
         <div className="p-4">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2.5">
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/d/${category}`); }}
-              className="font-semibold text-foreground/70 hover:text-primary transition-colors"
-            >
-              d/{category}
-            </button>
+            <span className="font-medium text-foreground/70">
+              {CATEGORIES[category] || category}
+            </span>
             <span>·</span>
             <span>{anonHandle}</span>
             <span>·</span>
@@ -97,19 +94,19 @@ export default function PostCard({
             )}
           </div>
 
-          <h3 className="font-sans font-semibold text-[16px] leading-snug text-foreground mb-1.5">
+          <h3 className="font-semibold text-[15px] leading-snug text-foreground mb-1.5">
             {title}
           </h3>
 
           {(flair || course_code) && (
             <div className="flex items-center gap-1.5 mb-2.5">
               {flair && (
-                <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border", flairColorClass)}>
+                <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-md border", flairColorClass)}>
                   {flair}
                 </span>
               )}
               {course_code && (
-                <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
                   {course_code}
                 </span>
               )}
@@ -125,33 +122,18 @@ export default function PostCard({
           <div className="flex items-center gap-1.5">
             <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} horizontal size="sm" />
             <button
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-full transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg transition-colors"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/post/${id}`); }}
             >
               <MessageSquare className="h-3.5 w-3.5" />
               <span className="font-medium tabular-nums">{comment_count}</span>
             </button>
             <button
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-full transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg transition-colors"
               onClick={handleShare}
             >
               <Share2 className="h-3.5 w-3.5" />
               <span className="font-medium hidden sm:inline">Share</span>
-            </button>
-            <button
-              className={cn(
-                "flex items-center gap-1.5 text-xs hover:bg-muted px-3 py-1.5 rounded-full transition-colors",
-                saved ? "text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={handleSave}
-            >
-              <Bookmark className={cn("h-3.5 w-3.5", saved && "fill-current")} />
-            </button>
-            <button
-              className="flex items-center text-muted-foreground hover:text-foreground hover:bg-muted p-1.5 rounded-full transition-colors ml-auto"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toast.info("More options coming soon!"); }}
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>

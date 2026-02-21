@@ -25,13 +25,13 @@ export default function AuthGuardDialog({ open, onOpenChange, action = "do that"
           <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
             <Shield className="h-6 w-6 text-primary" />
           </div>
-          <DialogTitle className="text-lg font-bold">Join Digital Mitra</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Join Digi Mitra</DialogTitle>
           <DialogDescription className="text-sm">
             Sign in with your @iimb.ac.in email to {action}. Only verified IIMB students can participate.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 mt-2">
-          <Button className="w-full rounded-full font-bold" onClick={() => { onOpenChange(false); navigate("/auth"); }}>
+          <Button className="w-full rounded-lg font-semibold" onClick={() => { onOpenChange(false); navigate("/auth"); }}>
             Sign In with IIMB Email
           </Button>
         </div>

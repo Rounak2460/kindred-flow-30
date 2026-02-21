@@ -1,13 +1,14 @@
 import { useNavigate } from "react-router-dom";
+import { BookOpen, Globe, Briefcase, FileText, MapPin } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useStats } from "@/hooks/useStats";
 
 const sections = [
-  { emoji: "📚", label: "Academics", desc: "Course reviews & ratings", to: "/academics", countKey: "courseReviews" as const },
-  { emoji: "🌍", label: "Exchange", desc: "College diaries", to: "/exchange", countKey: "exchangeDiaries" as const },
-  { emoji: "💼", label: "Internships", desc: "Company intel", to: "/internships", countKey: "internshipReports" as const },
-  { emoji: "📝", label: "Exam Papers", desc: "Past papers", to: "/exam-papers", countKey: "examPapers" as const },
-  { emoji: "📍", label: "Campus Life", desc: "Survival guide", to: "/campus", countKey: null },
+  { icon: BookOpen, label: "Academics", desc: "Course reviews & ratings", to: "/academics", countKey: "courseReviews" as const },
+  { icon: Globe, label: "Exchange", desc: "College diaries", to: "/exchange", countKey: "exchangeDiaries" as const },
+  { icon: Briefcase, label: "Internships", desc: "Company intel", to: "/internships", countKey: "internshipReports" as const },
+  { icon: FileText, label: "Exam Papers", desc: "Past papers", to: "/exam-papers", countKey: "examPapers" as const },
+  { icon: MapPin, label: "Campus Life", desc: "Survival guide", to: "/campus", countKey: null },
 ];
 
 interface ExploreSheetProps {
@@ -34,16 +35,16 @@ export default function ExploreSheet({ open, onOpenChange }: ExploreSheetProps) 
                 onClick={() => { onOpenChange(false); navigate(s.to); }}
                 className="flex items-center gap-3 p-3 rounded-xl hover:bg-accent/50 transition-colors text-left"
               >
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 text-xl">
-                  {s.emoji}
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                  <s.icon className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{s.label}</p>
                   <p className="text-[11px] text-muted-foreground">{s.desc}</p>
                 </div>
-                {count !== null && count > 0 && (
-                  <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">{count}</span>
-                )}
+                <span className="text-[11px] text-muted-foreground tabular-nums">
+                  {count !== null ? count : 0}
+                </span>
               </button>
             );
           })}

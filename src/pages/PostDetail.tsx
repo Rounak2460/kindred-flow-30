@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageSquare, Share2, Bookmark, MoreHorizontal, RefreshCw } from "lucide-react";
+import { ArrowLeft, MessageSquare, Share2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import VoteButtons from "@/components/feed/VoteButtons";
 import CommentItem from "@/components/feed/CommentItem";
@@ -16,6 +16,14 @@ import { usePost } from "@/hooks/usePosts";
 import { useComments, Comment } from "@/hooks/useComments";
 import { useQueryClient } from "@tanstack/react-query";
 import { useVote } from "@/hooks/useVote";
+
+const CATEGORIES: Record<string, string> = {
+  academics: "Academics",
+  exchange: "Exchange",
+  internships: "Internships",
+  campus: "Campus",
+  papers: "Papers",
+};
 
 function sortComments(comments: Comment[], sort: "best" | "new" | "top"): Comment[] {
   const sorted = [...comments];
@@ -40,7 +48,6 @@ export default function PostDetail() {
   const { user } = useAuth();
   const { data: post, isLoading, isError, refetch } = usePost(id);
   const { data: comments = [], isLoading: commentsLoading, isError: commentsError, refetch: refetchComments } = useComments(id);
-  const [saved, setSaved] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
   const [showAuth, setShowAuth] = useState(false);
@@ -55,10 +62,10 @@ export default function PostDetail() {
 
   if (isError) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
         <p className="text-xs text-muted-foreground mb-3">Could not load this post</p>
-        <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-full gap-1.5">
+        <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-lg gap-1.5">
           <RefreshCw className="h-3.5 w-3.5" /> Try Again
         </Button>
       </div>
@@ -76,7 +83,7 @@ export default function PostDetail() {
 
   if (!post) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-20 text-center">
+      <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <p className="text-muted-foreground text-sm">Thread not found</p>
         <Link to="/" className="text-primary text-sm hover:underline mt-2 inline-block">← Back to feed</Link>
       </div>
@@ -147,60 +154,51 @@ export default function PostDetail() {
         <ArrowLeft className="h-3.5 w-3.5" /> Back
       </Link>
 
-      <article className="bg-card/60 border border-border/40 rounded-xl p-5 sm:p-6">
+      <article className="bg-card border border-border rounded-xl p-5 sm:p-6">
         {/* Meta */}
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-3">
-          <button onClick={() => navigate(`/d/${post.category}`)} className="font-semibold text-foreground/80 hover:text-primary transition-colors">
-            d/{post.category}
-          </button>
+          <span className="font-medium text-foreground/80">
+            {CATEGORIES[post.category] || post.category}
+          </span>
           <span>·</span>
           <span>{anonHandle}</span>
           <span>·</span>
           <span>{timeAgo(post.created_at)}</span>
         </div>
 
-        {/* Title - serif */}
-        <h1 className="font-serif text-2xl sm:text-[28px] leading-tight mb-3 text-foreground">{post.title}</h1>
+        {/* Title */}
+        <h1 className="text-xl sm:text-2xl font-semibold leading-tight mb-3 text-foreground">{post.title}</h1>
 
         {/* Tags */}
         <div className="flex items-center gap-1.5 mb-5">
           {post.flair && (
-            <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">{post.flair}</span>
+            <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-md border border-primary/20">{post.flair}</span>
           )}
           {post.course_code && (
-            <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{post.course_code}</span>
+            <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-md">{post.course_code}</span>
           )}
           {contextLabel && <span className="text-[10px] text-muted-foreground">{contextLabel}</span>}
         </div>
 
-        {/* Body - reading optimized */}
+        {/* Body */}
         <div className="mb-6 text-[15px] leading-[1.75] space-y-0.5">{renderBody(post.body)}</div>
 
         {/* Action bar */}
         <div className="flex items-center gap-1.5 pt-4 border-t border-border/30">
           <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} horizontal />
-          <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium">
+          <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg transition-colors font-medium">
             <MessageSquare className="h-4 w-4" /> {post.comment_count}
           </button>
-          <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium" onClick={handleShare}>
+          <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-lg transition-colors font-medium" onClick={handleShare}>
             <Share2 className="h-4 w-4" /> Share
-          </button>
-          <button
-            className={cn("flex items-center gap-1.5 text-xs hover:bg-accent px-3 py-1.5 rounded-full transition-colors font-medium", saved ? "text-primary" : "text-muted-foreground hover:text-foreground")}
-            onClick={() => { setSaved(!saved); toast.success(saved ? "Unsaved" : "Saved!"); }}
-          >
-            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} />
-          </button>
-          <button className="text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto" onClick={() => toast.info("More options coming soon!")}>
-            <MoreHorizontal className="h-4 w-4" />
           </button>
         </div>
       </article>
 
       {/* Comment input */}
-      <div className="mt-4 bg-card/40 border border-border/30 rounded-xl overflow-hidden">
+      <div className="mt-4 bg-card border border-border rounded-xl overflow-hidden">
         <textarea
-          className="w-full bg-transparent p-4 text-sm resize-none focus:outline-none placeholder:text-muted-foreground min-h-[90px]"
+          className="w-full bg-transparent p-4 text-sm resize-none focus:outline-none placeholder:text-muted-foreground min-h-[80px]"
           placeholder={user ? "Share your thoughts…" : "Sign in to share your thoughts…"}
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
@@ -213,7 +211,7 @@ export default function PostDetail() {
             <button
               onClick={handleComment}
               disabled={!commentText.trim() || submitting}
-              className="text-xs font-semibold bg-primary text-primary-foreground px-5 py-1.5 rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-xs font-semibold bg-primary text-primary-foreground px-5 py-1.5 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? "Posting…" : "Comment"}
             </button>
@@ -229,8 +227,8 @@ export default function PostDetail() {
             key={s}
             onClick={() => setCommentSort(s)}
             className={cn(
-              "text-xs font-medium px-2.5 py-1 rounded-full transition-colors capitalize",
-              commentSort === s ? "text-foreground bg-accent" : "text-muted-foreground hover:text-foreground"
+              "text-xs font-medium px-2.5 py-1 rounded-lg transition-colors capitalize",
+              commentSort === s ? "text-foreground bg-muted" : "text-muted-foreground hover:text-foreground"
             )}
           >
             {s}
@@ -241,9 +239,9 @@ export default function PostDetail() {
       {/* Comments */}
       <div>
         {commentsError ? (
-          <div className="text-center py-10 bg-card/40 border border-border/30 rounded-xl">
+          <div className="text-center py-10 bg-card border border-border rounded-xl">
             <p className="text-sm text-muted-foreground mb-2">Could not load comments</p>
-            <Button onClick={() => refetchComments()} size="sm" variant="outline" className="rounded-full gap-1.5">
+            <Button onClick={() => refetchComments()} size="sm" variant="outline" className="rounded-lg gap-1.5">
               <RefreshCw className="h-3.5 w-3.5" /> Try Again
             </Button>
           </div>
@@ -259,7 +257,7 @@ export default function PostDetail() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-14 bg-card/30 border border-border/30 rounded-xl">
+          <div className="text-center py-12 bg-card border border-border rounded-xl">
             <MessageSquare className="h-8 w-8 text-muted-foreground/20 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No comments yet</p>
             <p className="text-xs text-muted-foreground/60 mt-0.5">Be the first to share your thoughts</p>
