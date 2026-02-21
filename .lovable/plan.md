@@ -1,88 +1,82 @@
+# Email OTP Authentication with @iimb.ac.in Restriction
 
+## Overview
 
-# Fix Plan: Force React Query Online + Unblock All Network Requests
+Replace the current password-based authentication with an email OTP flow. Users enter their @iimb.ac.in email, receive a 6-digit OTP code, and enter it to sign in. No passwords needed. A temporary test bypass will allow a specific test email domain for verification.  
+  
+Sample email id: [rounak.tikmani24@iimb.ac.in](mailto:rounak.tikmani24@iimb.ac.in)  
+Ask me if i got otp while testing and keep updating until i get OTP  
+Also allow for both OTP for first time authentication then allow user to login with set password or OTP both.
 
-## Root Cause (Confirmed via Testing)
+## Changes
 
-I tested the full app in the browser:
-- **Homepage**: Infinite spinner, ZERO network requests to the database (not even auth session checks)
-- **Auth login**: The POST to `/auth/v1/token` works (200 response), proving `fetch()` and the Supabase URL/key are correct
-- **After login**: Page stuck on "Please wait..." forever -- never navigates to home
+### 1. Redesign Auth Page (`src/pages/Auth.tsx`)
 
-The confirmed root cause: **React Query v5's `onlineManager` reports the browser as offline** in the Lovable preview iframe environment (`navigator.onLine` returns `false`). Even with `networkMode: 'always'` set on individual queries, React Query v5 still checks the online manager internally and can pause queries in certain edge cases.
+- Remove the login/signup toggle -- OTP flow handles both (new users are auto-created)
+- Remove password and name fields
+- Two-step flow:
+  - **Step 1**: Email input with @iimb.ac.in validation. User enters email and clicks "Send OTP". Calls `supabase.auth.signInWithOtp({ email })`.
+  - **Step 2**: 6-digit OTP input using the existing `InputOTP` component. User enters OTP and clicks "Verify". Calls `supabase.auth.verifyOtp({ email, token, type: 'email' })`.
+- Add a "Resend OTP" button with a 60-second cooldown timer
+- Email validation: must end with `@iimb.ac.in` (plus a temporary test bypass for `@gmail.com` during development -- will be removed later)
+- On successful verification, navigate to `/`
 
-The Supabase PostgREST client (for `.from().select()`) goes through the same fetch pipeline, and even direct Supabase calls in `AuthContext.fetchProfile()` appear to hang, blocking the auth flow.
+### 2. Update AuthGuardDialog (`src/components/AuthGuardDialog.tsx`)
 
-## The Fix (3 Changes)
+- Remove the separate "Sign Up" and "Log In" buttons -- replace with a single "Sign In with IIMB Email" button since OTP handles both flows
+- Keep the @iimb.ac.in messaging
 
-### 1. Force React Query Online Manager (THE critical fix)
-**File: `src/main.tsx`**
+### 3. Handle new users without a name (`src/contexts/AuthContext.tsx`)
 
-Add `onlineManager.setOnline(true)` before rendering the app. This is the documented React Query v5 solution for iframe/sandbox environments where `navigator.onLine` is unreliable.
+- The `handle_new_user` database trigger already creates a profile with `COALESCE(raw_user_meta_data->>'name', '')` so new OTP users get a blank name
+- No changes needed to the context, but the Profile page should prompt users to set their name if it's empty
 
-```typescript
-import { onlineManager } from '@tanstack/react-query';
-onlineManager.setOnline(true);
-```
+### 4. Add a route for email verification callback (`src/App.tsx`)
 
-This single line will unblock ALL queries (posts, comments, leaderboard, profiles) at once.
+- No new route needed -- Supabase OTP verification happens in-page, not via redirect links
 
-### 2. Fix Auth page stuck on "Please wait..."
-**File: `src/pages/Auth.tsx`**
+### 5. Configure auth settings
 
-The `handleSubmit` calls `supabase.auth.signInWithPassword()` which succeeds, but then the `onAuthStateChange` in `AuthContext` tries to `await fetchProfile()` which can hang. The fix: add a timeout wrapper so login always completes:
+- Disable auto-confirm so OTP is actually required (check current setting)
+- The OTP flow uses Supabase's built-in email OTP which sends a 6-digit code
 
-```typescript
-try {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  toast.success("Welcome back!");
-  navigate("/");
-} catch ...
-```
+## Technical Details
 
-Also ensure `setLoading(false)` always runs in the `finally` block (it already does, but we need to verify the auth state change isn't blocking the component).
-
-### 3. Fix AuthContext profile fetch blocking
-**File: `src/contexts/AuthContext.tsx`**
-
-The `onAuthStateChange` callback uses `await fetchProfile(currentUser.id)`. If this fetch hangs (due to the same network issue), it blocks `setLoading(false)` for 2 seconds. Fix: Don't await the profile fetch -- use `.then()` instead so it doesn't block state updates:
+**Step 1 - Send OTP:**
 
 ```typescript
-supabase.auth.onAuthStateChange((_event, session) => {
-  const currentUser = session?.user ?? null;
-  setUser(currentUser);
-  if (currentUser) {
-    // Don't block -- fetch profile in background
-    fetchProfile(currentUser.id);
-  } else {
-    setProfile(null);
-  }
-  if (!initialized.current) {
-    initialized.current = true;
-    setLoading(false);
-  }
+const { error } = await supabase.auth.signInWithOtp({
+  email,
+  options: {
+    shouldCreateUser: true,
+  },
 });
 ```
 
-## What This Fixes
+**Step 2 - Verify OTP:**
 
-All 30 previously identified issues that stem from "zero network requests" will be resolved:
-- Feed loads with the 15 approved posts from the database
-- Post detail pages load
-- Comments load
-- Leaderboard loads
-- Login completes and navigates to home
-- Post creation works (can hit the database)
-- Voting works
-- Profile page shows real data
+```typescript
+const { data, error } = await supabase.auth.verifyOtp({
+  email,
+  token: otpCode,
+  type: 'email',
+});
+```
 
-## Files Changed
+**Email validation:**
 
-| File | Change |
-|------|--------|
-| `src/main.tsx` | Add `onlineManager.setOnline(true)` -- 2 lines |
-| `src/contexts/AuthContext.tsx` | Remove `await` from `fetchProfile` call -- 1 line |
+```typescript
+const isValidEmail = (email: string) => {
+  return email.endsWith('@iimb.ac.in') || email.endsWith('@gmail.com'); // gmail is temp bypass
+};
+```
 
-These two changes are the minimum needed to unblock the entire app.
+**OTP Input UI** uses the existing `InputOTP`, `InputOTPGroup`, `InputOTPSlot` components from `src/components/ui/input-otp.tsx`.
 
+**Files to modify:**
+
+- `src/pages/Auth.tsx` -- Complete rewrite for OTP flow
+- `src/components/AuthGuardDialog.tsx` -- Simplify buttons
+- Auth configuration -- Disable auto-confirm if needed
+
+**Auth config change:** Will use the configure-auth tool to ensure email OTP is enabled and auto-confirm is disabled.
