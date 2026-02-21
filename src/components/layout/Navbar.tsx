@@ -28,7 +28,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Cmd+K / Ctrl+K shortcut
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -53,73 +52,51 @@ export default function Navbar() {
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-200 bg-card",
           scrolled
-            ? "bg-background/80 backdrop-blur-xl border-b border-border/40 shadow-soft"
-            : "bg-background border-b border-border/30"
+            ? "shadow-soft border-b border-border/60"
+            : "border-b border-border/40"
         )}
       >
         <div className="max-w-3xl mx-auto flex items-center h-14 px-4 gap-3">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 flex-shrink-0">
             <img src={dmLogo} alt="Digital Mitra" className="h-8 w-8 rounded-full" />
             <span className="hidden sm:inline text-sm font-semibold text-foreground tracking-tight">digitalmitra</span>
           </Link>
 
-          {/* Search trigger */}
           <div className="flex-1 flex justify-center">
             <button
               onClick={() => setSearchOpen(true)}
-              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/60 hover:bg-secondary text-muted-foreground text-sm transition-colors max-w-xs w-full"
+              className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted hover:bg-border/60 text-muted-foreground text-sm transition-colors max-w-xs w-full"
             >
               <Search className="h-3.5 w-3.5" />
               <span className="flex-1 text-left">Search…</span>
-              <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border/40 bg-muted/40 px-1.5 text-[10px] font-mono text-muted-foreground/60">
+              <kbd className="hidden sm:inline-flex h-5 items-center rounded border border-border bg-card px-1.5 text-[10px] font-mono text-muted-foreground/60">
                 ⌘K
               </kbd>
             </button>
           </div>
 
-          {/* Right side */}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {user ? (
               <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-accent rounded-full"
-                  onClick={() => navigate("/gossip")}
-                >
+                <Button variant="ghost" size="sm" className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-muted rounded-full" onClick={() => navigate("/gossip")}>
                   <EyeOff className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-accent rounded-full"
-                  onClick={() => navigate("/forms")}
-                >
+                <Button variant="ghost" size="sm" className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-muted rounded-full" onClick={() => navigate("/forms")}>
                   <FileText className="h-4 w-4" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-accent rounded-full"
-                  onClick={() => { import("sonner").then(m => m.toast.info("Notifications coming soon!")); }}
-                >
+                <Button variant="ghost" size="sm" className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-muted rounded-full" onClick={() => { import("sonner").then(m => m.toast.info("Notifications coming soon!")); }}>
                   <Bell className="h-4 w-4" />
                 </Button>
-                <Button
-                  size="sm"
-                  className="hidden md:flex gap-1.5 h-8 text-xs rounded-full font-semibold"
-                  onClick={() => navigate("/submit")}
-                >
+                <Button size="sm" className="hidden md:flex gap-1.5 h-8 text-xs rounded-full font-semibold" onClick={() => navigate("/submit")}>
                   <Plus className="h-3.5 w-3.5" /> Post
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="ml-0.5 rounded-full ring-1 ring-border/50 hover:ring-muted-foreground/50 transition-all">
+                    <button className="ml-0.5 rounded-full ring-1 ring-border hover:ring-primary/40 transition-all">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-[10px] font-semibold bg-primary/15 text-primary">{initials}</AvatarFallback>
+                        <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
                       </Avatar>
                     </button>
                   </DropdownMenuTrigger>
@@ -167,7 +144,6 @@ export default function Navbar() {
         </div>
       </header>
 
-      {/* AI Search Dialog */}
       <AISearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );

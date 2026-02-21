@@ -35,7 +35,7 @@ export default function BottomNav() {
 
   return (
     <>
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/50 safe-area-pb">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-lg border-t border-border/60 safe-area-pb">
       <div className="flex items-center justify-around h-14 px-2">
         {tabs.map((tab) => {
           const isActive = location.pathname === tab.key || (tab.key === "/" && location.pathname === "/");
@@ -65,6 +65,10 @@ export default function BottomNav() {
             </button>
           );
         })}
+      </div>
+      {/* Mobile footer credit */}
+      <div className="flex items-center justify-center gap-1.5 pb-1 text-[10px] text-muted-foreground/60">
+        <span>Built by Ronnie T</span>
       </div>
     </nav>
     <AISearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />

@@ -50,15 +50,15 @@ export default function VoteButtons({
     <>
       <div
         className={cn(
-          "flex items-center gap-0.5 rounded-full bg-secondary/60",
+          "flex items-center gap-0.5 rounded-full bg-muted/60",
           horizontal ? "flex-row px-1" : "flex-col py-1"
         )}
       >
         <button
           onClick={handleUpvote}
           className={cn(
-            "p-1 rounded-full transition-colors hover:bg-accent",
-            userVote === 1 ? "text-orange-500" : "text-muted-foreground hover:text-orange-500",
+            "p-1 rounded-full transition-colors hover:bg-muted",
+            userVote === 1 ? "text-primary" : "text-muted-foreground hover:text-primary",
             bouncing === "up" && "animate-vote-bounce"
           )}
           aria-label="Upvote"
@@ -66,8 +66,8 @@ export default function VoteButtons({
           <ArrowBigUp className={cn(iconSize, userVote === 1 && "fill-current")} />
         </button>
         <span className={cn("font-bold min-w-[2ch] text-center tabular-nums", textSize, {
-          "text-orange-500": userVote === 1,
-          "text-blue-500": userVote === -1,
+          "text-primary": userVote === 1,
+          "text-blue-600": userVote === -1,
           "text-foreground": !userVote,
         })}>
           {score}
@@ -75,8 +75,8 @@ export default function VoteButtons({
         <button
           onClick={handleDownvote}
           className={cn(
-            "p-1 rounded-full transition-colors hover:bg-accent",
-            userVote === -1 ? "text-blue-500" : "text-muted-foreground hover:text-blue-500",
+            "p-1 rounded-full transition-colors hover:bg-muted",
+            userVote === -1 ? "text-blue-600" : "text-muted-foreground hover:text-blue-600",
             bouncing === "down" && "animate-vote-bounce"
           )}
           aria-label="Downvote"
