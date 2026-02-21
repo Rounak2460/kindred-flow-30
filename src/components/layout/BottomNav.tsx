@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Plus, EyeOff, User } from "lucide-react";
+import { Home, Compass, Plus, EyeOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import AISearchDialog from "@/components/search/AISearchDialog";
+import ExploreSheet from "@/components/layout/ExploreSheet";
 
 const tabs = [
   { key: "/", icon: Home, label: "Home" },
-  { key: "/search", icon: Search, label: "Search" },
+  { key: "/explore", icon: Compass, label: "Explore" },
   { key: "/submit", icon: Plus, label: "Post", accent: true },
   { key: "/gossip", icon: EyeOff, label: "Gossip" },
   { key: "/profile", icon: User, label: "Profile" },
@@ -18,10 +19,11 @@ export default function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
 
   const handleTap = (key: string) => {
-    if (key === "/search") {
-      setSearchOpen(true);
+    if (key === "/explore") {
+      setExploreOpen(true);
       return;
     }
     if ((key === "/submit" || key === "/profile") && !user) {
@@ -66,6 +68,7 @@ export default function BottomNav() {
       </div>
     </nav>
     <AISearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
+    <ExploreSheet open={exploreOpen} onOpenChange={setExploreOpen} />
     </>
   );
 }
