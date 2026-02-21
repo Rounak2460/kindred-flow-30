@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Plus, User, LogOut, FileText, Bell, Award } from "lucide-react";
+import { Search, Plus, User, LogOut, FileText, Bell, Award, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -88,6 +88,14 @@ export default function Navbar() {
                   variant="ghost"
                   size="sm"
                   className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-accent rounded-full"
+                  onClick={() => navigate("/gossip")}
+                >
+                  <EyeOff className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:flex h-9 w-9 p-0 text-muted-foreground hover:bg-accent rounded-full"
                   onClick={() => navigate("/forms")}
                 >
                   <FileText className="h-4 w-4" />
@@ -132,6 +140,9 @@ export default function Navbar() {
                     <DropdownMenuItem className="text-xs" onClick={() => navigate("/profile")}>
                       <User className="h-3.5 w-3.5 mr-2" /> Profile
                     </DropdownMenuItem>
+                    <DropdownMenuItem className="text-xs" onClick={() => navigate("/gossip")}>
+                      <EyeOff className="h-3.5 w-3.5 mr-2" /> Gossip
+                    </DropdownMenuItem>
                     <DropdownMenuItem className="text-xs" onClick={() => navigate("/forms")}>
                       <FileText className="h-3.5 w-3.5 mr-2" /> Forms
                     </DropdownMenuItem>
@@ -143,9 +154,14 @@ export default function Navbar() {
                 </DropdownMenu>
               </>
             ) : (
-              <Button size="sm" className="h-8 text-xs rounded-full font-semibold px-4" onClick={() => navigate("/auth")}>
-                Join
-              </Button>
+              <>
+                <Button variant="ghost" size="sm" className="hidden md:flex h-8 text-xs rounded-full font-medium px-3 text-muted-foreground hover:text-foreground" onClick={() => navigate("/gossip")}>
+                  Gossip
+                </Button>
+                <Button size="sm" className="h-8 text-xs rounded-full font-semibold px-4" onClick={() => navigate("/auth")}>
+                  Join
+                </Button>
+              </>
             )}
           </div>
         </div>
