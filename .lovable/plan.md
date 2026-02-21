@@ -1,198 +1,231 @@
 
 
-# Complete UI/UX Revamp: Reddit + Knowledge Base Fusion
+# Premium Light Mode Redesign: IIMB White + Red
 
-## Vision
+## Design Philosophy
 
-Combine the Reddit-style threaded discussion feed (current) with the structured knowledge-base sections from the uploaded design. The result: a platform where MBA students can both **explore structured data** (course ratings, exchange reviews, internship intel) AND **participate in community discussions** -- all in the current dark-mode design system.
+Inspired by Apple's design language: white space as a feature, not emptiness. Every element breathes. IIMB's institutional red (#B71C1C / crimson-800) used sparingly as a signature accent -- on CTAs, active states, and key moments only. The rest is a symphony of whites, warm grays, and subtle shadows.
 
-## Architecture Change
+Think: Apple.com meets The Economist meets a premium B-school portal.
 
-Current: Feed-first with category filters
-New: **Hub-and-spoke** -- a dashboard home page with quick access to 5 dedicated section pages, PLUS the community feed
+## Color System Overhaul
 
-```text
-Home (Dashboard)
-  |-- Feed (community posts, existing)
-  |-- /academics (course cards + detail pages)
-  |-- /exchange (exchange colleges + detail pages)  
-  |-- /internships (company cards + detail pages)
-  |-- /exam-papers (filterable paper listings)
-  |-- /campus (categorized tips)
-  |-- /gossip (existing, anonymous)
-  |-- /submit (existing, post wizard)
-  |-- /profile (existing, editable)
+### CSS Variables (`src/index.css`)
+
+Switch from dark charcoal to a warm white palette:
+
+| Token | Current (Dark) | New (Light Premium) |
+|-------|---------------|-------------------|
+| background | 240 6% 7% (near-black) | 0 0% 99% (off-white) |
+| foreground | 240 5% 93% | 0 0% 12% (near-black text) |
+| card | 240 5% 10% | 0 0% 100% (pure white) |
+| card-foreground | 240 5% 93% | 0 0% 12% |
+| primary | 4 80% 56% (orange-red) | 0 72% 36% (IIMB crimson #B71C1C) |
+| primary-foreground | white | white |
+| secondary | 240 5% 14% | 0 0% 96% (light gray) |
+| secondary-foreground | 240 5% 85% | 0 0% 40% |
+| muted | 240 5% 14% | 0 0% 96% |
+| muted-foreground | 240 5% 45% | 0 0% 55% |
+| accent | 240 5% 16% | 0 0% 97% |
+| border | 240 5% 14% | 0 0% 91% (subtle gray) |
+| destructive | same | same |
+| surface | dark | 0 0% 98% |
+| upvote | 16 100% 50% | 0 72% 36% (IIMB red) |
+| downvote | blue | 220 60% 50% |
+
+### Typography
+
+Keep Inter (sans) and Instrument Serif (headings) -- they're already premium. Add subtle tracking adjustments in CSS for headings.
+
+## Files to Modify (Complete List)
+
+### 1. `src/index.css` -- Color variables + utility classes
+- Replace all CSS variable values with the light palette above
+- Update `.glass` utility: white/90 backdrop blur instead of dark
+- Update `.card-hover`: subtle shadow lift instead of dark bg change
+- Update `.shimmer`: light gray gradient
+
+### 2. `src/components/layout/Navbar.tsx` -- Premium white navbar
+- White background with barely-visible bottom border
+- IIMB logo stays, brand name in near-black
+- Search pill: light gray bg (#f5f5f5), darker on hover
+- Active buttons: IIMB red accents
+- Avatar ring: red accent
+- Dropdown: white bg with subtle shadow
+
+### 3. `src/components/layout/BottomNav.tsx` -- Light bottom bar
+- White bg with top border
+- Active tab: IIMB red
+- Post button: red circle with white icon
+- Inactive: gray-500
+
+### 4. `src/components/layout/AppLayout.tsx` -- Add footer with "Built by" credit
+- Add a footer component below main content with:
+  - "Built by Ronnie T (PGP 2026)"
+  - LinkedIn icon linking to https://www.linkedin.com/in/rounak-tikmani-a79635169/
+  - Minimal, centered, small text, muted
+
+### 5. `src/components/layout/ExploreSheet.tsx` -- Light sheet
+- White bg, subtle borders
+- Icon containers: red/10 bg with red icons
+
+### 6. `src/pages/Home.tsx` -- Premium dashboard
+- Clean white canvas
+- FeedWelcome hero: white card with thin red left border accent (instead of gradient bg)
+- StatCards: white with very subtle shadow, red icon accent
+- QuickAccess cards: white with thin border, red icon, hover shadow lift
+- Feed section: clean dividers
+
+### 7. `src/components/feed/FeedWelcome.tsx` -- Elegant hero
+- White bg with subtle IIMB red left accent bar
+- IIMB logo placement (small, beside "IIM Bangalore" text)
+- "Join with IIMB Email" button in solid IIMB red
+- Clean, minimal, no gradient blob
+
+### 8. `src/components/feed/PostCard.tsx` -- White post cards
+- Pure white bg, thin gray border
+- Hover: subtle shadow elevation (no bg change)
+- Flair colors: toned down for light mode (lighter bgs, darker text)
+- Vote buttons: red for upvote, blue for downvote
+- Category text: muted gray
+
+### 9. `src/components/feed/VoteButtons.tsx` -- Light vote UI
+- Light gray pill bg
+- Upvote active: IIMB red
+- Downvote active: blue-600
+- Score text: dark
+
+### 10. `src/components/feed/CategoryTabs.tsx` -- Light pills
+- Active: red bg, white text
+- Inactive: white bg, gray border, gray text
+
+### 11. `src/components/feed/SortBar.tsx` -- Light dropdown
+- White bg trigger with gray border
+- Active sort: red text
+
+### 12. `src/components/feed/LeaderboardWidget.tsx` -- White leaderboard
+- White card, subtle border
+- Trophy/flame icons: IIMB red
+- Hover rows: light gray
+
+### 13. `src/components/feed/SkeletonCard.tsx` -- Light skeletons
+- Light gray pulse blocks on white
+
+### 14. `src/components/feed/CommentItem.tsx` -- Light comments
+- White bg, subtle left border for nesting
+
+### 15. `src/components/shared/StatCard.tsx` -- Premium stat cards
+- White bg, subtle shadow (no gradient)
+- Icon: IIMB red
+- Clean number + label
+
+### 16. `src/components/shared/QuickAccessCard.tsx` -- Clean access cards
+- White bg, thin border
+- Red icon
+- Hover: shadow-soft + slight border-red
+
+### 17. `src/components/shared/FilterPills.tsx` -- Light filter pills
+- Active: red bg, white text
+- Inactive: white bg, gray border
+
+### 18. `src/components/shared/StarRating.tsx` -- Keep yellow stars (universal)
+
+### 19. `src/components/shared/RatingBar.tsx` -- Red progress bar
+
+### 20. `src/pages/Auth.tsx` -- Premium auth page
+- Left panel: clean white with subtle IIMB red accent line
+- IIMB logo prominent
+- Form inputs: white bg with light gray border
+- CTA buttons: solid IIMB red
+- OTP slots: white with red focus ring
+
+### 21. `src/pages/Profile.tsx` -- Light profile
+- White card, subtle shadow
+- Gradient header: light red tint
+- Stats: white bg with border
+- Edit mode: clean inputs
+
+### 22. `src/pages/Gossip.tsx` -- Light gossip
+- Violet accents stay (differentiator for anonymous section)
+- But cards: white bg instead of dark
+- Borders: gray instead of violet/dark
+
+### 23. `src/pages/PostDetail.tsx` -- Light post detail
+- White article card with subtle shadow
+- Clean typography on white
+- Comment area: white with light border
+
+### 24. `src/pages/Submit.tsx` -- Light submit wizard
+- White cards for community selection
+- Clean inputs on white
+- Red CTA buttons
+
+### 25. `src/pages/Academics.tsx`, `Exchange.tsx`, `Internships.tsx`, `ExamPapers.tsx`, `CampusLife.tsx` -- All section pages
+- White card grids
+- Red icon accents
+- Hover shadows instead of border color changes
+
+### 26. `src/pages/CourseDetail.tsx`, `ExchangeDetail.tsx`, `InternshipDetail.tsx` -- Detail pages
+- White bg
+- Rating bars: red indicator
+- Clean review cards
+
+### 27. `src/components/search/AISearchDialog.tsx` -- Premium search modal
+- White dialog with subtle shadow
+- Sparkle icon: IIMB red
+- Results: white bg, hover light gray
+- Category pills: adjusted for light mode
+
+### 28. `src/components/AuthGuardDialog.tsx` -- Light auth guard
+- White dialog
+- Shield icon: red bg tint
+- Red CTA button
+
+### 29. `src/components/feed/CreditsPrompt.tsx` -- Light credits prompt
+- White card, red accent border
+- Red CTA
+
+### 30. `tailwind.config.ts` -- Shadow adjustments
+- Update `shadow-soft`, `shadow-elevated`, `shadow-glow`, `shadow-card-hover` for light mode (lighter, more subtle shadows)
+
+### 31. `src/components/ui/progress.tsx` -- Already uses `--primary`, will auto-update
+
+## IIMB Logo Placement
+
+- Navbar: existing `digitalmitra-logo.png` stays as brand mark
+- FeedWelcome hero: Add small IIMB crest/badge next to "IIM Bangalore" text
+- Auth page: IIMB logo on the brand panel
+- Using the existing `src/assets/digitalmitra-logo.png` asset
+
+## Footer Credit
+
+Added to `AppLayout.tsx`, always visible at bottom of every page:
+
+```
+Built by Ronnie T (PGP 2026)  [LinkedIn icon]
 ```
 
-## New Routes and Pages
+- Tiny text (text-xs), muted gray
+- LinkedIn icon links to https://www.linkedin.com/in/rounak-tikmani-a79635169/
+- Centered, with generous top margin
+- Professional and understated
 
-### 1. Enhanced Home Page (`src/pages/Home.tsx`)
+## Design Principles Applied
 
-Replace the current feed-only home with a dashboard layout:
-
-- **Hero section** (adapted from uploaded): gradient banner with "The Knowledge Layer of IIM Bangalore" tagline, CTA buttons for "Explore Courses" and "Contribute"
-- **Quick Stats bar**: 4 stat cards (Course Reviews, Exchange Diaries, Internship Reports, Exam Papers) -- counts fetched from database
-- **Quick Access grid**: 3 gradient cards linking to Academics, Exchange, Internships
-- **Recent community posts**: The existing feed (PostCard list) with category tabs and sort, shown below the dashboard widgets
-- Keep existing category tabs, sort bar, and post list -- just move them below the new dashboard section
-
-### 2. Academics Page (`src/pages/Academics.tsx`)
-
-A dedicated course exploration page:
-
-- Header: "Academics" with subtitle "Course reviews, tips & study strategies from your peers"
-- Filter pills: All, Core, Elective, Finance, Marketing, etc. (from course `category` enum)
-- Search input: filter by course name or code
-- Course cards grid (2-col desktop, 1-col mobile): Each card shows code, name, professor, term, star rating, review count, tags
-- Click a card -> navigate to `/academics/:courseId`
-- Data source: `courses` table + `course_reviews` table for ratings
-
-### 3. Course Detail Page (`src/pages/CourseDetail.tsx`)
-
-- Back button to /academics
-- Course header card: code, name, professor, term, overall rating
-- Rating breakdown panel: Overall, Difficulty, Relevance, Workload (progress bars)
-- Quick Tips section (from reviews)
-- Student Reviews list: avatar, batch, date, star rating, review text, tags, helpful count
-- "Write a Review" button (navigates to /submit or opens a form)
-- Data: `courses` table joined with `course_reviews`
-
-### 4. Exchange Page (`src/pages/Exchange.tsx`)
-
-- Header: "Exchange Programs" with subtitle
-- Region filter pills: All, Europe, Asia, North America, Oceania
-- College cards grid: flag emoji, college name, location, rating, highlights, diary count
-- Click -> navigate to `/exchange/:collegeId`
-- Data: `exchange_colleges` table
-
-### 5. Exchange Detail Page (`src/pages/ExchangeDetail.tsx`)
-
-- Back button, college header with flag and name
-- 4 rating panels: Academics, Living & Costs, Social Life, Travel (from `exchange_reviews` averages)
-- Student diaries/reviews list
-- Data: `exchange_colleges` + `exchange_reviews`
-
-### 6. Internships Page (`src/pages/Internships.tsx`)
-
-- Header: "Internship Intel"
-- Domain filter pills: All, Consulting, Finance, Product Management, Strategy & Ops
-- Company cards grid: logo/initials, company name, domain, location, stipend, rating, highlights
-- Click -> navigate to `/internships/:companyId`
-- Data: `internship_companies` table
-
-### 7. Internship Detail Page (`src/pages/InternshipDetail.tsx`)
-
-- Company header with logo and info
-- 4 rating panels: Work Culture, Learning Curve, Mentorship, PPO Conversion
-- Intern reviews list
-- Data: `internship_companies` + `internship_reviews`
-
-### 8. Exam Papers Page (`src/pages/ExamPapers.tsx`)
-
-- Header: "Exam Papers" with "Upload Paper" button
-- Type filter pills: All, End Term, Mid Term, Quiz, Case Analysis
-- Paper listing (list layout, not grid): file icon, course name, code, term, year, type badge, uploader, vote count
-- Click -> opens/downloads the paper file
-- Data: `exam_papers` table joined with `courses`
-
-### 9. Campus Life Page (`src/pages/CampusLife.tsx`)
-
-- Header: "Campus Life -- The unofficial survival guide"
-- Category tabs: Food & Cafes, Study Spots, Weekend Getaways, Gyms & Sports (from `campus_tip_category` enum)
-- Tips cards grid (3-col desktop): type badge, rating, name, tip text, useful vote count
-- "Add a Tip" button
-- Data: `campus_tips` table
-
-## Navigation Overhaul
-
-### Navbar (`src/components/layout/Navbar.tsx`)
-
-No major changes needed -- the existing search, profile menu, and gossip links stay.
-
-### Bottom Nav (`src/components/layout/BottomNav.tsx`)
-
-Change from: Home, Search, Post, Gossip, Profile
-Change to: Home, Explore, Post, Gossip, Profile
-
-"Explore" opens a bottom sheet or navigates to a hub page showing all 5 sections (Academics, Exchange, Internships, Exam Papers, Campus Life).
-
-### Home Page Section Navigation
-
-The Quick Access grid on the home page serves as the primary discovery mechanism on desktop.
-
-## New Hooks
-
-| Hook | Purpose |
-|------|---------|
-| `src/hooks/useCourses.ts` | Fetch courses list with filters, single course detail |
-| `src/hooks/useCourseReviews.ts` | Fetch reviews for a course |
-| `src/hooks/useExchangeColleges.ts` | Fetch exchange colleges with region filter |
-| `src/hooks/useExchangeReviews.ts` | Fetch reviews for a college |
-| `src/hooks/useInternshipCompanies.ts` | Fetch companies with domain filter |
-| `src/hooks/useInternshipReviews.ts` | Fetch reviews for a company |
-| `src/hooks/useExamPapers.ts` | Fetch exam papers with type filter |
-| `src/hooks/useCampusTips.ts` | Fetch campus tips by category |
-| `src/hooks/useStats.ts` | Fetch aggregate counts for the dashboard |
-
-## Shared Components
-
-| Component | Purpose |
-|-----------|---------|
-| `src/components/shared/StarRating.tsx` | Reusable star rating display |
-| `src/components/shared/RatingBar.tsx` | Horizontal rating progress bar (Overall: 4.3 [====]) |
-| `src/components/shared/FilterPills.tsx` | Reusable pill filter bar |
-| `src/components/shared/StatCard.tsx` | Dashboard stat card with icon and count |
-| `src/components/shared/QuickAccessCard.tsx` | Gradient card linking to a section |
-
-## Design Approach
-
-- **Keep the dark mode** design system (current CSS variables)
-- **Adapt the uploaded JSX layouts** into Tailwind + shadcn components
-- Cards use `bg-card border-border` instead of white backgrounds
-- Gradient accents use `from-primary/20` patterns
-- Star ratings and badges use existing component patterns
-- All pages use `max-w-3xl mx-auto` for content width consistency
-- Animations use existing `fade-up` utility and framer-motion
-
-## Routing Changes (`src/App.tsx`)
-
-Add these routes inside AppLayout:
-```
-/academics -> Academics
-/academics/:courseId -> CourseDetail
-/exchange -> Exchange  
-/exchange/:collegeId -> ExchangeDetail
-/internships -> Internships
-/internships/:companyId -> InternshipDetail
-/exam-papers -> ExamPapers
-/campus -> CampusLife
-```
+1. **White space is the design** -- generous padding, no clutter
+2. **Red is earned** -- only on CTAs, active states, icons. Never as background fills
+3. **Shadows over borders** -- cards use subtle shadows for depth, not heavy borders
+4. **Typography hierarchy** -- Instrument Serif for headings creates editorial elegance
+5. **Micro-interactions** -- hover states are shadow lifts, not color changes
+6. **Consistency** -- every page follows the same white + red + gray palette
 
 ## Implementation Order
 
-1. Shared components (StarRating, RatingBar, FilterPills, StatCard)
-2. Data hooks (useCourses, useExchangeColleges, etc.)
-3. Dashboard home page enhancement
-4. Academics + CourseDetail pages
-5. Exchange + ExchangeDetail pages
-6. Internships + InternshipDetail pages
-7. Exam Papers page
-8. Campus Life page
-9. Navigation updates (BottomNav explore, routing)
-10. End-to-end testing
-
-## Files Summary
-
-**New files (~20):**
-- 9 page components
-- 8 data hooks
-- 4 shared components
-
-**Modified files (~4):**
-- `src/App.tsx` (new routes)
-- `src/pages/Home.tsx` (dashboard layout)
-- `src/components/layout/BottomNav.tsx` (explore tab)
-- `src/components/feed/CategoryTabs.tsx` (may link to section pages)
-
-**No database changes needed** -- all required tables already exist with proper RLS policies.
+1. CSS variables + Tailwind config (foundation)
+2. Layout components (Navbar, BottomNav, AppLayout with footer)
+3. Shared components (StatCard, QuickAccessCard, FilterPills, etc.)
+4. Feed components (PostCard, VoteButtons, CategoryTabs, etc.)
+5. Page-level updates (Home, Auth, Profile, Gossip, etc.)
+6. Section pages (Academics, Exchange, Internships, etc.)
+7. Search dialog + auth guard
 
