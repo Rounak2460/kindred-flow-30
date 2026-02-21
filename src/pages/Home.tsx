@@ -1,16 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, BookOpen, Globe, Briefcase, FileText, Sparkles } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
 import CategoryTabs from "@/components/feed/CategoryTabs";
 import SortBar from "@/components/feed/SortBar";
 import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
 import FeedWelcome from "@/components/feed/FeedWelcome";
 import SkeletonCard from "@/components/feed/SkeletonCard";
+import StatCard from "@/components/shared/StatCard";
+import QuickAccessCard from "@/components/shared/QuickAccessCard";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { usePosts } from "@/hooks/usePosts";
+import { useStats } from "@/hooks/useStats";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -25,18 +28,59 @@ export default function Home() {
   useEffect(() => { setSearch(urlSearch); }, [urlSearch]);
 
   const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort, search);
+  const { data: stats } = useStats();
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Welcome hero for logged-out users */}
+      {/* Hero */}
       {!user && <FeedWelcome />}
 
-      {/* Category pills */}
+      {/* Dashboard Section */}
+      <div className="mb-6">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
+          <StatCard icon={BookOpen} label="Course Reviews" count={stats?.courseReviews ?? 0} gradient="from-blue-500/15 to-blue-500/5" />
+          <StatCard icon={Globe} label="Exchange Diaries" count={stats?.exchangeDiaries ?? 0} gradient="from-green-500/15 to-green-500/5" />
+          <StatCard icon={Briefcase} label="Internship Reports" count={stats?.internshipReports ?? 0} gradient="from-purple-500/15 to-purple-500/5" />
+          <StatCard icon={FileText} label="Exam Papers" count={stats?.examPapers ?? 0} gradient="from-orange-500/15 to-orange-500/5" />
+        </div>
+
+        {/* Quick Access */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <QuickAccessCard
+            icon={BookOpen}
+            title="Academics"
+            subtitle="Course reviews, tips & ratings"
+            to="/academics"
+            gradient="from-blue-500/10 to-primary/5"
+          />
+          <QuickAccessCard
+            icon={Globe}
+            title="Exchange"
+            subtitle="College diaries & comparisons"
+            to="/exchange"
+            gradient="from-green-500/10 to-primary/5"
+          />
+          <QuickAccessCard
+            icon={Briefcase}
+            title="Internships"
+            subtitle="Company intel & reviews"
+            to="/internships"
+            gradient="from-purple-500/10 to-primary/5"
+          />
+        </div>
+      </div>
+
+      {/* Community Feed */}
+      <div className="flex items-center gap-2 mb-3">
+        <Sparkles className="h-4 w-4 text-primary" />
+        <h2 className="text-sm font-semibold">Community Feed</h2>
+      </div>
+
       <div className="mb-3">
         <CategoryTabs selected={category} onSelect={setCategory} />
       </div>
 
-      {/* Sort + result count */}
       <div className="flex items-center justify-between mb-4">
         <SortBar selected={sort} onSelect={setSort} />
         {search.trim() && (
@@ -44,7 +88,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Posts */}
       <div>
         {isError ? (
           <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
@@ -88,7 +131,6 @@ export default function Home() {
                   created_at={post.created_at}
                   user_id={post.user_id}
                 />
-                {/* Inline leaderboard after 4th post */}
                 {i === 3 && <div className="mb-3"><LeaderboardWidget /></div>}
               </div>
             ))}

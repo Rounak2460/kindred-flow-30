@@ -13,6 +13,14 @@ import Forms from "@/pages/Forms";
 import Subreddit from "@/pages/Subreddit";
 import Profile from "@/pages/Profile";
 import Gossip from "@/pages/Gossip";
+import Academics from "@/pages/Academics";
+import CourseDetail from "@/pages/CourseDetail";
+import Exchange from "@/pages/Exchange";
+import ExchangeDetail from "@/pages/ExchangeDetail";
+import Internships from "@/pages/Internships";
+import InternshipDetail from "@/pages/InternshipDetail";
+import ExamPapers from "@/pages/ExamPapers";
+import CampusLife from "@/pages/CampusLife";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -45,6 +53,14 @@ const App = () => (
               <Route path="/forms" element={<Forms />} />
               <Route path="/gossip" element={<Gossip />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/academics" element={<Academics />} />
+              <Route path="/academics/:courseId" element={<CourseDetail />} />
+              <Route path="/exchange" element={<Exchange />} />
+              <Route path="/exchange/:collegeId" element={<ExchangeDetail />} />
+              <Route path="/internships" element={<Internships />} />
+              <Route path="/internships/:companyId" element={<InternshipDetail />} />
+              <Route path="/exam-papers" element={<ExamPapers />} />
+              <Route path="/campus" element={<CampusLife />} />
             </Route>
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
