@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import dmLogo from "@/assets/digitalmitra-logo.png";
 import { cn } from "@/lib/utils";
 import AISearchDialog from "@/components/search/AISearchDialog";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            <ThemeToggle />
             {user ? (
               <>
                 <Button variant="ghost" size="sm" className="hidden md:flex h-8 w-8 p-0 text-muted-foreground hover:bg-muted rounded-lg" onClick={() => navigate("/gossip")}><EyeOff className="h-4 w-4" /></Button>

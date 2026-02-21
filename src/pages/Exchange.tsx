@@ -55,7 +55,7 @@ export default function Exchange() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {displayColleges.map(c => (
-            <button key={c.id} onClick={() => !showSamples && navigate(`/exchange/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors">
+            <button key={c.id} onClick={() => navigate(`/exchange/${c.id}`)} className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/40 transition-colors">
               <h3 className="text-sm font-medium mb-1">{c.name}</h3>
               <p className="text-[11px] text-muted-foreground mb-2">{c.country} · {c.region.replace("_", " ")}</p>
               <div className="flex items-center justify-between mb-2">
