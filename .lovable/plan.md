@@ -1,180 +1,102 @@
 
 
-# Profile Editing + Gossip Central Section
+# Speed Up AI Search -- Hybrid Approach
 
-## Overview
+## Problem
 
-Two major features to add:
+The current search fetches **500 posts** from the database and sends them all to the AI model on every query. This creates two bottlenecks:
+- Large database fetch (500 rows with body text)
+- Massive AI prompt (processing 500 post summaries is slow)
 
-1. **Editable Profile** -- Let users personalize their profile by editing name, batch, section, and bio
-2. **Gossip Central** -- A voluntary, anonymous gossip section with extra-stringent moderation
+## Solution: Two-Stage Hybrid Search
+
+Instead of sending everything to the AI, use a **fast database pre-filter first**, then send only the top candidates to AI for semantic ranking.
+
+```text
+User Query
+    |
+    v
+[Stage 1: Postgres full-text + ILIKE search] --> ~40 candidates (fast, <100ms)
+    |
+    v
+[Stage 2: AI semantic ranking on 40 posts]   --> 8 best results (fast, ~1-2s vs current ~4-5s)
+    |
+    v
+Results returned to UI
+```
+
+## Changes
+
+### 1. Edge Function (`supabase/functions/ai-search/index.ts`)
+
+- **Stage 1 -- Database pre-filter**: Use Postgres `ILIKE` across title, body, flair, course_code, course_name, company_name, college_name to get ~50 keyword-matching candidates. Also fetch the 20 most recent posts as fallback context (for intent-based queries where keywords don't match directly).
+- **Stage 2 -- AI ranking**: Send only these ~50 candidates (not 500) to the AI model. Truncate body to 80 chars instead of 150.
+- **Faster model**: Switch from `google/gemini-3-flash-preview` to `google/gemini-2.5-flash-lite` -- this is a simple ranking task, not complex reasoning. The lite model is 3-5x faster.
+- **Add `max_tokens: 1024`** to limit response size and speed up generation.
+
+### 2. Client debounce (`src/components/search/AISearchDialog.tsx`)
+
+- Reduce debounce from 600ms to 350ms for snappier feel.
+
+### 3. Instant keyword results (`src/hooks/useAISearch.ts`)
+
+- Show instant local keyword matches from a lightweight client-side cache while AI results load (progressive enhancement). On first open, fetch a slim index (id, title, category) of recent posts and filter client-side for immediate suggestions. AI results replace them when ready.
 
 ---
 
-## Part 1: Editable Profile
+## Technical Details
 
-### What Changes
+### Edge Function -- New Query Strategy
 
-Add an "Edit Profile" mode to the existing Profile page where users can update their personal information. The profiles table already supports `name`, `batch`, `section` via RLS UPDATE policy (`auth.uid() = user_id`), so no database migration is needed for basic fields.
+```typescript
+// Stage 1: Get keyword candidates (fast)
+const keywords = query.split(/\s+/).filter(w => w.length > 2);
+const ilikeFilter = keywords.map(k =>
+  `title.ilike.%${k}%,body.ilike.%${k}%,flair.ilike.%${k}%,course_code.ilike.%${k}%,course_name.ilike.%${k}%,company_name.ilike.%${k}%,college_name.ilike.%${k}%`
+).join(",");
 
-**However**, we need to add a `bio` column to the `profiles` table so users can write a short personal description.
+const { data: candidates } = await supabase
+  .from("posts")
+  .select("id, title, body, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count")
+  .eq("moderation_status", "approved")
+  .or(ilikeFilter)
+  .order("upvote_count", { ascending: false })
+  .limit(40);
 
-### Database Migration
+// Also get 10 recent popular posts as fallback
+const { data: recent } = await supabase
+  .from("posts")
+  .select("id, title, body, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count")
+  .eq("moderation_status", "approved")
+  .order("created_at", { ascending: false })
+  .limit(10);
 
-```sql
-ALTER TABLE public.profiles ADD COLUMN bio text NOT NULL DEFAULT '';
+// Deduplicate and merge
+const allPosts = deduplicateById([...candidates, ...recent]);
 ```
 
-### Profile Page Changes (`src/pages/Profile.tsx`)
+Then send only these ~50 posts to the AI model instead of 500. Body truncated to 80 chars.
 
-- Add an "Edit" button (pencil icon) next to the profile header
-- When editing, fields become editable inputs: name, batch, section, bio
-- Save button calls `supabase.from("profiles").update(...)` with the new values
-- After save, call `refreshProfile()` from AuthContext to sync state
-- Bio displays below the name/handle when not editing
-- Batch and section become editable text inputs
-- Add a subtle character limit indicator for bio (160 chars max)
+### Model Switch
 
-### AuthContext Update (`src/contexts/AuthContext.tsx`)
-
-- Add `bio` to the Profile interface and fetchProfile select query
-
----
-
-## Part 2: Gossip Central
-
-### Concept
-
-A separate, voluntary anonymous discussion space with:
-- **Opt-in only**: Users must explicitly join Gossip Central from a dedicated page
-- **Maximum anonymity**: Handles rotate per-post (unlike main feed where handles are consistent per user). No user identity is ever revealed.
-- **Stringent moderation**: Enhanced AI moderation prompt based on IIMB media policy and civic decency -- stricter than the main feed
-
-### Database Changes
-
-**1. Add `gossip_member` column to profiles:**
-
-```sql
-ALTER TABLE public.profiles ADD COLUMN gossip_member boolean NOT NULL DEFAULT false;
+```typescript
+model: "google/gemini-2.5-flash-lite"  // was gemini-3-flash-preview
 ```
 
-**2. Create `gossip_posts` table:**
+### Expected Speed Improvement
 
-```sql
-CREATE TABLE public.gossip_posts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  body text NOT NULL,
-  upvote_count integer NOT NULL DEFAULT 0,
-  downvote_count integer NOT NULL DEFAULT 0,
-  comment_count integer NOT NULL DEFAULT 0,
-  moderation_status text NOT NULL DEFAULT 'pending',
-  moderation_reason text,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+| Metric | Before | After |
+|--------|--------|-------|
+| DB fetch | 500 posts, ~200ms | ~50 posts, ~50ms |
+| AI prompt size | ~25K tokens | ~3K tokens |
+| AI response time | ~3-5s | ~0.5-1.5s |
+| Client debounce | 600ms | 350ms |
+| **Total perceived** | **~4-6s** | **~1-2.5s** |
 
-ALTER TABLE public.gossip_posts ENABLE ROW LEVEL SECURITY;
+### Files Modified
 
--- Anyone can read approved gossip
-CREATE POLICY "Anyone can read gossip" ON public.gossip_posts
-  FOR SELECT USING (true);
-
--- Authenticated gossip members can post
-CREATE POLICY "Members can create gossip" ON public.gossip_posts
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- Users can delete own gossip
-CREATE POLICY "Users can delete own gossip" ON public.gossip_posts
-  FOR DELETE USING (auth.uid() = user_id);
-```
-
-**3. Create `gossip_comments` table:**
-
-```sql
-CREATE TABLE public.gossip_comments (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  gossip_id uuid NOT NULL REFERENCES public.gossip_posts(id) ON DELETE CASCADE,
-  parent_id uuid REFERENCES public.gossip_comments(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL,
-  body text NOT NULL,
-  upvote_count integer NOT NULL DEFAULT 0,
-  downvote_count integer NOT NULL DEFAULT 0,
-  moderation_status text NOT NULL DEFAULT 'pending',
-  moderation_reason text,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.gossip_comments ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read gossip comments" ON public.gossip_comments
-  FOR SELECT USING (true);
-
-CREATE POLICY "Members can comment on gossip" ON public.gossip_comments
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own gossip comments" ON public.gossip_comments
-  FOR DELETE USING (auth.uid() = user_id);
-```
-
-### New Files
-
-| File | Purpose |
-|------|---------|
-| `src/pages/Gossip.tsx` | Gossip Central main page with opt-in gate, feed, and post creation |
-| `src/hooks/useGossip.ts` | React Query hooks for gossip posts and comments |
-| `supabase/functions/moderate-gossip/index.ts` | Stricter moderation edge function for gossip content |
-
-### Gossip Page (`src/pages/Gossip.tsx`)
-
-- **Gate screen**: If user is not a gossip member, show an onboarding card explaining the rules (anonymity, strict moderation, IIMB media policy compliance), with a "Join Gossip Central" button that sets `gossip_member = true` on their profile
-- **Feed**: Simple anonymous posts (no titles, just body text -- like a confessions page). Each post shows a randomly generated handle (different per post, not tied to user identity)
-- **Post creation**: Inline text input at the top of the feed -- "What's the tea?" placeholder
-- **Comments**: Threaded comments, also fully anonymous with rotating handles
-- **Design**: Distinct visual identity -- slightly different accent color (purple/violet tint) to differentiate from the main feed
-
-### Gossip Moderation (`supabase/functions/moderate-gossip/index.ts`)
-
-Enhanced moderation prompt that adds IIMB-specific media policy rules:
-
-- No identifying information about any individual (even first names with context)
-- No unverified rumors about faculty, staff, or specific students
-- No content that could constitute defamation under Indian law
-- No content targeting protected characteristics
-- No sharing of private conversations, screenshots, or confidential information
-- No content that could damage IIMB's institutional reputation with false claims
-- Stricter threshold: reject on lower confidence (if confidence < 0.7, reject)
-
-### Routing Changes (`src/App.tsx`)
-
-- Add `/gossip` route inside AppLayout
-
-### Navigation Updates
-
-- Add "Gossip" option to the category tabs or as a separate nav item
-- Add gossip icon to BottomNav (replace "Top/Leaderboard" with "Gossip" or add as 6th item)
-
-### Anonymity for Gossip (`src/lib/anonymity.ts`)
-
-- Add a `generateGossipHandle(userId, postId)` function that uses BOTH userId AND postId as salt, so the same user gets different handles on different posts -- true anonymity within the gossip section
-
----
-
-## Implementation Order
-
-1. Database migration (add `bio` to profiles, create gossip tables)
-2. Update AuthContext to include `bio`
-3. Build editable Profile page
-4. Create gossip moderation edge function
-5. Build gossip hooks and page
-6. Update routing and navigation
-7. Test end-to-end
-
----
-
-## Technical Notes
-
-- Gossip posts intentionally have NO title field -- just body text, keeping it casual and confession-style
-- The `user_id` is stored in `gossip_posts` for RLS/deletion purposes but is NEVER exposed to the client in queries (the select statement will exclude it or the UI will never display it)
-- Vote functionality on gossip uses the existing `votes` table with `target_type = 'gossip_post'` or `'gossip_comment'`
-- The gossip moderation function is separate from the main one to allow independent prompt tuning without affecting main feed moderation
+| File | Change |
+|------|--------|
+| `supabase/functions/ai-search/index.ts` | Two-stage hybrid search, faster model, smaller prompt |
+| `src/components/search/AISearchDialog.tsx` | Reduce debounce to 350ms |
 
