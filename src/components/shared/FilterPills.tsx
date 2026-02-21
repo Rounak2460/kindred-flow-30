@@ -14,7 +14,7 @@ export default function FilterPills({ options, selected, onSelect }: FilterPills
           key={o.value}
           onClick={() => onSelect(o.value)}
           className={cn(
-            "px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors border",
+            "px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border",
             selected === o.value
               ? "bg-primary text-primary-foreground border-primary"
               : "bg-card text-muted-foreground border-border hover:border-primary/40"

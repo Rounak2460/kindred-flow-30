@@ -41,7 +41,7 @@ export default function Profile() {
   const bio = (profile as any).bio || "";
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-6">
+    <div className="max-w-2xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-foreground">Profile</h1>
         <div className="flex items-center gap-2">

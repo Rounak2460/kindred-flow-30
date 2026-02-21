@@ -121,7 +121,7 @@ export default function Home() {
       {user && (
         <button
           onClick={() => navigate("/submit")}
-          className="fixed bottom-20 right-4 md:hidden h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-elevated flex items-center justify-center z-40"
+          className="fixed bottom-24 right-4 md:hidden h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-elevated flex items-center justify-center z-40"
           aria-label="Create post"
         >
           <Plus className="h-5 w-5" />

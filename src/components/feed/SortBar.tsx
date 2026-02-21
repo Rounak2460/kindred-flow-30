@@ -26,7 +26,7 @@ export default function SortBar({ selected, onSelect }: SortBarProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border">
+        <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors border border-border">
           <current.icon className="h-3.5 w-3.5" />
           {current.label}
           <ChevronDown className="h-3 w-3 opacity-50" />
