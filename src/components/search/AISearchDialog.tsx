@@ -71,7 +71,7 @@ export default function AISearchDialog({ open, onClose }: AISearchDialogProps) {
         clear();
         return;
       }
-      debounceRef.current = setTimeout(() => search(val), 600);
+      debounceRef.current = setTimeout(() => search(val), 350);
     },
     [search, clear]
   );

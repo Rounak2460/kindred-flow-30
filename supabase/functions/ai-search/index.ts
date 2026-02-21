@@ -7,6 +7,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function deduplicateById(posts: any[]): any[] {
+  const seen = new Set<string>();
+  return posts.filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,28 +34,60 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch all approved posts
-    const { data: posts, error } = await supabase
+    const selectFields = "id, title, body, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count";
+
+    // Stage 1: Fast database pre-filter using ILIKE keyword matching
+    const keywords = query.trim().split(/\s+/).filter((w) => w.length > 2);
+
+    let candidates: any[] = [];
+
+    if (keywords.length > 0) {
+      const ilikeFilter = keywords
+        .map(
+          (k) =>
+            `title.ilike.%${k}%,body.ilike.%${k}%,flair.ilike.%${k}%,course_code.ilike.%${k}%,course_name.ilike.%${k}%,company_name.ilike.%${k}%,college_name.ilike.%${k}%`
+        )
+        .join(",");
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select(selectFields)
+        .eq("moderation_status", "approved")
+        .or(ilikeFilter)
+        .order("upvote_count", { ascending: false })
+        .limit(40);
+
+      if (error) throw error;
+      candidates = data || [];
+    }
+
+    // Also fetch 10 recent posts as fallback context
+    const { data: recent, error: recentErr } = await supabase
       .from("posts")
-      .select("id, title, body, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count")
+      .select(selectFields)
       .eq("moderation_status", "approved")
       .order("created_at", { ascending: false })
-      .limit(500);
+      .limit(10);
 
-    if (error) throw error;
-    if (!posts || posts.length === 0) {
+    if (recentErr) throw recentErr;
+
+    const allPosts = deduplicateById([...candidates, ...(recent || [])]);
+
+    if (allPosts.length === 0) {
       return new Response(JSON.stringify({ results: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Build a compact post index for the AI
-    const postIndex = posts.map((p, i) => {
-      const meta = [p.category, p.flair, p.course_code, p.course_name, p.company_name, p.college_name]
-        .filter(Boolean)
-        .join(", ");
-      return `[${i}] "${p.title}" | ${meta} | ${p.body.slice(0, 150)}`;
-    }).join("\n");
+    // Stage 2: AI semantic ranking on the small candidate set
+    const postIndex = allPosts
+      .map((p, i) => {
+        const meta = [p.category, p.flair, p.course_code, p.course_name, p.company_name, p.college_name]
+          .filter(Boolean)
+          .join(", ");
+        return `[${i}] "${p.title}" | ${meta} | ${(p.body || "").slice(0, 80)}`;
+      })
+      .join("\n");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
@@ -58,7 +99,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 1024,
         messages: [
           {
             role: "system",
@@ -133,13 +175,12 @@ serve(async (req) => {
       });
     }
 
-    // Map indices back to post data, take top 8
     const results = (parsed.results || [])
-      .filter((r: any) => r.index >= 0 && r.index < posts.length && r.relevance > 20)
+      .filter((r: any) => r.index >= 0 && r.index < allPosts.length && r.relevance > 20)
       .sort((a: any, b: any) => b.relevance - a.relevance)
       .slice(0, 8)
       .map((r: any) => ({
-        ...posts[r.index],
+        ...allPosts[r.index],
         reason: r.reason,
         relevance: r.relevance,
       }));
