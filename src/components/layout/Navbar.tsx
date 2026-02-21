@@ -50,6 +50,7 @@ export default function Navbar() {
           <Link to="/" className="flex items-center gap-2 flex-shrink-0">
             <DMLogo size={28} />
             <span className="hidden sm:inline text-sm font-semibold text-foreground tracking-tight">Digi Mitra</span>
+            <span className="hidden sm:inline text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md tracking-wide">IIMB</span>
           </Link>
 
           <div className="flex-1 flex justify-center">

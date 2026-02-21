@@ -37,7 +37,7 @@ serve(async (req) => {
     const selectFields = "id, title, body, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count";
 
     // Stage 1: Fast database pre-filter using ILIKE keyword matching
-    const keywords = query.trim().split(/\s+/).filter((w) => w.length > 2);
+    const keywords = query.trim().split(/\s+/).filter((w) => w.length > 0);
 
     let candidates: any[] = [];
 

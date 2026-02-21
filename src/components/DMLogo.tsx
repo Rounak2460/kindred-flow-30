@@ -4,6 +4,7 @@ interface DMLogoProps {
 }
 
 export default function DMLogo({ size = 32, className = "" }: DMLogoProps) {
+  const id = `dm-grad-${size}`;
   return (
     <svg
       width={size}
@@ -13,16 +14,32 @@ export default function DMLogo({ size = 32, className = "" }: DMLogoProps) {
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      <rect width="40" height="40" rx="10" className="fill-primary" />
-      <path
-        d="M8 11h5.5c4.8 0 7.8 3 7.8 7.2s-3 7.3-7.8 7.3H8V11zm3.2 2.6v9.3h2.2c3 0 4.7-1.8 4.7-4.7 0-2.8-1.7-4.6-4.7-4.6h-2.2z"
-        className="fill-primary-foreground"
-      />
-      <path
-        d="M22.5 11h3.4l3.5 9.5h.1L33 11h3.4v14.5H33.8V15.2h-.1l-3.2 8.6h-2l-3.2-8.6h-.1v10.3H22.5V11z"
-        className="fill-primary-foreground"
-      />
-      <rect x="8" y="28.5" width="28" height="1.5" rx="0.75" className="fill-primary-foreground" opacity="0.4" />
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+          <stop stopColor="hsl(var(--primary))" />
+          <stop offset="1" stopColor="hsl(var(--primary) / 0.75)" />
+        </linearGradient>
+        <clipPath id={`${id}-clip`}>
+          <rect width="40" height="40" rx="11" />
+        </clipPath>
+      </defs>
+      <g clipPath={`url(#${id}-clip)`}>
+        <rect width="40" height="40" rx="11" fill={`url(#${id})`} />
+        {/* Subtle inner glow */}
+        <rect width="40" height="40" rx="11" fill="white" opacity="0.06" />
+        {/* D letterform — geometric half-circle + vertical bar */}
+        <path
+          d="M7.5 10h4.8c5.2 0 8.2 3.2 8.2 7.5S17.5 25 12.3 25H10v5h-2.5V10z M10 12.8v9.4h2.3c3.4 0 5.4-2 5.4-4.7s-2-4.7-5.4-4.7H10z"
+          fill="white"
+          opacity="0.95"
+        />
+        {/* M letterform — clean angular strokes */}
+        <path
+          d="M22 10h2.8l4 11.5h.1L33 10h2.8V30H33.3V14.8h-.1L29.5 25h-1.8l-3.7-10.2h-.1V30H22V10z"
+          fill="white"
+          opacity="0.95"
+        />
+      </g>
     </svg>
   );
 }
