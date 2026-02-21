@@ -1,104 +1,57 @@
 
 
-# Multi-Mode Auth: OTP Signup + Password/OTP Login
+# Fix: Send 6-Digit OTP Code Instead of Magic Link
 
-## Overview
+## Problem
 
-Redesign the auth page to support three modes:
-- **New users**: Enter email, receive 6-digit OTP, verify it, then set a password to complete signup
-- **Returning users**: Login with email + password
-- **Forgot password**: Send OTP to email, verify it, reset password
+Supabase's `signInWithOtp()` shares the same implementation as Magic Links. By default, the email template contains a clickable link (`{{ .ConfirmationURL }}`). To receive a 6-digit code instead, we need to customize the email template to use `{{ .Token }}`.
 
-## User Flows
+## Solution
 
-### Flow 1: First-time Sign Up
-1. User enters @iimb.ac.in email, clicks "Send OTP"
-2. Receives 6-digit OTP via email
-3. Enters OTP on the verification screen
-4. After verification, prompted to set a password
-5. Account created, navigated to home
+Update `supabase/config.toml` to override the email templates for **Magic Link** and **Recovery** (forgot password) flows, replacing the login link with the 6-digit OTP token.
 
-### Flow 2: Returning User Login
-1. User enters email + password
-2. Clicks "Sign In"
-3. Authenticated and navigated to home
+## Changes
 
-### Flow 3: Forgot Password
-1. User clicks "Forgot password?" on login screen
-2. Enters email, receives 6-digit OTP
-3. Enters OTP to verify identity
-4. Sets new password
-5. Authenticated and navigated to home
+### 1. Update `supabase/config.toml`
+
+Add email template overrides for these two template types:
+
+- **`magic_link`** (used by `signInWithOtp` for signup): Replace the link with `{{ .Token }}` so users receive a 6-digit code.
+- **`recovery`** (used by `signInWithOtp` for forgot password with existing users): Same change.
+
+The templates will display the OTP code prominently and instruct the user to enter it in the app.
+
+### 2. No code changes needed
+
+`src/pages/Auth.tsx` already has the correct `InputOTP` component and `verifyOtp` logic. Once the email template sends the code instead of a link, everything will work as designed.
 
 ## Technical Details
 
-### Auth Page Steps (state machine)
+The relevant `config.toml` additions:
 
-The page will have 5 steps managed by a `step` state:
+```toml
+[auth.email.template.magic_link]
+subject = "Your Digital Mitra login code"
+content_path = "./supabase/templates/magic_link.html"
 
-```
-"login"        -> Email + password form (default for returning users)
-"signup-email"  -> Email input + "Send OTP" (for new users)
-"verify-otp"   -> 6-digit OTP input
-"set-password"  -> Password creation form (after OTP verification)
-"forgot-otp"   -> Email input for forgot password OTP
-```
-
-### Supabase API Calls
-
-**Send OTP (signup or forgot password):**
-```typescript
-await supabase.auth.signInWithOtp({
-  email,
-  options: { shouldCreateUser: true },
-});
+[auth.email.template.recovery]
+subject = "Your Digital Mitra password reset code"
+content_path = "./supabase/templates/recovery.html"
 ```
 
-**Verify OTP:**
-```typescript
-await supabase.auth.verifyOtp({
-  email,
-  token: otpCode,
-  type: 'email',
-});
+The HTML templates will contain the `{{ .Token }}` variable which Supabase replaces with the 6-digit OTP code. Example template body:
+
+```html
+<h2>Your verification code</h2>
+<p style="font-size: 32px; font-weight: bold; letter-spacing: 8px;">{{ .Token }}</p>
+<p>Enter this code in Digital Mitra to continue. It expires in 10 minutes.</p>
 ```
 
-**Set password (after OTP verification, user is now signed in):**
-```typescript
-await supabase.auth.updateUser({ password });
-```
-
-**Login with password:**
-```typescript
-await supabase.auth.signInWithPassword({ email, password });
-```
-
-### Files to Modify
+### Files to create/modify
 
 | File | Change |
 |------|--------|
-| `src/pages/Auth.tsx` | Complete rewrite with multi-step flow: login, signup-email, verify-otp, set-password, forgot-otp |
-| `src/components/AuthGuardDialog.tsx` | No changes needed (already simplified) |
-
-### Auth.tsx Structure
-
-The page starts on a "login" screen with:
-- Email + password fields
-- "Sign In" button
-- "New here? Sign up with OTP" link (goes to signup-email)
-- "Forgot password?" link (goes to forgot-otp)
-
-**signup-email step**: Email input with @iimb.ac.in validation, "Send OTP" button. On success, moves to verify-otp with `mode: "signup"`.
-
-**forgot-otp step**: Same email input, "Send OTP" button. On success, moves to verify-otp with `mode: "forgot"`.
-
-**verify-otp step**: 6-digit `InputOTP` component. On successful `verifyOtp`, moves to set-password.
-
-**set-password step**: Password + confirm password fields. Calls `supabase.auth.updateUser({ password })`. On success, navigates to `/`.
-
-### OTP is single-use by default
-Supabase OTPs are automatically invalidated after use -- no extra work needed. Each code can only be verified once.
-
-### Email validation
-Keeps the existing `@iimb.ac.in` restriction with temporary `@gmail.com` bypass.
+| `supabase/config.toml` | Add `[auth.email.template.magic_link]` and `[auth.email.template.recovery]` sections |
+| `supabase/templates/magic_link.html` | New file -- OTP email template for signup |
+| `supabase/templates/recovery.html` | New file -- OTP email template for password reset |
 
