@@ -1,34 +1,64 @@
 
 
-# Fix Academics Page to Match Updated Design System
+# Elegant Section Icons, Dark Default Theme, Enhanced Quick Action Cards & New Logo
 
-The Academics page was missed during the 50-issue overhaul and still has old patterns. Here are the specific fixes needed to align it with the already-updated Exchange, Internships, and other section pages:
+## 1. Default to Dark Theme
 
-## Changes to `src/pages/Academics.tsx`
+Change `ThemeProvider` in `App.tsx` from `defaultTheme="light"` to `defaultTheme="dark"`. On first visit, users see the dark UI. The existing sun/moon toggle in the navbar lets them switch anytime.
 
-1. **max-w-3xl to max-w-2xl** -- all other pages use max-w-2xl
-2. **Remove emoji from heading** -- "📚 Academics" becomes "Academics" (font-semibold, not font-bold)
-3. **Back button uses navigate("/")** -- should use navigate(-1) like Exchange
-4. **"Add Review" button is rounded-full** -- should be rounded-lg + pass category query param
-5. **Search input is rounded-full** -- should be rounded-lg for consistency
-6. **Sample banner still present** -- remove the yellow "These are examples" box (lines 67-72)
-7. **Sample Badge still present** -- remove the "Sample" badge on cards (line 92)
-8. **Sample cards not clickable** -- remove the `!showSamples &&` guard so sample cards navigate to detail pages
-9. **Empty state uses emoji** -- remove the magnifying glass emoji from the empty state (line 80)
-10. **Unused imports** -- remove `BookOpen` and `Badge` imports (no longer needed)
+## 2. Redesigned Quick Action Cards (Larger, with One-liners)
 
-## Changes to `src/pages/CourseDetail.tsx`
+The current cards are small and text-only. Redesign `QuickActionCard` to be:
 
-11. **max-w-3xl to max-w-2xl** -- consistency
-12. **Back button hardcodes /academics** -- should use navigate(-1)
-13. **"Write Review" button is rounded-full** -- should be rounded-lg + pass category query param
-14. **h1 uses font-bold** -- should be font-semibold
+- **Larger**: taller padding (p-5), with a prominent icon area
+- **2-column grid on mobile, 3-column on desktop** (instead of 5-column which makes them too cramped)
+- **Elegant icon**: Each section gets a styled Lucide icon inside a soft-colored circular container (not emojis)
+- **One-liner subtitle**: A short descriptive phrase under each title (e.g., "Courses" -> "Peer-rated reviews", "Exchange" -> "Global diaries")
+- **Count badge**: Small pill showing the count
+- **"+" button** remains always visible in the corner
 
-## Verification
+Card data in `Home.tsx` updated to include `icon` (Lucide component) and `subtitle` (one-liner string) for each section.
 
-After implementation, navigate to /academics in the browser to confirm:
-- Clean header without emoji
-- Sample data shows silently without banners/badges
-- Cards are clickable
-- Consistent styling with other section pages
+### Icon + Color Assignments
+
+| Section | Lucide Icon | Accent Color | One-liner |
+|---------|------------|-------------|-----------|
+| Courses | `GraduationCap` | `text-blue-500 bg-blue-500/10` | Peer-rated reviews |
+| Exchange | `Globe` | `text-emerald-500 bg-emerald-500/10` | Global diaries |
+| Internships | `Briefcase` | `text-amber-500 bg-amber-500/10` | Company intel |
+| Papers | `FileText` | `text-violet-500 bg-violet-500/10` | Past exam papers |
+| Campus | `MapPin` | `text-rose-500 bg-rose-500/10` | Survival guide |
+
+## 3. Elite Section Icons Across Pages
+
+Add matching Lucide icons to each section page header (Academics, Exchange, Internships, ExamPapers, CampusLife) -- displayed as a small icon next to the h1 title, using the same color scheme as the quick action cards. Also update the `ExploreSheet` to use matching colored icon containers instead of plain gray.
+
+## 4. New SVG Logo
+
+Generate a new logo using the AI image generation edge function. The logo will be a modern, minimal "DM" monogram -- clean geometric letterforms in the IIMB red accent color on a transparent/dark background. This replaces the current `digitalmitra-logo.png` in the navbar, auth page, and feed welcome.
+
+Since AI image generation requires an edge function, I'll instead create an elegant **SVG logo component** directly in code -- a clean "DM" monogram rendered as an inline SVG. This is sharper at all sizes, works perfectly in dark/light mode, and loads instantly (no image file needed).
+
+## 5. Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/App.tsx` | `defaultTheme="dark"` |
+| `src/components/home/QuickActionCard.tsx` | Larger card with icon, subtitle, accent color |
+| `src/pages/Home.tsx` | Update quickActions array with icons, subtitles, colors; 2-col/3-col grid |
+| `src/components/layout/Navbar.tsx` | Replace img logo with SVG DM monogram component |
+| `src/components/feed/FeedWelcome.tsx` | Replace img logo with SVG monogram |
+| `src/pages/Auth.tsx` | Replace img logo with SVG monogram |
+| `src/components/layout/ExploreSheet.tsx` | Colored icon containers matching section colors |
+| `src/pages/Academics.tsx` | Add GraduationCap icon to header |
+| `src/pages/Exchange.tsx` | Add Globe icon to header |
+| `src/pages/Internships.tsx` | Add Briefcase icon to header |
+| `src/pages/ExamPapers.tsx` | Add FileText icon to header |
+| `src/pages/CampusLife.tsx` | Add MapPin icon to header |
+
+### New File
+
+| File | Purpose |
+|------|---------|
+| `src/components/DMlogo.tsx` | SVG monogram component -- a clean "DM" in a rounded square, using primary color, adaptable to any size |
 
