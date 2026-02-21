@@ -33,16 +33,9 @@ export default function AuthGuardDialog({ open, onOpenChange, action = "do that"
         <div className="flex flex-col gap-2 mt-2">
           <Button
             className="w-full rounded-full font-bold"
-            onClick={() => { onOpenChange(false); navigate("/auth?tab=signup"); }}
-          >
-            Sign Up
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full rounded-full"
             onClick={() => { onOpenChange(false); navigate("/auth"); }}
           >
-            Log In
+            Sign In with IIMB Email
           </Button>
         </div>
         <p className="text-center text-[11px] text-muted-foreground mt-1">
