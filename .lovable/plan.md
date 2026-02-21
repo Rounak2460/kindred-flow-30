@@ -1,82 +1,104 @@
-# Email OTP Authentication with @iimb.ac.in Restriction
+
+
+# Multi-Mode Auth: OTP Signup + Password/OTP Login
 
 ## Overview
 
-Replace the current password-based authentication with an email OTP flow. Users enter their @iimb.ac.in email, receive a 6-digit OTP code, and enter it to sign in. No passwords needed. A temporary test bypass will allow a specific test email domain for verification.  
-  
-Sample email id: [rounak.tikmani24@iimb.ac.in](mailto:rounak.tikmani24@iimb.ac.in)  
-Ask me if i got otp while testing and keep updating until i get OTP  
-Also allow for both OTP for first time authentication then allow user to login with set password or OTP both.
+Redesign the auth page to support three modes:
+- **New users**: Enter email, receive 6-digit OTP, verify it, then set a password to complete signup
+- **Returning users**: Login with email + password
+- **Forgot password**: Send OTP to email, verify it, reset password
 
-## Changes
+## User Flows
 
-### 1. Redesign Auth Page (`src/pages/Auth.tsx`)
+### Flow 1: First-time Sign Up
+1. User enters @iimb.ac.in email, clicks "Send OTP"
+2. Receives 6-digit OTP via email
+3. Enters OTP on the verification screen
+4. After verification, prompted to set a password
+5. Account created, navigated to home
 
-- Remove the login/signup toggle -- OTP flow handles both (new users are auto-created)
-- Remove password and name fields
-- Two-step flow:
-  - **Step 1**: Email input with @iimb.ac.in validation. User enters email and clicks "Send OTP". Calls `supabase.auth.signInWithOtp({ email })`.
-  - **Step 2**: 6-digit OTP input using the existing `InputOTP` component. User enters OTP and clicks "Verify". Calls `supabase.auth.verifyOtp({ email, token, type: 'email' })`.
-- Add a "Resend OTP" button with a 60-second cooldown timer
-- Email validation: must end with `@iimb.ac.in` (plus a temporary test bypass for `@gmail.com` during development -- will be removed later)
-- On successful verification, navigate to `/`
+### Flow 2: Returning User Login
+1. User enters email + password
+2. Clicks "Sign In"
+3. Authenticated and navigated to home
 
-### 2. Update AuthGuardDialog (`src/components/AuthGuardDialog.tsx`)
-
-- Remove the separate "Sign Up" and "Log In" buttons -- replace with a single "Sign In with IIMB Email" button since OTP handles both flows
-- Keep the @iimb.ac.in messaging
-
-### 3. Handle new users without a name (`src/contexts/AuthContext.tsx`)
-
-- The `handle_new_user` database trigger already creates a profile with `COALESCE(raw_user_meta_data->>'name', '')` so new OTP users get a blank name
-- No changes needed to the context, but the Profile page should prompt users to set their name if it's empty
-
-### 4. Add a route for email verification callback (`src/App.tsx`)
-
-- No new route needed -- Supabase OTP verification happens in-page, not via redirect links
-
-### 5. Configure auth settings
-
-- Disable auto-confirm so OTP is actually required (check current setting)
-- The OTP flow uses Supabase's built-in email OTP which sends a 6-digit code
+### Flow 3: Forgot Password
+1. User clicks "Forgot password?" on login screen
+2. Enters email, receives 6-digit OTP
+3. Enters OTP to verify identity
+4. Sets new password
+5. Authenticated and navigated to home
 
 ## Technical Details
 
-**Step 1 - Send OTP:**
+### Auth Page Steps (state machine)
 
+The page will have 5 steps managed by a `step` state:
+
+```
+"login"        -> Email + password form (default for returning users)
+"signup-email"  -> Email input + "Send OTP" (for new users)
+"verify-otp"   -> 6-digit OTP input
+"set-password"  -> Password creation form (after OTP verification)
+"forgot-otp"   -> Email input for forgot password OTP
+```
+
+### Supabase API Calls
+
+**Send OTP (signup or forgot password):**
 ```typescript
-const { error } = await supabase.auth.signInWithOtp({
+await supabase.auth.signInWithOtp({
   email,
-  options: {
-    shouldCreateUser: true,
-  },
+  options: { shouldCreateUser: true },
 });
 ```
 
-**Step 2 - Verify OTP:**
-
+**Verify OTP:**
 ```typescript
-const { data, error } = await supabase.auth.verifyOtp({
+await supabase.auth.verifyOtp({
   email,
   token: otpCode,
   type: 'email',
 });
 ```
 
-**Email validation:**
-
+**Set password (after OTP verification, user is now signed in):**
 ```typescript
-const isValidEmail = (email: string) => {
-  return email.endsWith('@iimb.ac.in') || email.endsWith('@gmail.com'); // gmail is temp bypass
-};
+await supabase.auth.updateUser({ password });
 ```
 
-**OTP Input UI** uses the existing `InputOTP`, `InputOTPGroup`, `InputOTPSlot` components from `src/components/ui/input-otp.tsx`.
+**Login with password:**
+```typescript
+await supabase.auth.signInWithPassword({ email, password });
+```
 
-**Files to modify:**
+### Files to Modify
 
-- `src/pages/Auth.tsx` -- Complete rewrite for OTP flow
-- `src/components/AuthGuardDialog.tsx` -- Simplify buttons
-- Auth configuration -- Disable auto-confirm if needed
+| File | Change |
+|------|--------|
+| `src/pages/Auth.tsx` | Complete rewrite with multi-step flow: login, signup-email, verify-otp, set-password, forgot-otp |
+| `src/components/AuthGuardDialog.tsx` | No changes needed (already simplified) |
 
-**Auth config change:** Will use the configure-auth tool to ensure email OTP is enabled and auto-confirm is disabled.
+### Auth.tsx Structure
+
+The page starts on a "login" screen with:
+- Email + password fields
+- "Sign In" button
+- "New here? Sign up with OTP" link (goes to signup-email)
+- "Forgot password?" link (goes to forgot-otp)
+
+**signup-email step**: Email input with @iimb.ac.in validation, "Send OTP" button. On success, moves to verify-otp with `mode: "signup"`.
+
+**forgot-otp step**: Same email input, "Send OTP" button. On success, moves to verify-otp with `mode: "forgot"`.
+
+**verify-otp step**: 6-digit `InputOTP` component. On successful `verifyOtp`, moves to set-password.
+
+**set-password step**: Password + confirm password fields. Calls `supabase.auth.updateUser({ password })`. On success, navigates to `/`.
+
+### OTP is single-use by default
+Supabase OTPs are automatically invalidated after use -- no extra work needed. Each code can only be verified once.
+
+### Email validation
+Keeps the existing `@iimb.ac.in` restriction with temporary `@gmail.com` bypass.
+
