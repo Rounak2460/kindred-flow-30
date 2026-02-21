@@ -129,26 +129,23 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left panel - brand (desktop only) */}
       <div className="hidden lg:flex flex-1 items-center justify-center bg-card relative overflow-hidden border-r border-border">
-        {/* Subtle red accent line */}
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />
         <div className="relative z-10 text-center px-12">
-          <img src={dmLogo} alt="Digital Mitra" className="h-16 w-16 rounded-2xl mx-auto mb-6" />
-          <h2 className="font-serif text-4xl text-foreground mb-3">Digital Mitra</h2>
+          <img src={dmLogo} alt="Digi Mitra" className="h-16 w-16 rounded-2xl mx-auto mb-6" />
+          <h2 className="font-display text-4xl text-foreground mb-3">Digi Mitra</h2>
           <p className="text-muted-foreground text-lg leading-relaxed max-w-sm mx-auto">
-            The knowledge layer of IIM Bangalore. Anonymous, honest, student-driven.
+            Your campus companion at IIM Bangalore. Anonymous, honest, student-driven.
           </p>
         </div>
       </div>
 
-      {/* Right panel - form */}
       <div className="flex-1 flex items-center justify-center px-4 py-8 bg-background">
         <div className="w-full max-w-sm">
           <div className="lg:hidden text-center mb-8">
-            <img src={dmLogo} alt="Digital Mitra" className="h-12 w-12 rounded-xl mx-auto mb-3" />
-            <h1 className="font-serif text-2xl text-foreground">Digital Mitra</h1>
-            <p className="text-muted-foreground text-sm mt-1">The Knowledge Layer of IIM Bangalore</p>
+            <img src={dmLogo} alt="Digi Mitra" className="h-12 w-12 rounded-xl mx-auto mb-3" />
+            <h1 className="font-display text-2xl text-foreground">Digi Mitra</h1>
+            <p className="text-muted-foreground text-sm mt-1">Your Campus Companion</p>
           </div>
 
           {stepNumber > 0 && (
@@ -163,7 +160,7 @@ export default function Auth() {
             <motion.div key={step} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
               <div className="mb-6">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center mb-3">{stepIcon()}</div>
-                <h2 className="font-serif text-xl text-foreground">{stepTitle()}</h2>
+                <h2 className="font-display text-xl text-foreground">{stepTitle()}</h2>
                 <p className="text-sm text-muted-foreground mt-0.5">{stepDescription()}</p>
               </div>
 

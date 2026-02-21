@@ -6,6 +6,7 @@ import FilterPills from "@/components/shared/FilterPills";
 import { useExamPapers } from "@/hooks/useExamPapers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { SAMPLE_PAPERS } from "@/lib/sample-data";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "All" },
@@ -27,6 +28,9 @@ export default function ExamPapers() {
   const [examType, setExamType] = useState("all");
   const { data: papers = [], isLoading } = useExamPapers(examType);
 
+  const showSamples = !isLoading && papers.length === 0;
+  const displayPapers = showSamples ? SAMPLE_PAPERS : papers;
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-4">
       <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
@@ -34,7 +38,7 @@ export default function ExamPapers() {
       </button>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold flex items-center gap-2"><FileText className="h-5 w-5 text-primary" /> Exam Papers</h1>
+          <h1 className="text-xl font-bold flex items-center gap-2">📝 Exam Papers</h1>
           <p className="text-xs text-muted-foreground mt-1">Past papers shared by students</p>
         </div>
         <Button size="sm" className="rounded-full gap-1.5 text-xs" onClick={() => navigate("/submit")}>
@@ -44,20 +48,32 @@ export default function ExamPapers() {
       <div className="mb-5">
         <FilterPills options={TYPE_OPTIONS} selected={examType} onSelect={setExamType} />
       </div>
+
+      {showSamples && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 mb-4 text-center">
+          <p className="text-xs text-primary font-medium">👋 These are examples to show what this section will look like.</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5">Upload your past papers to earn karma credits!</p>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>
-      ) : papers.length === 0 ? (
-        <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl"><p className="text-sm font-medium">No papers found</p></div>
+      ) : displayPapers.length === 0 ? (
+        <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
+          <div className="text-4xl mb-3">📝</div>
+          <p className="text-sm font-medium">No papers found</p>
+        </div>
       ) : (
         <div className="space-y-2">
-          {papers.map(p => (
+          {displayPapers.map(p => (
             <a
               key={p.id}
-              href={p.file_url}
-              target="_blank"
+              href={showSamples ? undefined : p.file_url}
+              target={showSamples ? undefined : "_blank"}
               rel="noopener noreferrer"
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-primary/50 transition-colors"
+              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 hover:border-primary/50 transition-colors relative"
             >
+              {showSamples && <Badge variant="secondary" className="absolute top-1 right-1 text-[9px]">Sample</Badge>}
               <FileText className="h-5 w-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{p.title}</p>
