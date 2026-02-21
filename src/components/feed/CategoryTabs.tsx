@@ -1,6 +1,15 @@
 import { cn } from "@/lib/utils";
 import { CATEGORIES } from "@/lib/mock-data";
 
+const EMOJI_MAP: Record<string, string> = {
+  all: "🔥",
+  academics: "📚",
+  exchange: "✈️",
+  internships: "💼",
+  campus: "🏫",
+  papers: "📝",
+};
+
 interface CategoryTabsProps {
   selected: string;
   onSelect: (category: string) => void;
@@ -8,18 +17,19 @@ interface CategoryTabsProps {
 
 export default function CategoryTabs({ selected, onSelect }: CategoryTabsProps) {
   return (
-    <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-hide border-b border-border">
+    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1 -mx-1 px-1">
       {CATEGORIES.map((cat) => (
         <button
           key={cat.key}
           onClick={() => onSelect(cat.key)}
           className={cn(
-            "px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px",
+            "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border",
             selected === cat.key
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
+              ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
+              : "border-border/50 text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50"
           )}
         >
+          <span className="text-sm">{EMOJI_MAP[cat.key] || "📌"}</span>
           {cat.label}
         </button>
       ))}
