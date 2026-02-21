@@ -1,94 +1,148 @@
 
+# Logo Image Swap, Theme Popup & Notifications
 
-# Logo Redesign, IIMB Branding & Search Overhaul
+## 1. Use the Uploaded Logo Image (Light/Dark Variants)
 
-## 1. Elegant New DM Logo
+The user has provided a professional logo image with both light-mode (crimson DM on white) and dark-mode (white DM on dark) versions. Instead of trying to replicate it in SVG, we will use the actual image.
 
-Replace the crude SVG monogram with a modern, designer-quality logo:
+**Approach:** Since the image contains both variants side-by-side, we need to handle this carefully. We will copy the uploaded image to `src/assets/` and update `DMLogo.tsx` to render the image. To support light/dark switching, the component will use `next-themes` `useTheme()` to pick the correct visual treatment:
 
-- **Design**: A refined squircle container with a subtle gradient (not flat fill). The "D" letterform is stylized as a geometric half-circle + vertical bar, and the "M" uses clean angular strokes with optical kerning. Remove the random underline bar.
-- **Color**: Uses CSS `primary` color with a subtle lighter gradient stop for depth. Works in both dark and light themes.
-- **File**: Rewrite `src/components/DMLogo.tsx`
+- Copy `user-uploads://image.png` to `src/assets/dm-logo.png`
+- Rewrite `DMLogo.tsx` to render an `<img>` tag with the uploaded logo
+- Since the image has both variants in one file, we will use CSS `object-position` to show only the left half (light) or right half (dark) based on the current theme
+- Alternatively, we can crop them into two separate images -- but using a single image with CSS clipping is cleaner
 
-## 2. IIMB Institutional Identity
+**Files using DMLogo (all auto-update):** Navbar, Auth page, FeedWelcome
 
-- **Navbar** (`Navbar.tsx`): Add a small "IIMB" badge/pill next to "Digi Mitra" text
-- **Auth page** (`Auth.tsx`): Add "An IIM Bangalore student platform" subtitle under logo
-- **FeedWelcome** (`FeedWelcome.tsx`): Keep and refine the existing "IIM Bangalore" label
+## 2. Theme Selection Popup (Apparent + Visible)
 
-## 3. Search Overhaul -- Two-Tier Approach
+Replace the tiny icon-only toggle with a proper theme selection popup/popover:
 
-The current search has critical problems:
-- Words under 3 characters are ignored (`filter(w => w.length > 2)`), so "Macro" as a single 5-letter word works but partial typing like "Ma" gets no candidates
-- Every keystroke triggers an expensive AI edge function call (350ms debounce is too short)
-- Searching "Macro" returns empty because the ILIKE filter requires exact case-insensitive substring but doesn't do fuzzy matching
+- **ThemeToggle.tsx**: Replace the single button with a `Popover` that opens on click
+- Shows two clear options: "Light" and "Dark" with visual previews (sun/moon icons + labels)
+- Active theme gets a highlighted border/check mark
+- Bigger, more visible trigger button with label text (not just an icon)
+- Smooth transition animation when switching
 
-### New architecture: Instant DB search + optional AI refinement
+**Design:**
+```text
++---------------------------+
+|  [Sun] Light Mode    [x]  |
+|  [Moon] Dark Mode   [ok]  |
++---------------------------+
+```
 
-**Tier 1 -- Instant local search (new):** Query the database directly from the client using Supabase `.ilike()` with no minimum character length. This returns results instantly as you type with a 200ms debounce. No AI involved -- pure database substring matching.
+## 3. In-App Notification System
 
-**Tier 2 -- AI deep search (on demand):** Keep the AI edge function but only trigger it when the user explicitly presses Enter or clicks a "Deep search" button, or after 1.5 seconds of no typing. This handles semantic queries like "best marketing electives."
+Create a notification system that alerts users when activity happens on their posts.
 
-### Changes:
+### Database
 
-**`src/hooks/useAISearch.ts`** -- Rename to `src/hooks/useSearch.ts` with two modes:
-- `instantSearch(query)`: Direct Supabase `.or()` ilike query on posts table, returns matches instantly. No minimum word length -- even "M" will match. Uses `.ilike` across title, body, course_code, course_name, company_name, college_name.
-- `deepSearch(query)`: The existing AI edge function call for semantic ranking.
+Create a `notifications` table:
+- `id` (uuid, PK)
+- `user_id` (uuid, references profiles)
+- `type` (text: 'comment', 'upvote', 'reply')
+- `title` (text)
+- `body` (text)
+- `post_id` (uuid, nullable, references posts)
+- `is_read` (boolean, default false)
+- `created_at` (timestamptz)
 
-**`src/components/search/AISearchDialog.tsx`** -- Complete redesign:
-- Cleaner, more polished UI with proper dark-mode colors (current category colors are light-mode-only `bg-blue-50 text-blue-700`)
-- Type to see instant results (Tier 1). Results appear immediately.
-- Show a subtle "AI refine" button or auto-trigger AI after 1.5s idle
-- Better empty state and loading states
-- Fix category pill colors to dark-mode-safe (`bg-blue-500/10 text-blue-400`)
+RLS policies:
+- Users can only SELECT their own notifications
+- Users can UPDATE (mark read) their own notifications
+- INSERT allowed for authenticated users (triggered by app logic)
 
-**`supabase/functions/ai-search/index.ts`** -- Fix the keyword filter:
-- Remove the `w.length > 2` filter so short words still match
-- Add trigram/prefix matching: use `ilike.%${k}%` for all keywords regardless of length
+### Database Trigger
 
-## 4. Files to Modify
+Create a trigger function that auto-inserts a notification when:
+- Someone comments on a user's post
+- Someone upvotes a user's post or comment
+
+### Frontend
+
+- **`src/hooks/useNotifications.ts`**: Hook to fetch unread notifications count + list, mark as read
+- **`src/components/NotificationBell.tsx`**: Bell icon in Navbar with unread badge count
+- **`src/components/NotificationPanel.tsx`**: Dropdown panel showing recent notifications with links to the relevant post
+- Add Supabase Realtime subscription on the notifications table so new notifications appear instantly
+- **Navbar.tsx**: Add the NotificationBell next to theme toggle
+
+## Files to Create
+
+| File | Purpose |
+|------|---------|
+| `src/assets/dm-logo.png` | Copy of uploaded logo image |
+| `src/hooks/useNotifications.ts` | Fetch, subscribe, mark-read notifications |
+| `src/components/NotificationBell.tsx` | Bell icon with unread count badge |
+| `src/components/NotificationPanel.tsx` | Dropdown list of notifications |
+
+## Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/DMLogo.tsx` | Complete redesign -- premium gradient squircle with refined DM letterforms |
-| `src/components/layout/Navbar.tsx` | Add IIMB badge, keep logo swap |
-| `src/pages/Auth.tsx` | Add "An IIM Bangalore student platform" subtitle |
-| `src/components/feed/FeedWelcome.tsx` | Refine IIMB label styling |
-| `src/hooks/useAISearch.ts` | Add instant DB search tier alongside AI search |
-| `src/components/search/AISearchDialog.tsx` | Two-tier search UI, dark-mode-safe colors, faster UX |
-| `supabase/functions/ai-search/index.ts` | Remove `length > 2` filter, improve keyword matching |
+| `src/components/DMLogo.tsx` | Swap SVG for the uploaded image, theme-aware display |
+| `src/components/ThemeToggle.tsx` | Replace icon button with a popover showing Light/Dark options with labels |
+| `src/components/layout/Navbar.tsx` | Add NotificationBell to the header actions |
 
 ## Technical Details
 
-### Instant search query (client-side)
+### DMLogo with theme-aware image cropping
 
 ```typescript
-const { data } = await supabase
-  .from("posts")
-  .select("id, title, category, flair, course_code, course_name, company_name, college_name, created_at, upvote_count, comment_count")
-  .eq("moderation_status", "approved")
-  .or(`title.ilike.%${query}%,course_code.ilike.%${query}%,course_name.ilike.%${query}%,company_name.ilike.%${query}%,college_name.ilike.%${query}%`)
-  .order("upvote_count", { ascending: false })
-  .limit(10);
+import { useTheme } from "next-themes";
+import logoImg from "@/assets/dm-logo.png";
+
+export default function DMLogo({ size = 32 }) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  return (
+    <div style={{ width: size, height: size, overflow: "hidden" }}>
+      <img
+        src={logoImg}
+        alt="Digi Mitra"
+        style={{
+          width: size * 2,
+          height: size,
+          objectFit: "cover",
+          objectPosition: isDark ? "right" : "left",
+        }}
+      />
+    </div>
+  );
+}
 ```
 
-This returns results in under 100ms for any partial input -- "M", "Ma", "Mac", "Macro" all work instantly.
+### Notification trigger (SQL)
 
-### Edge function fix
+```sql
+CREATE OR REPLACE FUNCTION notify_on_comment()
+RETURNS trigger AS $$
+BEGIN
+  INSERT INTO notifications (user_id, type, title, body, post_id)
+  SELECT p.user_id, 'comment', 'New comment on your post',
+    'Someone commented on "' || p.title || '"', p.id
+  FROM posts p WHERE p.id = NEW.post_id
+  AND p.user_id != NEW.user_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
-Change line 40 from:
+CREATE TRIGGER on_comment_notify
+AFTER INSERT ON comments
+FOR EACH ROW EXECUTE FUNCTION notify_on_comment();
+```
+
+### Realtime subscription
+
 ```typescript
-const keywords = query.trim().split(/\\s+/).filter((w) => w.length > 2);
+supabase.channel('notifications')
+  .on('postgres_changes', {
+    event: 'INSERT',
+    schema: 'public',
+    table: 'notifications',
+    filter: `user_id=eq.${userId}`,
+  }, (payload) => {
+    // Add to local state, show toast
+  })
+  .subscribe();
 ```
-to:
-```typescript
-const keywords = query.trim().split(/\\s+/).filter((w) => w.length > 0);
-```
-
-### Search UX flow
-
-1. User types "Ma" -- instant DB results appear in under 200ms
-2. User keeps typing "Macro" -- results refine instantly
-3. After 1.5s idle or pressing Enter -- AI semantic search triggers for deeper ranking
-4. AI results replace/merge with instant results, showing relevance reasons
-
