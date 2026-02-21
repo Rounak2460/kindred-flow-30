@@ -17,10 +17,10 @@ const TYPE_OPTIONS = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-  end_term: "bg-red-50 text-red-700 border-red-200",
-  mid_term: "bg-amber-50 text-amber-700 border-amber-200",
-  quiz: "bg-blue-50 text-blue-700 border-blue-200",
-  case_analysis: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  end_term: "bg-red-500/10 text-red-500 border-red-500/20",
+  mid_term: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  quiz: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  case_analysis: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
 };
 
 export default function ExamPapers() {
