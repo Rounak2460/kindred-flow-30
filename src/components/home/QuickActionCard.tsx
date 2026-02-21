@@ -17,9 +17,12 @@ export default function QuickActionCard({ icon: Icon, iconColor, iconBg, title, 
   const navigate = useNavigate();
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => navigate(to)}
-      className="group relative text-left rounded-xl border border-border bg-card p-5 transition-all hover:shadow-soft hover:border-primary/30"
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(to); }}
+      className="group relative text-left rounded-xl border border-border bg-card p-5 transition-all hover:shadow-soft hover:border-primary/30 cursor-pointer"
     >
       <div className={`h-10 w-10 rounded-xl ${iconBg} flex items-center justify-center mb-3 transition-transform group-hover:scale-110`}>
         <Icon className={`h-5 w-5 ${iconColor}`} />
@@ -38,6 +41,6 @@ export default function QuickActionCard({ icon: Icon, iconColor, iconBg, title, 
       >
         <Plus className="h-3.5 w-3.5" />
       </button>
-    </button>
+    </div>
   );
 }

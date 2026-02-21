@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Compass, Plus, EyeOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
-import AISearchDialog from "@/components/search/AISearchDialog";
 import ExploreSheet from "@/components/layout/ExploreSheet";
+import { useState } from "react";
 
 const tabs = [
   { key: "/", icon: Home, label: "Home" },
@@ -18,7 +17,6 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const [searchOpen, setSearchOpen] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(false);
 
   const handleTap = (key: string) => {
@@ -66,12 +64,7 @@ export default function BottomNav() {
           );
         })}
       </div>
-      {/* Mobile footer credit */}
-      <div className="flex items-center justify-center gap-1.5 pb-1 text-[10px] text-muted-foreground/60">
-        <span>Built by Ronnie T</span>
-      </div>
     </nav>
-    <AISearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
     <ExploreSheet open={exploreOpen} onOpenChange={setExploreOpen} />
     </>
   );

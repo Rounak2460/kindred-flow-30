@@ -24,7 +24,7 @@ export default function ThemeToggle() {
         >
           <Sun className="h-3.5 w-3.5 rotate-0 scale-100 transition-transform dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-3.5 w-3.5 rotate-90 scale-0 transition-transform dark:rotate-0 dark:scale-100" />
-          <span className="hidden sm:inline">Theme</span>
+          <span className="sr-only">Theme</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-44 p-1.5">

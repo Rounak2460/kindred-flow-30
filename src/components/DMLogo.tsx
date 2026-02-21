@@ -1,5 +1,6 @@
 import { useTheme } from "next-themes";
-import logoImg from "@/assets/dm-logo.png";
+import logoLight from "@/assets/dm-logo-light.png";
+import logoDark from "@/assets/dm-logo-dark.png";
 
 interface DMLogoProps {
   size?: number;
@@ -8,28 +9,17 @@ interface DMLogoProps {
 
 export default function DMLogo({ size = 32, className = "" }: DMLogoProps) {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const src = resolvedTheme === "dark" ? logoDark : logoLight;
 
   return (
     <div
       className={className}
-      style={{
-        width: size,
-        height: size,
-        overflow: "hidden",
-        borderRadius: size * 0.2,
-        flexShrink: 0,
-      }}
+      style={{ width: size, height: size, flexShrink: 0 }}
     >
       <img
-        src={logoImg}
+        src={src}
         alt="Digi Mitra"
-        style={{
-          width: size * 2,
-          height: size,
-          objectFit: "cover",
-          objectPosition: isDark ? "right" : "left",
-        }}
+        style={{ width: "100%", height: "100%", objectFit: "contain" }}
         draggable={false}
       />
     </div>

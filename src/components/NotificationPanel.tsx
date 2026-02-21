@@ -38,7 +38,7 @@ export default function NotificationPanel({
   };
 
   return (
-    <div className="flex flex-col max-h-96">
+    <div className="flex flex-col max-h-[calc(100vh-8rem)]">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
         {notifications.some((n) => !n.is_read) && (

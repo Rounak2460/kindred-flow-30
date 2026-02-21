@@ -27,15 +27,15 @@ interface PostCardProps {
 }
 
 const FLAIR_COLORS: Record<string, string> = {
-  "Course Review": "bg-blue-50 text-blue-700 border-blue-200",
-  "Experience Diary": "bg-violet-50 text-violet-700 border-violet-200",
-  "Company Review": "bg-emerald-50 text-emerald-700 border-emerald-200",
-  "Interview Prep": "bg-amber-50 text-amber-700 border-amber-200",
-  "Question": "bg-cyan-50 text-cyan-700 border-cyan-200",
-  "Food & Cafes": "bg-orange-50 text-orange-700 border-orange-200",
-  "Study Spots": "bg-teal-50 text-teal-700 border-teal-200",
-  "End Term": "bg-rose-50 text-rose-700 border-rose-200",
-  "Pro Tip": "bg-lime-50 text-lime-700 border-lime-200",
+  "Course Review": "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  "Experience Diary": "bg-violet-500/10 text-violet-500 border-violet-500/20",
+  "Company Review": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+  "Interview Prep": "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  "Question": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  "Food & Cafes": "bg-orange-500/10 text-orange-500 border-orange-500/20",
+  "Study Spots": "bg-teal-500/10 text-teal-500 border-teal-500/20",
+  "End Term": "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  "Pro Tip": "bg-lime-500/10 text-lime-500 border-lime-500/20",
 };
 
 const CATEGORIES: Record<string, string> = {
@@ -115,7 +115,7 @@ export default function PostCard({
 
           <div className="relative mb-3">
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-              {body.replace(/[*#_]/g, "")}
+              {body.replace(/(\*{1,3}|#{1,6}\s|_{2,}|~~)/g, "")}
             </p>
           </div>
 
