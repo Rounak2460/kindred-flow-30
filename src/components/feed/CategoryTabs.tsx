@@ -25,8 +25,8 @@ export default function CategoryTabs({ selected, onSelect }: CategoryTabsProps) 
           className={cn(
             "flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 border",
             selected === cat.key
-              ? "border-primary/40 bg-primary/10 text-primary shadow-sm"
-              : "border-border/50 text-muted-foreground hover:text-foreground hover:border-border hover:bg-accent/50"
+              ? "border-primary bg-primary text-primary-foreground shadow-sm"
+              : "border-border text-muted-foreground hover:text-foreground hover:border-foreground/20 hover:bg-muted"
           )}
         >
           <span className="text-sm">{EMOJI_MAP[cat.key] || "📌"}</span>

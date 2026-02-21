@@ -75,10 +75,10 @@ export default {
         "2xl": "calc(var(--radius) + 8px)",
       },
       boxShadow: {
-        soft: "0 2px 20px -4px rgba(0,0,0,0.15), 0 1px 6px -2px rgba(0,0,0,0.1)",
-        elevated: "0 8px 40px -8px rgba(0,0,0,0.25), 0 2px 12px -4px rgba(0,0,0,0.15)",
-        glow: "0 0 30px -6px hsl(4 80% 56% / 0.2)",
-        "card-hover": "0 12px 40px -12px rgba(0,0,0,0.35)",
+        soft: "0 1px 8px -2px rgba(0,0,0,0.06), 0 1px 3px -1px rgba(0,0,0,0.04)",
+        elevated: "0 4px 24px -4px rgba(0,0,0,0.08), 0 2px 8px -2px rgba(0,0,0,0.04)",
+        glow: "0 0 20px -4px hsl(0 72% 36% / 0.12)",
+        "card-hover": "0 8px 30px -8px rgba(0,0,0,0.1)",
       },
       keyframes: {
         "accordion-down": {

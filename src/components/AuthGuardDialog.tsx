@@ -31,16 +31,11 @@ export default function AuthGuardDialog({ open, onOpenChange, action = "do that"
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2 mt-2">
-          <Button
-            className="w-full rounded-full font-bold"
-            onClick={() => { onOpenChange(false); navigate("/auth"); }}
-          >
+          <Button className="w-full rounded-full font-bold" onClick={() => { onOpenChange(false); navigate("/auth"); }}>
             Sign In with IIMB Email
           </Button>
         </div>
-        <p className="text-center text-[11px] text-muted-foreground mt-1">
-          Only @iimb.ac.in email addresses are accepted
-        </p>
+        <p className="text-center text-[11px] text-muted-foreground mt-1">Only @iimb.ac.in email addresses are accepted</p>
       </DialogContent>
     </Dialog>
   );

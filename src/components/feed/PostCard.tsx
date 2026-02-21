@@ -27,15 +27,15 @@ interface PostCardProps {
 }
 
 const FLAIR_COLORS: Record<string, string> = {
-  "Course Review": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Experience Diary": "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  "Company Review": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  "Interview Prep": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  "Question": "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-  "Food & Cafes": "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Study Spots": "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  "End Term": "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  "Pro Tip": "bg-lime-500/10 text-lime-400 border-lime-500/20",
+  "Course Review": "bg-blue-50 text-blue-700 border-blue-200",
+  "Experience Diary": "bg-violet-50 text-violet-700 border-violet-200",
+  "Company Review": "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Interview Prep": "bg-amber-50 text-amber-700 border-amber-200",
+  "Question": "bg-cyan-50 text-cyan-700 border-cyan-200",
+  "Food & Cafes": "bg-orange-50 text-orange-700 border-orange-200",
+  "Study Spots": "bg-teal-50 text-teal-700 border-teal-200",
+  "End Term": "bg-rose-50 text-rose-700 border-rose-200",
+  "Pro Tip": "bg-lime-50 text-lime-700 border-lime-200",
 };
 
 export default function PostCard({
@@ -66,23 +66,22 @@ export default function PostCard({
     toast.success(saved ? "Unsaved" : "Saved!");
   };
 
-  const flairColorClass = flair ? (FLAIR_COLORS[flair] || "bg-primary/10 text-primary border-primary/20") : "";
+  const flairColorClass = flair ? (FLAIR_COLORS[flair] || "bg-primary/5 text-primary border-primary/20") : "";
 
   return (
     <Link to={`/post/${id}`}>
       <article
         className={cn(
-          "group bg-card border border-border/50 rounded-xl transition-all duration-200 cursor-pointer mb-3",
-          "hover:border-border hover:bg-accent/30 hover:-translate-y-0.5 hover:shadow-card-hover",
-          pinned && "border-t-2 border-t-primary/40"
+          "group bg-card border border-border rounded-xl transition-all duration-200 cursor-pointer mb-3",
+          "hover:shadow-soft hover:-translate-y-0.5",
+          pinned && "border-l-2 border-l-primary"
         )}
       >
         <div className="p-4">
-          {/* Meta row */}
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2.5">
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/d/${category}`); }}
-              className="font-semibold text-foreground/80 hover:text-primary transition-colors"
+              className="font-semibold text-foreground/70 hover:text-primary transition-colors"
             >
               d/{category}
             </button>
@@ -93,17 +92,15 @@ export default function PostCard({
             {contextLabel && (
               <>
                 <span>·</span>
-                <span className="text-foreground/60">{contextLabel}</span>
+                <span className="text-foreground/50">{contextLabel}</span>
               </>
             )}
           </div>
 
-          {/* Title */}
-          <h3 className="font-sans font-semibold text-[16px] leading-snug text-foreground mb-1.5 group-hover:text-foreground">
+          <h3 className="font-sans font-semibold text-[16px] leading-snug text-foreground mb-1.5">
             {title}
           </h3>
 
-          {/* Flair / tags */}
           {(flair || course_code) && (
             <div className="flex items-center gap-1.5 mb-2.5">
               {flair && (
@@ -112,32 +109,30 @@ export default function PostCard({
                 </span>
               )}
               {course_code && (
-                <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                   {course_code}
                 </span>
               )}
             </div>
           )}
 
-          {/* Body preview with gradient fade */}
           <div className="relative mb-3">
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
               {body.replace(/[*#_]/g, "")}
             </p>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-1.5">
             <VoteButtons score={score} userVote={userVote} onUpvote={() => vote(1)} onDownvote={() => vote(-1)} horizontal size="sm" />
             <button
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-full transition-colors"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/post/${id}`); }}
             >
               <MessageSquare className="h-3.5 w-3.5" />
               <span className="font-medium tabular-nums">{comment_count}</span>
             </button>
             <button
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent px-3 py-1.5 rounded-full transition-colors"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted px-3 py-1.5 rounded-full transition-colors"
               onClick={handleShare}
             >
               <Share2 className="h-3.5 w-3.5" />
@@ -145,7 +140,7 @@ export default function PostCard({
             </button>
             <button
               className={cn(
-                "flex items-center gap-1.5 text-xs hover:bg-accent px-3 py-1.5 rounded-full transition-colors",
+                "flex items-center gap-1.5 text-xs hover:bg-muted px-3 py-1.5 rounded-full transition-colors",
                 saved ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
               onClick={handleSave}
@@ -153,7 +148,7 @@ export default function PostCard({
               <Bookmark className={cn("h-3.5 w-3.5", saved && "fill-current")} />
             </button>
             <button
-              className="flex items-center text-muted-foreground hover:text-foreground hover:bg-accent p-1.5 rounded-full transition-colors ml-auto"
+              className="flex items-center text-muted-foreground hover:text-foreground hover:bg-muted p-1.5 rounded-full transition-colors ml-auto"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); toast.info("More options coming soon!"); }}
             >
               <MoreHorizontal className="h-3.5 w-3.5" />

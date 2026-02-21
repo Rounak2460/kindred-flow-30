@@ -32,49 +32,28 @@ export default function Home() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {/* Hero */}
       {!user && <FeedWelcome />}
 
       {/* Dashboard Section */}
-      <div className="mb-6">
-        {/* Stats */}
+      <div className="mb-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-4">
-          <StatCard icon={BookOpen} label="Course Reviews" count={stats?.courseReviews ?? 0} gradient="from-blue-500/15 to-blue-500/5" />
-          <StatCard icon={Globe} label="Exchange Diaries" count={stats?.exchangeDiaries ?? 0} gradient="from-green-500/15 to-green-500/5" />
-          <StatCard icon={Briefcase} label="Internship Reports" count={stats?.internshipReports ?? 0} gradient="from-purple-500/15 to-purple-500/5" />
-          <StatCard icon={FileText} label="Exam Papers" count={stats?.examPapers ?? 0} gradient="from-orange-500/15 to-orange-500/5" />
+          <StatCard icon={BookOpen} label="Course Reviews" count={stats?.courseReviews ?? 0} />
+          <StatCard icon={Globe} label="Exchange Diaries" count={stats?.exchangeDiaries ?? 0} />
+          <StatCard icon={Briefcase} label="Internship Reports" count={stats?.internshipReports ?? 0} />
+          <StatCard icon={FileText} label="Exam Papers" count={stats?.examPapers ?? 0} />
         </div>
 
-        {/* Quick Access */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
-          <QuickAccessCard
-            icon={BookOpen}
-            title="Academics"
-            subtitle="Course reviews, tips & ratings"
-            to="/academics"
-            gradient="from-blue-500/10 to-primary/5"
-          />
-          <QuickAccessCard
-            icon={Globe}
-            title="Exchange"
-            subtitle="College diaries & comparisons"
-            to="/exchange"
-            gradient="from-green-500/10 to-primary/5"
-          />
-          <QuickAccessCard
-            icon={Briefcase}
-            title="Internships"
-            subtitle="Company intel & reviews"
-            to="/internships"
-            gradient="from-purple-500/10 to-primary/5"
-          />
+          <QuickAccessCard icon={BookOpen} title="Academics" subtitle="Course reviews, tips & ratings" to="/academics" />
+          <QuickAccessCard icon={Globe} title="Exchange" subtitle="College diaries & comparisons" to="/exchange" />
+          <QuickAccessCard icon={Briefcase} title="Internships" subtitle="Company intel & reviews" to="/internships" />
         </div>
       </div>
 
       {/* Community Feed */}
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="h-4 w-4 text-primary" />
-        <h2 className="text-sm font-semibold">Community Feed</h2>
+        <h2 className="text-sm font-semibold text-foreground">Community Feed</h2>
       </div>
 
       <div className="mb-3">
@@ -90,7 +69,7 @@ export default function Home() {
 
       <div>
         {isError ? (
-          <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
+          <div className="text-center py-20 bg-card border border-border rounded-xl">
             <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
             <p className="text-xs text-muted-foreground mb-4">Could not load posts</p>
             <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-full gap-1.5">
@@ -102,7 +81,7 @@ export default function Home() {
             {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-20 bg-card/50 border border-border/40 rounded-xl">
+          <div className="text-center py-20 bg-card border border-border rounded-xl">
             <p className="text-sm font-medium text-foreground mb-1">
               {search.trim() ? `No results for "${search}"` : "No threads yet"}
             </p>
@@ -115,21 +94,11 @@ export default function Home() {
             {posts.map((post, i) => (
               <div key={post.id}>
                 <PostCard
-                  id={post.id}
-                  title={post.title}
-                  body={post.body}
-                  category={post.category}
-                  flair={post.flair}
-                  upvote_count={post.upvote_count}
-                  downvote_count={post.downvote_count}
-                  comment_count={post.comment_count}
-                  pinned={post.pinned}
-                  course_code={post.course_code}
-                  course_name={post.course_name}
-                  company_name={post.company_name}
-                  college_name={post.college_name}
-                  created_at={post.created_at}
-                  user_id={post.user_id}
+                  id={post.id} title={post.title} body={post.body} category={post.category}
+                  flair={post.flair} upvote_count={post.upvote_count} downvote_count={post.downvote_count}
+                  comment_count={post.comment_count} pinned={post.pinned} course_code={post.course_code}
+                  course_name={post.course_name} company_name={post.company_name} college_name={post.college_name}
+                  created_at={post.created_at} user_id={post.user_id}
                 />
                 {i === 3 && <div className="mb-3"><LeaderboardWidget /></div>}
               </div>
