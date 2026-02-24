@@ -12,6 +12,7 @@ interface Profile {
   free_views_used: number;
   bio: string;
   gossip_member: boolean;
+  email_verified: boolean;
 }
 
 interface AuthContextType {
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("name, batch, section, credits, founding_contributor, avatar_url, free_views_used, bio, gossip_member")
+      .select("name, batch, section, credits, founding_contributor, avatar_url, free_views_used, bio, gossip_member, email_verified")
       .eq("user_id", userId)
       .maybeSingle();
     setProfile(data);
@@ -52,7 +53,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // Use onAuthStateChange as single source of truth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         const currentUser = session?.user ?? null;
@@ -69,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Fallback: if onAuthStateChange hasn't fired within 2s, stop loading
     const timeout = setTimeout(() => {
       if (!initialized.current) {
         initialized.current = true;
