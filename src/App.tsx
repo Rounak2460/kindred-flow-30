@@ -10,17 +10,12 @@ import Home from "@/pages/Home";
 import PostDetail from "@/pages/PostDetail";
 import Submit from "@/pages/Submit";
 import Auth from "@/pages/Auth";
-import Forms from "@/pages/Forms";
 import Subreddit from "@/pages/Subreddit";
 import Profile from "@/pages/Profile";
-import Academics from "@/pages/Academics";
 import CourseDetail from "@/pages/CourseDetail";
-import Exchange from "@/pages/Exchange";
 import ExchangeDetail from "@/pages/ExchangeDetail";
-import Internships from "@/pages/Internships";
 import InternshipDetail from "@/pages/InternshipDetail";
-import ExamPapers from "@/pages/ExamPapers";
-import CampusLife from "@/pages/CampusLife";
+import SearchPage from "@/pages/SearchPage";
 import UserProfile from "@/pages/UserProfile";
 import ChatList from "@/pages/ChatList";
 import ChatConversation from "@/pages/ChatConversation";
@@ -54,16 +49,11 @@ const App = () => (
                 <Route path="/d/:category" element={<Subreddit />} />
                 <Route path="/post/:id" element={<PostDetail />} />
                 <Route path="/submit" element={<Submit />} />
-                <Route path="/forms" element={<Forms />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/academics" element={<Academics />} />
                 <Route path="/academics/:courseId" element={<CourseDetail />} />
-                <Route path="/exchange" element={<Exchange />} />
                 <Route path="/exchange/:collegeId" element={<ExchangeDetail />} />
-                <Route path="/internships" element={<Internships />} />
                 <Route path="/internships/:companyId" element={<InternshipDetail />} />
-                <Route path="/exam-papers" element={<ExamPapers />} />
-                <Route path="/campus" element={<CampusLife />} />
+                <Route path="/search" element={<SearchPage />} />
                 <Route path="/user/:userId" element={<UserProfile />} />
                 <Route path="/chat" element={<ChatList />} />
                 <Route path="/chat/:conversationId" element={<ChatConversation />} />
