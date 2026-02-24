@@ -5,17 +5,19 @@ export function useStats() {
   return useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const [courses, exchange, internships, papers] = await Promise.all([
+      const [courses, exchange, internships, papers, posts] = await Promise.all([
         supabase.from("course_reviews").select("id", { count: "exact", head: true }),
         supabase.from("exchange_reviews").select("id", { count: "exact", head: true }),
         supabase.from("internship_reviews").select("id", { count: "exact", head: true }),
         supabase.from("exam_papers").select("id", { count: "exact", head: true }),
+        supabase.from("posts").select("id", { count: "exact", head: true }),
       ]);
       return {
         courseReviews: courses.count ?? 0,
         exchangeDiaries: exchange.count ?? 0,
         internshipReports: internships.count ?? 0,
         examPapers: papers.count ?? 0,
+        totalPosts: posts.count ?? 0,
       };
     },
     staleTime: 60000,

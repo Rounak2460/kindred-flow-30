@@ -8,6 +8,7 @@ import { useCampusTips } from "@/hooks/useCampusTips";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SAMPLE_TIPS } from "@/lib/sample-data";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "All" },
@@ -23,8 +24,9 @@ export default function CampusLife() {
   const navigate = useNavigate();
   const [category, setCategory] = useState("all");
   const { data: tips = [], isLoading } = useCampusTips(category);
+  const shouldShowSamples = useShouldShowSamples();
 
-  const showSamples = !isLoading && tips.length === 0;
+  const showSamples = !isLoading && tips.length === 0 && shouldShowSamples;
   const displayTips = showSamples ? SAMPLE_TIPS : tips;
 
   return (

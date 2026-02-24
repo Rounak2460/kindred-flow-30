@@ -8,6 +8,7 @@ import { useExchangeColleges } from "@/hooks/useExchangeColleges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SAMPLE_EXCHANGE } from "@/lib/sample-data";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const REGION_OPTIONS = [
   { value: "all", label: "All" },
@@ -22,8 +23,9 @@ export default function Exchange() {
   const navigate = useNavigate();
   const [region, setRegion] = useState("all");
   const { data: colleges = [], isLoading } = useExchangeColleges(region);
+  const shouldShowSamples = useShouldShowSamples();
 
-  const showSamples = !isLoading && colleges.length === 0;
+  const showSamples = !isLoading && colleges.length === 0 && shouldShowSamples;
   const displayColleges = showSamples ? SAMPLE_EXCHANGE : colleges;
 
   return (
