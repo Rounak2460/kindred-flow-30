@@ -1,161 +1,258 @@
 
 
-# Replace Dummy Data with Real T4 Course Data + Add "Ask Mitra Ronnie" AI Chat
+# Complete Fix Prompt Implementation Plan
 
-## Part 1: Seed Real IIMB T4 Course Data
+This plan implements ALL changes from the uploaded `lovable-fix-prompt.md` across 16+ files. Nothing is skipped.
 
-The T4 Course Selector GitHub repo contains **47 actual IIMB Term 4 elective courses** with rich metadata: faculty names, official codes, areas (domains), demand ratios, peer sentiment reviews, course outlines, and grading breakdowns. Currently the app uses 4 fake sample courses. We will replace ALL dummy/sample data with this real data.
+---
 
-### 1A. Database Migration -- Expand Domain Enum + Seed Courses
+## FIX 1: Auth -- @iimb.ac.in only + Magic Link (not OTP)
 
-The existing `course_domain` enum only has 8 values. The T4 data has 13 areas. We need to add: `public_policy`, `interdisciplinary`, `information_systems`, `language`, `communication`, `entrepreneurship`.
+### File: `src/pages/Auth.tsx` (Major rewrite)
 
-**Migration 1: Expand enum + seed 47 courses**
+**1a.** Change email validator from `email.endsWith("@iimb.ac.in") || email.endsWith("@gmail.com")` to `email.endsWith("@iimb.ac.in")` only.
 
-Map the T4 areas to domains:
-- `Strat` → `strategy`
-- `Econ` → `economics`
-- `PP` → `public_policy` (new)
-- `Interdis` → `interdisciplinary` (new)
-- `F&A` → `finance`
-- `DS` → `analytics`
-- `Mktg` → `marketing`
-- `POM` → `operations`
-- `IS` → `information_systems` (new)
-- `Lang` → `language` (new)
-- `Mcomm` → `communication` (new)
-- `OBHRM` → `hr`
-- `Entre` → `entrepreneurship` (new)
+**1b.** Replace the entire `verify-otp` step. Remove `InputOTP` import, remove `verifyOtp` function, remove the OTP input UI. Replace with a "Check your inbox" screen showing:
+- Animated mail icon
+- "We've sent a login link to {email}"
+- "Click the link in the email to continue. Check spam if needed."
+- "Resend link" button with cooldown timer
+- "Back" button
+- No code input -- Supabase magic links auto-verify via redirect
 
-Insert all 47 courses with: `code` (official code like CS757), `name`, `professor` (faculty), `term` = "Term 4", `category` = "elective", `domain`, `description` (from outline array joined), `avg_rating` (derived from sentiment: recommended=4.2, caution=3.2, not_recommended=2.5, null=3.5).
+**1c.** Update all descriptive text:
+- `stepDescription` for `"signup-email"`: "We'll send a login link to your inbox"
+- `stepDescription` for `"forgot-otp"`: "We'll send a reset link to your inbox"
+- `stepDescription` for `"verify-otp"`: "Check your inbox -- we sent a login link to {email}"
+- Button text: "Send OTP" becomes "Send Link"
+- Bottom note: "Only @iimb.ac.in emails are accepted"
 
-### 1B. Seed Course Reviews from T4 Review Text
+**1d.** Remove `otp` state, remove `InputOTP` import, remove `verifyOtp` callback. The `verify-otp` step becomes a passive "check inbox" confirmation with no input.
 
-For courses that have `reviewText` in the T4 data, create a corresponding course review in `course_reviews` using a system user. Each review includes the peer sentiment text, a derived rating, and tags based on sentiment.
+### File: `src/components/AuthGuardDialog.tsx`
+- Change description text to: "Sign in with your @iimb.ac.in email to {action}. Only IIMB students can participate."
+- Change bottom note to: "Only @iimb.ac.in emails accepted"
 
-### 1C. Replace All Sample/Mock Data Files
+---
 
-**`src/lib/sample-data.ts`**: Replace 4 fake courses with a subset of real T4 courses (for fallback display). Replace fake internship/exchange/papers/tips data with IIMB-specific real data.
+## FIX 2: Dual-Posting System -- Reviews appear in BOTH structured tables AND common feed
 
-**`src/lib/sample-detail-data.ts`**: Replace fake reviews with realistic reviews derived from the T4 course data.
+### File: `src/pages/Submit.tsx` (Major rewrite)
 
-**`src/lib/mock-data.ts`**: Replace 10 generic mock posts with realistic IIMB-specific posts that reference actual T4 courses, real faculty names, and actual course codes.
+Replace the entire submit page with a multi-mode flow that branches by category:
 
-### 1D. Update Domain Filter Options
+**For "academics":**
+1. Course selector (searchable dropdown from `courses` table, with "Add new course" option)
+2. Rating step: 4 star ratings (Overall, Difficulty, Relevance, Workload) using new `StarRatingInput`
+3. Review text (min 100 chars), optional tips, optional tags
+4. On submit: Insert into `course_reviews` AND `posts` (dual-write)
 
-**`src/pages/Academics.tsx`**: Add the new domains to `DOMAIN_OPTIONS`: Public Policy, Interdisciplinary, IS, Language, Communication, Entrepreneurship.
+**For "exchange":**
+1. College selector (from `exchange_colleges`, or add new)
+2. 4 ratings: Academics, Living & Costs, Social Life, Travel
+3. Review text (min 150 chars)
+4. On submit: Insert into `exchange_reviews` AND `posts`
 
-## Part 2: "Ask Mitra Ronnie" -- RAG-Powered AI Chat
+**For "internships":**
+1. Company selector (from `internship_companies`, or add new)
+2. 4 ratings: Work Culture, Learning, Mentorship, PPO
+3. Stipend input, review text (min 150 chars)
+4. On submit: Insert into `internship_reviews` AND `posts`
 
-Build an AI assistant that uses platform content (posts, course reviews, courses, campus tips) as context to answer student queries.
+**For "papers":**
+1. Course selector
+2. Exam type, year, title, file upload (PDF via Supabase Storage)
+3. On submit: Insert into `exam_papers` AND `posts`
 
-### 2A. Edge Function: `ask-mitra`
+**For "campus":**
+1. Sub-category selector, place name, rating, tip text (min 50 chars)
+2. On submit: Insert into `campus_tips` AND `posts`
 
-Create `supabase/functions/ask-mitra/index.ts`:
-- Accepts `{ question: string, history?: { role: string, content: string }[] }`
-- Fetches relevant context from the database:
-  1. Search `posts` for keyword matches on the question (top 10)
-  2. Search `courses` for relevant course info (top 5)
-  3. Search `course_reviews` joined with courses for review context (top 5)
-  4. Search `campus_tips` for campus-related queries (top 5)
-- Builds a system prompt with the retrieved context as RAG
-- Calls Lovable AI Gateway (`google/gemini-3-flash-preview`) with streaming
-- Returns streamed SSE response
+**For general:** Keep existing title + body + flair flow for discussion posts.
 
-### 2B. Frontend: Chat UI Component
+### Navigation updates:
 
-**`src/components/AskMitraChat.tsx`**: A floating chat button (bottom-right on desktop, above FAB on mobile) that opens a slide-up chat panel:
-- Chat input with send button
-- Message bubbles (user + assistant) with markdown rendering
-- Streaming token-by-token display
-- "Powered by Digi Mitra AI" footer
-- Persisted in session (not across page loads)
+**`src/pages/CourseDetail.tsx`:**
+- "Write Review" button navigates to `/submit?category=academics&courseId={courseId}`
+- Back button: `navigate("/academics")` with text "← Academics"
 
-**`src/hooks/useAskMitra.ts`**: Hook managing chat state, streaming, and message history.
+**`src/pages/ExchangeDetail.tsx`:**
+- "Write Diary" button navigates to `/submit?category=exchange&collegeId={collegeId}`
+- Back button: `navigate("/exchange")` with text "← Exchange Programs"
 
-### 2C. Integration Points
+**`src/pages/InternshipDetail.tsx`:**
+- "Write Review" button navigates to `/submit?category=internships&companyId={companyId}`
+- Back button: `navigate("/internships")` with text "← Internships"
 
-- Add the chat button to `src/pages/Home.tsx` and `src/components/layout/AppLayout.tsx`
-- Register the edge function in `supabase/config.toml`
-- The AI uses ONLY platform data as context -- no hallucinated answers about courses that don't exist
+### Database: Auto-update rating triggers
+
+Create a migration with triggers to auto-update `avg_rating` and `review_count` on `courses`, `exchange_colleges`, and `internship_companies` when reviews are inserted/updated/deleted.
+
+```sql
+CREATE OR REPLACE FUNCTION update_course_avg_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE courses SET
+    avg_rating = (SELECT COALESCE(AVG(overall_rating), 0) FROM course_reviews WHERE course_id = COALESCE(NEW.course_id, OLD.course_id)),
+    review_count = (SELECT COUNT(*) FROM course_reviews WHERE course_id = COALESCE(NEW.course_id, OLD.course_id))
+  WHERE id = COALESCE(NEW.course_id, OLD.course_id);
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Similar for exchange_colleges and internship_companies
+```
+
+---
+
+## FIX 3: Comprehensive UX Fixes
+
+### 3a. Default to light theme
+**`src/App.tsx`:** Change `defaultTheme="dark"` to `defaultTheme="light"`
+
+### 3b. Profile interface (already done)
+**`src/contexts/AuthContext.tsx`:** Already has `bio` and `gossip_member` in the Profile interface. No change needed.
+
+### 3c. Fix back navigation
+- **`CourseDetail.tsx`:** `navigate(-1)` → `navigate("/academics")`, text "← Academics"
+- **`ExchangeDetail.tsx`:** `navigate(-1)` → `navigate("/exchange")`, text "← Exchange Programs"
+- **`InternshipDetail.tsx`:** `navigate(-1)` → `navigate("/internships")`, text "← Internships"
+
+### 3d. Bottom nav: Explore → Sections
+**`src/components/layout/BottomNav.tsx`:**
+- Change icon from `Compass` to `LayoutGrid`
+- Change label from "Explore" to "Sections"
+
+### 3e. Gossip discoverable on desktop
+**`src/components/layout/Navbar.tsx`:**
+- The Gossip icon button gets a tooltip and shows "Gossip" text next to the icon on desktop
+
+### 3f. Fix ExamPapers sample data
+**`src/pages/ExamPapers.tsx`:**
+- For sample papers, make them non-clickable (use `<div>` instead of `<a>`)
+- Add a subtle "(sample)" badge
+
+### 3g. PostCard body markdown -- already fixed in previous iteration with targeted regex. Confirmed working.
+
+### 3h. Add "Can't find your course?" prompt
+**`src/pages/Academics.tsx`:**
+- When search has results = 0 and search is non-empty, show: "Can't find your course? [Add it →]" linking to `/submit?category=academics&newCourse=true`
+
+### 3i. Show credit count on mobile
+**`src/components/layout/Navbar.tsx`:**
+- On mobile, show a small pill with coin icon + credit count next to the logo
+
+### 3j. Forms page → Contribution hub
+**`src/pages/Forms.tsx`:** Rewrite to show a grid of "Contribute" cards linking to proper submit forms:
+- Course Review → `/submit?category=academics` (+20 credits)
+- Exam Paper → `/submit?category=papers` (+30 credits)
+- Exchange Diary → `/submit?category=exchange` (+25 credits)
+- Internship Report → `/submit?category=internships` (+25 credits)
+- Campus Tip → `/submit?category=campus` (+5 credits)
+- Keep the Google Forms section at bottom under an accordion
+
+### 3k. Star rating input component
+**Create `src/components/shared/StarRatingInput.tsx`:**
+- Interactive 5-star rating input (click to set 1-5)
+- Hollow stars that fill on hover and click
+- Returns selected value via `onChange` prop
+
+### 3l. Empty state improvements
+- Consistent empty states across all sections with larger icons, encouraging copy, and CTA buttons
+- Already partially done; will ensure consistency in Academics, ExamPapers, Exchange, Internships, CampusLife pages
+
+### 3m. Profile page -- remove `as any` casts
+**`src/pages/Profile.tsx`:**
+- Line 23: `(profile as any).bio` → `profile.bio`
+- Line 41: `(profile as any).bio` → `profile.bio`
+
+---
 
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `supabase/functions/ask-mitra/index.ts` | RAG-powered AI chat edge function |
-| `src/components/AskMitraChat.tsx` | Floating chat UI with streaming |
-| `src/hooks/useAskMitra.ts` | Chat state + streaming logic |
+| `src/components/shared/StarRatingInput.tsx` | Interactive 5-star rating input component |
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src/lib/sample-data.ts` | Replace all dummy data with real IIMB T4 course data |
-| `src/lib/sample-detail-data.ts` | Replace fake reviews with T4-sourced reviews |
-| `src/lib/mock-data.ts` | Replace mock posts with realistic IIMB content referencing real courses |
-| `src/pages/Academics.tsx` | Add 6 new domain filter pills |
-| `src/components/layout/AppLayout.tsx` | Add AskMitraChat component |
-| `supabase/config.toml` | Register `ask-mitra` function |
+| File | Key Changes |
+|------|-------------|
+| `src/pages/Auth.tsx` | @iimb.ac.in only, magic link flow, remove OTP UI |
+| `src/pages/Submit.tsx` | Major rewrite with category-specific review forms + dual-posting |
+| `src/pages/CourseDetail.tsx` | Fix back nav → `/academics`, fix Write Review link with courseId |
+| `src/pages/ExchangeDetail.tsx` | Fix back nav → `/exchange`, fix Write Diary link with collegeId |
+| `src/pages/InternshipDetail.tsx` | Fix back nav → `/internships`, fix Write Review link with companyId |
+| `src/pages/Academics.tsx` | Add "Can't find course?" empty-search prompt |
+| `src/pages/ExamPapers.tsx` | Make sample papers non-clickable, add "(sample)" badge |
+| `src/pages/Forms.tsx` | Rewrite as contribution hub with submit form links |
+| `src/pages/Profile.tsx` | Remove `as any` casts |
+| `src/App.tsx` | `defaultTheme="dark"` → `defaultTheme="light"` |
+| `src/components/AuthGuardDialog.tsx` | Fix email domain text |
+| `src/components/layout/Navbar.tsx` | Mobile credits pill, Gossip label on desktop |
+| `src/components/layout/BottomNav.tsx` | Compass→LayoutGrid, "Explore"→"Sections" |
 
-## Database Migrations
+## Database Migration
 
-1. Add 6 new values to `course_domain` enum
-2. Insert 47 real T4 courses into `courses` table
-3. Insert peer reviews from T4 reviewText into `course_reviews`
+One migration to create auto-update triggers for `courses.avg_rating`/`review_count`, `exchange_colleges.avg_rating`/`review_count`, and `internship_companies.avg_rating`/`review_count` when reviews are inserted/updated/deleted.
 
 ## Technical Details
 
-### RAG Context Retrieval (in ask-mitra edge function)
+### Dual-Write Pattern (in Submit.tsx)
 
 ```typescript
-// Search posts for relevant context
-const { data: posts } = await supabase
-  .from("posts")
-  .select("title, body, category, course_name, company_name")
-  .eq("moderation_status", "approved")
-  .or(`title.ilike.%${keyword}%,body.ilike.%${keyword}%`)
-  .order("upvote_count", { ascending: false })
-  .limit(10);
+// After inserting structured review:
+const { data: reviewData } = await supabase
+  .from("course_reviews")
+  .insert({ course_id, user_id, overall_rating, difficulty_rating, ... })
+  .select("id")
+  .single();
 
-// Get course info
-const { data: courses } = await supabase
-  .from("courses")
-  .select("code, name, professor, domain, description, avg_rating")
-  .or(`name.ilike.%${keyword}%,code.ilike.%${keyword}%,description.ilike.%${keyword}%`)
-  .limit(5);
-
-// Build RAG context string
-const context = [
-  ...posts.map(p => `[Post] ${p.title}: ${p.body?.slice(0, 200)}`),
-  ...courses.map(c => `[Course] ${c.code} ${c.name} by ${c.professor} (${c.domain}): ${c.description}`),
-].join("\n\n");
+// Also insert into posts feed:
+await supabase.from("posts").insert({
+  user_id,
+  category: "academics",
+  title: `Review: ${courseName} (${courseCode})`,
+  body: reviewText,
+  flair: "Course Review",
+  course_code: courseCode,
+  course_name: courseName,
+  moderation_status: "approved",
+});
 ```
 
-### Streaming Chat Pattern
-
-Uses the standard Lovable AI streaming pattern via SSE, with the system prompt containing RAG context:
+### StarRatingInput Component
 
 ```typescript
-const systemPrompt = `You are Mitra Ronnie, a helpful AI assistant for IIM Bangalore students on the Digi Mitra platform. 
-Answer questions using ONLY the following platform data. If you don't have enough info, say so honestly.
-
-PLATFORM DATA:
-${context}`;
+interface StarRatingInputProps {
+  value: number;
+  onChange: (value: number) => void;
+  label?: string;
+}
+// Renders 5 clickable stars with hover preview
+// Uses lucide Star icon, filled vs outline based on value
 ```
 
-### Sample Real Course Data (from T4 repo)
+### Auto-Update Trigger (SQL)
 
-```text
-CS757 - Corporate Strategy (Prof. Deepak Chandrashekar, Strategy, 1.7x demand)
-  "One of the best courses. Concept heavy. Excellent professor. Very useful for placements."
+```sql
+CREATE OR REPLACE FUNCTION update_course_avg_rating()
+RETURNS TRIGGER AS $$
+DECLARE target_id uuid;
+BEGIN
+  target_id := COALESCE(NEW.course_id, OLD.course_id);
+  UPDATE courses SET
+    avg_rating = (SELECT COALESCE(AVG(overall_rating), 0) FROM course_reviews WHERE course_id = target_id),
+    review_count = (SELECT COUNT(*) FROM course_reviews WHERE course_id = target_id)
+  WHERE id = target_id;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public';
 
-EC747 - Business, Finance & Intl Economy (Prof. Anubha Dhasmana, Economics, 1.6x demand)
-  "Practical case study based economics course. WARNING: If you got cooked in Macro, skip this."
-
-DN714 - Zen and Mind Training (Prof. Dinesh Kumar, Interdisciplinary, 2.1x demand)
-  "No mid-term or end-term. Very easy to score. Just attend and stay alert."
+CREATE TRIGGER update_course_stats_trigger
+AFTER INSERT OR UPDATE OR DELETE ON course_reviews
+FOR EACH ROW EXECUTE FUNCTION update_course_avg_rating();
 ```
 
-All 47 courses from the T4 selector will be seeded with their real faculty, codes, outlines, grading breakdowns, and peer reviews.
+Similar triggers for `exchange_reviews` → `exchange_colleges` and `internship_reviews` → `internship_companies`.
 
