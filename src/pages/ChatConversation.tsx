@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMessages, useSendMessage, useMarkRead } from "@/hooks/useChat";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Send } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -65,8 +66,14 @@ export default function ChatConversation() {
 
   const handleSend = () => {
     if (!text.trim() || !conversationId) return;
-    sendMessage.mutate({ conversationId, body: text.trim() });
-    setText("");
+    const body = text.trim();
+    sendMessage.mutate(
+      { conversationId, body },
+      {
+        onSuccess: () => setText(""),
+        onError: (e: any) => toast.error(e.message || "Failed to send message"),
+      }
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
