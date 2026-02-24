@@ -3,6 +3,7 @@ import { Linkedin } from "lucide-react";
 import Navbar from "./Navbar";
 import BottomNav from "./BottomNav";
 import PageTransition from "./PageTransition";
+import AskMitraChat from "@/components/AskMitraChat";
 
 export default function AppLayout() {
   return (
@@ -21,6 +22,7 @@ export default function AppLayout() {
         </a>
       </footer>
       <BottomNav />
+      <AskMitraChat />
     </div>
   );
 }
