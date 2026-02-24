@@ -1,115 +1,85 @@
 
 
-# Fix Chat: "New Row Violates RLS" on Conversation Creation
+# Typing Indicators & Online Status for Chat
 
-## Root Cause
+## Current State
 
-The error `new row violates row-level security policy for table "conversations"` happens at this line in `useStartConversation`:
+The chat backend (RLS policies, `start_conversation` RPC, realtime subscriptions) is now correctly configured. The previous fixes addressed:
+- Error handling with toast feedback in `ChatConversation.tsx`
+- RLS infinite recursion via `get_my_conversation_ids()` SECURITY DEFINER function
+- Atomic conversation creation via `start_conversation()` RPC
 
-```ts
-const { data: conv, error: convErr } = await supabase
-  .from("conversations")
-  .insert({})
-  .select("id")   // <-- THIS FAILS
-  .single();
+The chat flow should now work. The user should re-test by logging in and clicking "Send Message" on a user profile.
+
+## New Feature: Typing Indicators & Online Status
+
+### Approach: Supabase Realtime Presence (No DB Changes)
+
+Both features can be implemented using **Supabase Realtime Presence** — no new tables or migrations needed. Presence is an in-memory feature that tracks which users are online and what they're doing, perfect for ephemeral state like typing and online status.
+
+### 1. Online Status (Green Dot)
+
+**How it works:**
+- When a user loads the app, join a global presence channel (`online-users`) with their user ID
+- Other users can check presence state to see who's online
+- Show a green dot on the avatar in `ChatConversation.tsx` header and in `ChatList.tsx` conversation items
+
+**File: `src/hooks/usePresence.ts`** (new)
+- `useOnlinePresence()` — joins the `online-users` channel on mount, tracks current online user IDs
+- Returns a `Set<string>` of online user IDs
+- Automatically leaves on unmount
+
+**File: `src/pages/ChatConversation.tsx`**
+- Import `useOnlinePresence`
+- Show a green dot next to the other user's name in the header when they're online
+
+**File: `src/pages/ChatList.tsx`**
+- Import `useOnlinePresence`
+- Show a green dot on each conversation avatar where the other user is online
+
+### 2. Typing Indicator (Animated Dots)
+
+**How it works:**
+- When a user types in a conversation, broadcast a `typing` event on a conversation-specific presence channel
+- The other user sees an animated "typing..." indicator below the messages
+- Typing state expires after 3 seconds of inactivity
+
+**File: `src/hooks/useTypingIndicator.ts`** (new)
+- `useTypingIndicator(conversationId, userId)` — manages typing state for a specific conversation
+- `setTyping(isTyping: boolean)` — broadcasts typing state
+- `isOtherTyping` — boolean indicating if the other participant is typing
+- Uses debounce: sets typing=true on keystroke, resets to false after 3s of no input
+
+**File: `src/pages/ChatConversation.tsx`**
+- Import `useTypingIndicator`
+- Call `setTyping(true)` in the textarea's `onChange` handler
+- Call `setTyping(false)` on send
+- Render animated dots ("typing...") above the input area when `isOtherTyping` is true
+
+### 3. UI Components
+
+**Typing indicator animation** — three bouncing dots, inline in the message area:
+```
+<div className="flex gap-1 items-center px-4 py-2">
+  <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:0ms]" />
+  <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:150ms]" />
+  <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:300ms]" />
+</div>
 ```
 
-The `.select("id")` after `.insert({})` requires the SELECT policy to pass on the newly inserted row. The SELECT policy is:
-
-```sql
-USING (id IN (SELECT get_my_conversation_ids()))
+**Online dot** — small green circle with a subtle pulse:
+```
+<span className="h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
 ```
 
-But `get_my_conversation_ids()` queries `conversation_participants` -- and the user hasn't been added as a participant yet (that happens AFTER this step). So the SELECT check fails, and PostgREST returns an RLS violation.
+## File Summary
 
-This is a chicken-and-egg problem: you need the conversation ID to add participants, but you can't read the conversation ID until participants exist.
+| File | Change |
+|------|--------|
+| `src/hooks/usePresence.ts` | New — global online presence tracking |
+| `src/hooks/useTypingIndicator.ts` | New — per-conversation typing state via Realtime |
+| `src/pages/ChatConversation.tsx` | Add online dot in header, typing indicator in messages, wire up typing on input change |
+| `src/pages/ChatList.tsx` | Add online dots next to conversation avatars |
 
-## Fix: Atomic Database Function
-
-Create a `SECURITY DEFINER` database function that handles the entire conversation creation atomically:
-
-1. Check if a conversation already exists between the two users
-2. If not, create one and add both participants
-3. Return the conversation ID
-
-This bypasses the RLS chicken-and-egg issue entirely.
-
-### Database Migration
-
-```sql
-CREATE OR REPLACE FUNCTION public.start_conversation(other_user_id uuid)
-RETURNS uuid
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = 'public'
-AS $$
-DECLARE
-  current_uid uuid := auth.uid();
-  existing_conv_id uuid;
-  new_conv_id uuid;
-BEGIN
-  IF current_uid IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-
-  -- Check for existing conversation between the two users
-  SELECT cp1.conversation_id INTO existing_conv_id
-  FROM conversation_participants cp1
-  JOIN conversation_participants cp2 
-    ON cp1.conversation_id = cp2.conversation_id
-  WHERE cp1.user_id = current_uid 
-    AND cp2.user_id = other_user_id
-  LIMIT 1;
-
-  IF existing_conv_id IS NOT NULL THEN
-    RETURN existing_conv_id;
-  END IF;
-
-  -- Create new conversation
-  INSERT INTO conversations DEFAULT VALUES
-  RETURNING id INTO new_conv_id;
-
-  -- Add both participants
-  INSERT INTO conversation_participants (conversation_id, user_id)
-  VALUES 
-    (new_conv_id, current_uid),
-    (new_conv_id, other_user_id);
-
-  RETURN new_conv_id;
-END;
-$$;
-```
-
-### Frontend Change: `src/hooks/useChat.ts`
-
-Replace the `useStartConversation` function body to call the RPC instead of doing 3 separate queries:
-
-```ts
-export function useStartConversation() {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-
-  return useCallback(async (otherUserId: string): Promise<string> => {
-    if (!user) throw new Error("Not authenticated");
-
-    const { data, error } = await supabase
-      .rpc("start_conversation", { other_user_id: otherUserId });
-    
-    if (error) throw error;
-    
-    queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    return data as string;
-  }, [user, queryClient]);
-}
-```
-
-This replaces ~30 lines of fragile multi-step logic with a single atomic RPC call.
-
-## Summary
-
-| Change | Detail |
-|--------|--------|
-| New DB function | `start_conversation(other_user_id uuid)` -- SECURITY DEFINER, atomic |
-| Frontend | Replace `useStartConversation` body with single `supabase.rpc()` call |
-| Root cause | `.insert({}).select("id")` fails because SELECT policy can't see the row before participants are added |
+No database migrations needed — this uses Supabase Realtime Presence which is entirely in-memory.
 
