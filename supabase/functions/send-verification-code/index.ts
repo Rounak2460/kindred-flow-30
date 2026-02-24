@@ -53,36 +53,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Rate limit: check if a code was sent in the last 60 seconds
-    const { data: recentCode } = await supabaseAdmin
-      .from("verification_codes")
-      .select("created_at")
+    // Check if already verified
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("email_verified")
       .eq("user_id", userId)
-      .gte("created_at", new Date(Date.now() - 60_000).toISOString())
       .maybeSingle();
 
-    if (recentCode) {
-      return new Response(
-        JSON.stringify({ error: "Please wait before requesting another code" }),
-        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    if (profile?.email_verified) {
+      return new Response(JSON.stringify({ verified: true, already: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Generate 6-digit code
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
-
-    // Delete old codes for this user, insert new one
-    await supabaseAdmin
-      .from("verification_codes")
-      .delete()
-      .eq("user_id", userId);
-
-    await supabaseAdmin
-      .from("verification_codes")
-      .insert({ user_id: userId, email, code, expires_at: expiresAt });
-
-    // Send via Resend
+    // Send a verification email via Resend to check if the mailbox exists
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) {
       return new Response(JSON.stringify({ error: "Email service not configured" }), {
@@ -100,15 +84,13 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Digi Mitra <noreply@iimbdigimitra.org>",
         to: [email],
-        subject: "Your Digi Mitra verification code",
+        subject: "Welcome to Digi Mitra – Email Verified",
         html: `
           <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #333; margin-bottom: 8px;">Verify your email</h2>
-            <p style="color: #666; font-size: 14px;">Enter this code in Digi Mitra to verify your @iimb.ac.in email:</p>
-            <div style="background: #f4f4f5; border-radius: 8px; padding: 16px; text-align: center; margin: 16px 0;">
-              <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; color: #111;">${code}</span>
-            </div>
-            <p style="color: #999; font-size: 12px;">This code expires in 10 minutes. If you didn't request this, ignore this email.</p>
+            <h2 style="color: #333; margin-bottom: 8px;">Welcome to Digi Mitra! 🎉</h2>
+            <p style="color: #666; font-size: 14px;">Your @iimb.ac.in email has been verified successfully.</p>
+            <p style="color: #666; font-size: 14px;">You now have full access to the platform. Start exploring course reviews, internship insights, and more!</p>
+            <p style="color: #999; font-size: 12px; margin-top: 24px;">If you didn't create this account, please contact us immediately.</p>
           </div>
         `,
       }),
@@ -117,15 +99,31 @@ Deno.serve(async (req) => {
     if (!emailRes.ok) {
       const errBody = await emailRes.text();
       console.error("Resend error:", errBody);
-      // Fallback: return code directly so the UI can show it
-      return new Response(JSON.stringify({ success: true, fallback: true, code }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Resend rejected the email — mailbox likely doesn't exist
+      return new Response(
+        JSON.stringify({ verified: false, error: "Could not verify this email address. Please check your IIMB email prefix." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     await emailRes.text(); // consume body
 
-    return new Response(JSON.stringify({ success: true }), {
+    // Resend accepted (200) — IIMB mail server accepted the recipient
+    // Mark the profile as verified
+    const { error: updateError } = await supabaseAdmin
+      .from("profiles")
+      .update({ email_verified: true })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Profile update error:", updateError);
+      return new Response(JSON.stringify({ error: "Verification failed. Please try again." }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ verified: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
