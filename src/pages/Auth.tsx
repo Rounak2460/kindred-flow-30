@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { ArrowLeft, Mail, Lock, KeyRound, MailCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,7 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [cooldown, setCooldown] = useState(0);
+  const [otpCode, setOtpCode] = useState("");
 
   const email = `${emailPrefix}@iimb.ac.in`;
 
@@ -65,6 +67,22 @@ export default function Auth() {
     finally { setLoading(false); }
   }, [email, emailPrefix, password, navigate]);
 
+  const verifyOtp = useCallback(async () => {
+    if (otpCode.length !== 6) { toast.error("Please enter the 6-digit code"); return; }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otpCode,
+        type: otpMode === "signup" ? "email" : "recovery",
+      });
+      if (error) throw error;
+      toast.success("Code verified!");
+      setStep("set-password");
+    } catch (error: any) { toast.error(error.message || "Invalid code"); }
+    finally { setLoading(false); }
+  }, [email, otpCode, otpMode]);
+
   const setUserPassword = useCallback(async () => {
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     if (password !== confirmPassword) { toast.error("Passwords don't match"); return; }
@@ -92,7 +110,7 @@ export default function Auth() {
       case "login": return "Welcome back";
       case "signup-email": return "Create Account";
       case "forgot-otp": return "Reset Password";
-      case "verify-otp": return "Check your inbox";
+      case "verify-otp": return "Verify Code";
       case "set-password": return otpMode === "signup" ? "Set Your Password" : "New Password";
     }
   };
@@ -102,7 +120,7 @@ export default function Auth() {
       case "login": return "Sign in to continue";
       case "signup-email": return "We'll send a login link to your inbox";
       case "forgot-otp": return "We'll send a reset link to your inbox";
-      case "verify-otp": return `We sent a login link to ${email}`;
+      case "verify-otp": return `Enter the 6-digit code sent to ${email}`;
       case "set-password": return "Choose a strong password";
     }
   };
@@ -204,16 +222,25 @@ export default function Auth() {
 
               {step === "verify-otp" && (
                 <div className="space-y-5">
-                  <div className="flex flex-col items-center text-center py-4">
-                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                      <MailCheck className="h-8 w-8 text-primary animate-pulse" />
+                  <form onSubmit={(e) => { e.preventDefault(); verifyOtp(); }} className="space-y-4">
+                    <div className="flex justify-center">
+                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
                     </div>
-                    <p className="text-sm text-foreground font-medium">Click the link in the email to continue</p>
-                    <p className="text-xs text-muted-foreground mt-1.5">Check your spam folder if you don't see it</p>
-                  </div>
+                    <p className="text-xs text-muted-foreground text-center">Check your spam folder if you don't see it</p>
+                    <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading || otpCode.length !== 6}>{loading ? "Verifying…" : "Verify Code"}</Button>
+                  </form>
                   <div className="flex items-center justify-between text-xs">
                     <button type="button" className="text-muted-foreground hover:text-foreground flex items-center gap-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back</button>
-                    <button type="button" className="text-primary font-medium hover:underline disabled:opacity-50" disabled={cooldown > 0} onClick={sendMagicLink}>{cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}</button>
+                    <button type="button" className="text-primary font-medium hover:underline disabled:opacity-50" disabled={cooldown > 0} onClick={sendMagicLink}>{cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}</button>
                   </div>
                 </div>
               )}
