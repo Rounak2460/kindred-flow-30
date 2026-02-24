@@ -1028,6 +1028,7 @@ export type Database = {
           created_at: string
           credits: number
           current_term: string
+          email_verified: boolean
           founding_contributor: boolean
           free_views_used: number
           gossip_member: boolean
@@ -1047,6 +1048,7 @@ export type Database = {
           created_at?: string
           credits?: number
           current_term?: string
+          email_verified?: boolean
           founding_contributor?: boolean
           free_views_used?: number
           gossip_member?: boolean
@@ -1066,6 +1068,7 @@ export type Database = {
           created_at?: string
           credits?: number
           current_term?: string
+          email_verified?: boolean
           founding_contributor?: boolean
           free_views_used?: number
           gossip_member?: boolean
@@ -1075,6 +1078,33 @@ export type Database = {
           onboarding_complete?: boolean
           section?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      verification_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
