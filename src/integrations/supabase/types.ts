@@ -48,6 +48,7 @@ export type Database = {
           category: Database["public"]["Enums"]["campus_category"]
           created_at: string
           id: string
+          is_anonymous: boolean
           name: string
           rating: number
           tip_text: string
@@ -59,6 +60,7 @@ export type Database = {
           category: Database["public"]["Enums"]["campus_category"]
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           name: string
           rating: number
           tip_text: string
@@ -70,6 +72,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["campus_category"]
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           name?: string
           rating?: number
           tip_text?: string
@@ -85,6 +88,7 @@ export type Database = {
           created_at: string
           downvote_count: number
           id: string
+          is_anonymous: boolean
           moderation_reason: string | null
           moderation_status: string
           parent_id: string | null
@@ -98,6 +102,7 @@ export type Database = {
           created_at?: string
           downvote_count?: number
           id?: string
+          is_anonymous?: boolean
           moderation_reason?: string | null
           moderation_status?: string
           parent_id?: string | null
@@ -111,6 +116,7 @@ export type Database = {
           created_at?: string
           downvote_count?: number
           id?: string
+          is_anonymous?: boolean
           moderation_reason?: string | null
           moderation_status?: string
           parent_id?: string | null
@@ -160,6 +166,56 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       course_review_votes: {
         Row: {
           created_at: string
@@ -196,6 +252,7 @@ export type Database = {
           difficulty_rating: number
           helpful_count: number
           id: string
+          is_anonymous: boolean
           overall_rating: number
           relevance_rating: number
           review_text: string
@@ -211,6 +268,7 @@ export type Database = {
           difficulty_rating: number
           helpful_count?: number
           id?: string
+          is_anonymous?: boolean
           overall_rating: number
           relevance_rating: number
           review_text: string
@@ -226,6 +284,7 @@ export type Database = {
           difficulty_rating?: number
           helpful_count?: number
           id?: string
+          is_anonymous?: boolean
           overall_rating?: number
           relevance_rating?: number
           review_text?: string
@@ -414,6 +473,7 @@ export type Database = {
           college_id: string
           created_at: string
           id: string
+          is_anonymous: boolean
           living_costs_rating: number
           review_text: string
           social_life_rating: number
@@ -426,6 +486,7 @@ export type Database = {
           college_id: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           living_costs_rating: number
           review_text: string
           social_life_rating: number
@@ -438,6 +499,7 @@ export type Database = {
           college_id?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           living_costs_rating?: number
           review_text?: string
           social_life_rating?: number
@@ -592,6 +654,7 @@ export type Database = {
           company_id: string
           created_at: string
           id: string
+          is_anonymous: boolean
           learning_rating: number
           mentorship_rating: number
           ppo_rating: number
@@ -605,6 +668,7 @@ export type Database = {
           company_id: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           learning_rating: number
           mentorship_rating: number
           ppo_rating: number
@@ -618,6 +682,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           learning_rating?: number
           mentorship_rating?: number
           ppo_rating?: number
@@ -633,6 +698,38 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "internship_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]
@@ -684,6 +781,7 @@ export type Database = {
           file_url: string | null
           flair: string | null
           id: string
+          is_anonymous: boolean
           moderation_reason: string | null
           moderation_status: string
           pinned: boolean
@@ -705,6 +803,7 @@ export type Database = {
           file_url?: string | null
           flair?: string | null
           id?: string
+          is_anonymous?: boolean
           moderation_reason?: string | null
           moderation_status?: string
           pinned?: boolean
@@ -726,6 +825,7 @@ export type Database = {
           file_url?: string | null
           flair?: string | null
           id?: string
+          is_anonymous?: boolean
           moderation_reason?: string | null
           moderation_status?: string
           pinned?: boolean

@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { MessageSquare, Share2 } from "lucide-react";
+import { MessageSquare, Share2, EyeOff } from "lucide-react";
 import VoteButtons from "./VoteButtons";
 import { timeAgo } from "@/lib/mock-data";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { generateAnonHandle } from "@/lib/anonymity";
 import { useVote } from "@/hooks/useVote";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostCardProps {
   id: string;
@@ -24,6 +25,7 @@ interface PostCardProps {
   college_name?: string | null;
   created_at: string;
   user_id?: string;
+  is_anonymous?: boolean;
 }
 
 const FLAIR_COLORS: Record<string, string> = {
@@ -49,15 +51,24 @@ const CATEGORIES: Record<string, string> = {
 export default function PostCard({
   id, title, body, category, flair, upvote_count, downvote_count,
   comment_count, pinned, course_code, course_name, company_name,
-  college_name, created_at, user_id,
+  college_name, created_at, user_id, is_anonymous = false,
 }: PostCardProps) {
   const navigate = useNavigate();
   const initialScore = upvote_count - downvote_count;
   const { score, userVote, vote, loadVote } = useVote(id, "post", initialScore);
   const contextLabel = course_name || company_name || college_name;
   const anonHandle = generateAnonHandle(user_id || id, id);
+  const [authorName, setAuthorName] = useState<string | null>(null);
 
   useEffect(() => { loadVote(); }, [loadVote]);
+
+  // Fetch author name for non-anonymous posts
+  useEffect(() => {
+    if (is_anonymous || !user_id) return;
+    supabase.from("profiles").select("name").eq("user_id", user_id).maybeSingle().then(({ data }) => {
+      if (data?.name) setAuthorName(data.name);
+    });
+  }, [is_anonymous, user_id]);
 
   const handleShare = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -67,6 +78,8 @@ export default function PostCard({
   };
 
   const flairColorClass = flair ? (FLAIR_COLORS[flair] || "bg-primary/5 text-primary border-primary/20") : "";
+
+  const displayName = is_anonymous ? anonHandle : (authorName || anonHandle);
 
   return (
     <Link to={`/post/${id}`}>
@@ -83,7 +96,17 @@ export default function PostCard({
               {CATEGORIES[category] || category}
             </span>
             <span>·</span>
-            <span>{anonHandle}</span>
+            {is_anonymous ? (
+              <span className="flex items-center gap-0.5"><EyeOff className="h-3 w-3" />{displayName}</span>
+            ) : (
+              <Link
+                to={`/user/${user_id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="font-medium text-primary hover:underline"
+              >
+                {displayName}
+              </Link>
+            )}
             <span>·</span>
             <span>{timeAgo(created_at)}</span>
             {contextLabel && (

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Plus, User, LogOut, FileText, Award, EyeOff, X, Sparkles, ArrowRight, MessageSquare, ThumbsUp, Loader2 } from "lucide-react";
+import { Search, Plus, User, LogOut, FileText, Award, X, Sparkles, ArrowRight, MessageSquare, ThumbsUp, Loader2, MessageCircle } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import DMLogo from "@/components/DMLogo";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useSearch, type SearchResult } from "@/hooks/useSearch";
+import { useUnreadCount } from "@/hooks/useChat";
 
 const CATEGORY_COLORS: Record<string, string> = {
   placements: "bg-blue-500/10 text-blue-500",
@@ -45,6 +46,7 @@ export default function Navbar() {
   const { user, profile } = useAuth();
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatUnread = useUnreadCount();
 
   // Search logic
   const [query, setQuery] = useState("");
@@ -70,7 +72,6 @@ export default function Navbar() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Close on click outside
   useEffect(() => {
     if (!searchOpen) return;
     const handler = (e: MouseEvent) => {
@@ -186,7 +187,6 @@ export default function Navbar() {
                 </button>
               </div>
 
-              {/* Dropdown results */}
               {(query.trim() || results.length > 0) && (
                 <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-elevated max-h-[60vh] overflow-y-auto z-50">
                   {error && <div className="px-4 py-4 text-center"><p className="text-xs text-destructive">{error}</p></div>}
@@ -276,9 +276,18 @@ export default function Navbar() {
         <div className="flex items-center gap-1.5 flex-shrink-0">
           <ThemeToggle />
           {user && <NotificationBell />}
+          {user && (
+            <button onClick={() => navigate("/chat")} className="relative h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted transition-colors">
+              <MessageCircle className="h-4 w-4" />
+              {chatUnread > 0 && (
+                <div className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                  <span className="text-[8px] font-bold text-primary-foreground">{chatUnread > 9 ? "9+" : chatUnread}</span>
+                </div>
+              )}
+            </button>
+          )}
           {user ? (
             <>
-              <Button variant="ghost" size="sm" className="hidden md:flex h-8 gap-1.5 px-3 text-muted-foreground hover:bg-muted rounded-lg text-xs" onClick={() => navigate("/gossip")}><EyeOff className="h-4 w-4" /> Gossip</Button>
               <Button variant="ghost" size="sm" className="hidden md:flex h-8 w-8 p-0 text-muted-foreground hover:bg-muted rounded-lg" onClick={() => navigate("/forms")}><FileText className="h-4 w-4" /></Button>
               <Button size="sm" className="hidden md:flex gap-1.5 h-8 text-xs rounded-lg font-semibold" onClick={() => navigate("/submit")}><Plus className="h-3.5 w-3.5" /> Post</Button>
               <DropdownMenu>
@@ -300,7 +309,7 @@ export default function Navbar() {
                   )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-xs" onClick={() => navigate("/profile")}><User className="h-3.5 w-3.5 mr-2" /> Profile</DropdownMenuItem>
-                  <DropdownMenuItem className="text-xs" onClick={() => navigate("/gossip")}><EyeOff className="h-3.5 w-3.5 mr-2" /> Gossip</DropdownMenuItem>
+                  <DropdownMenuItem className="text-xs" onClick={() => navigate("/chat")}><MessageCircle className="h-3.5 w-3.5 mr-2" /> Messages</DropdownMenuItem>
                   <DropdownMenuItem className="text-xs" onClick={() => navigate("/forms")}><FileText className="h-3.5 w-3.5 mr-2" /> Forms</DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-xs" onClick={handleLogout}><LogOut className="h-3.5 w-3.5 mr-2" /> Sign out</DropdownMenuItem>
@@ -309,7 +318,6 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="hidden md:flex h-8 text-xs rounded-lg font-medium px-3 text-muted-foreground hover:text-foreground" onClick={() => navigate("/gossip")}>Gossip</Button>
               <Button size="sm" className="h-8 text-xs rounded-lg font-semibold px-4" onClick={() => navigate("/auth")}>Join</Button>
             </>
           )}

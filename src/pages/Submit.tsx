@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, Plus, Upload } from "lucide-react";
+import { ArrowLeft, Check, Plus, Upload, EyeOff } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -94,6 +95,7 @@ export default function Submit() {
   const [placeName, setPlaceName] = useState("");
   const [campusRating, setCampusRating] = useState(0);
   const [tipText, setTipText] = useState("");
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   // Load selector data
   useEffect(() => {
@@ -134,6 +136,7 @@ export default function Submit() {
       company_name: extra.company_name || null,
       college_name: extra.college_name || null,
       moderation_status: "approved",
+      is_anonymous: isAnonymous,
     });
   };
 
@@ -157,6 +160,7 @@ export default function Submit() {
         review_text: reviewText,
         tips: tips || null,
         tags: tagArray,
+        is_anonymous: isAnonymous,
       });
 
       await dualWritePost(session.user.id, `Review: ${course?.name || "Course"} (${course?.code || ""})`, reviewText, {
@@ -188,6 +192,7 @@ export default function Submit() {
         social_life_rating: socialRating || 3,
         travel_rating: travelRating || 3,
         review_text: reviewText,
+        is_anonymous: isAnonymous,
       });
 
       await dualWritePost(session.user.id, `Exchange Diary: ${college?.name || "College"}`, reviewText, {
@@ -219,6 +224,7 @@ export default function Submit() {
         ppo_rating: ppoRating || 3,
         review_text: reviewText,
         stipend: stipend || "",
+        is_anonymous: isAnonymous,
       });
 
       await dualWritePost(session.user.id, `Internship Review: ${company?.name || "Company"}`, reviewText, {
@@ -280,6 +286,7 @@ export default function Submit() {
         name: placeName,
         rating: campusRating,
         tip_text: tipText,
+        is_anonymous: isAnonymous,
       });
 
       await dualWritePost(session.user.id, `Campus Tip: ${placeName}`, tipText, {
@@ -304,6 +311,7 @@ export default function Submit() {
         body: body || "",
         flair: flair || null,
         moderation_status: "approved",
+        is_anonymous: isAnonymous,
       }).select("id").single();
       if (error) throw error;
       toast.success("Post submitted!");
@@ -539,6 +547,18 @@ export default function Submit() {
                   )}
                 </>
               )}
+
+              {/* Anonymous toggle */}
+              <div className="flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-xs font-medium text-foreground">Post anonymously</p>
+                    <p className="text-[10px] text-muted-foreground">Your name won't be shown</p>
+                  </div>
+                </div>
+                <Switch checked={isAnonymous} onCheckedChange={setIsAnonymous} />
+              </div>
 
               <div className="flex items-center gap-3 pt-2">
                 <Button type="button" variant="ghost" size="sm" className="rounded-lg" onClick={() => navigate(-1)}>Cancel</Button>

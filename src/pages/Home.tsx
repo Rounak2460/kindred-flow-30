@@ -107,7 +107,7 @@ export default function Home() {
                 flair={post.flair} upvote_count={post.upvote_count} downvote_count={post.downvote_count}
                 comment_count={post.comment_count} pinned={post.pinned} course_code={post.course_code}
                 course_name={post.course_name} company_name={post.company_name} college_name={post.college_name}
-                created_at={post.created_at} user_id={post.user_id}
+                created_at={post.created_at} user_id={post.user_id} is_anonymous={post.is_anonymous}
               />
             ))}
             <div className="mt-4">

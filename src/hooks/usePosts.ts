@@ -19,6 +19,7 @@ export interface Post {
   created_at: string;
   moderation_status: string;
   file_url: string | null;
+  is_anonymous: boolean;
 }
 
 type SortOption = "hot" | "new" | "top";
