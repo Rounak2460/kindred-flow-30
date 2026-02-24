@@ -1,41 +1,36 @@
 
 
-# Simplify Auth: Remove Outlook, Add Email Prefix Input
+# Fix: Email Input Loses Cursor After Each Keystroke
 
-## Changes to `src/pages/Auth.tsx`
+## Root Cause
 
-### 1. Remove all Microsoft/Outlook code
-- Delete `loginWithMicrosoft` callback (lines 81-93)
-- Delete `MicrosoftButton` component (lines 145-160)
-- Delete `Divider` component (lines 162-168)
-- Remove `<MicrosoftButton />` and `<Divider />` from login step (lines 209-210)
-- Remove `<MicrosoftButton />` and `<Divider />` from signup step (lines 231-236)
-- Remove the `onAuthStateChange` domain enforcement effect (lines 34-45) since there's no OAuth anymore
+`EmailPrefixInput` is defined as a **component function inside the `Auth` component body** (line 118-133). Every time `emailPrefix` state changes (i.e., every keystroke), `Auth` re-renders, which creates a **new function reference** for `EmailPrefixInput`. React sees it as a completely different component type, so it **unmounts the old input and mounts a new one** — destroying focus.
 
-### 2. Change email input to prefix-only with fixed suffix
-- Replace `email` state with `emailPrefix` state (stores just the part before @)
-- Compute full email as `${emailPrefix}@iimb.ac.in`
-- Replace all email `<Input>` fields with a combined input showing a fixed `@iimb.ac.in` suffix:
-  ```
-  ┌──────────────────────────────────────┐
-  │ rounak.tikmani24  │ @iimb.ac.in      │
-  └──────────────────────────────────────┘
-  ```
-  This uses a flex container with the Input on the left and a styled static suffix on the right.
-- Placeholder becomes `"yourname"` instead of `"yourname@iimb.ac.in"`
-- Input type changes from `"email"` to `"text"`
-- Remove `isValidEmail` function -- no longer needed since domain is always `@iimb.ac.in`
-- Update all references: `loginWithPassword`, `sendMagicLink`, and the verify-otp description to use the computed full email
+## Fix
 
-### 3. Update helper text
-- Remove "Only @iimb.ac.in emails accepted" note (it's now implicit from the UI)
-- Update verify-otp description to show full email: `We sent a login link to ${emailPrefix}@iimb.ac.in`
+**Inline the JSX** directly where `<EmailPrefixInput>` is used (lines 177 and 197) instead of wrapping it in a component function. This way React sees the same element tree across renders and preserves focus.
 
-## Files to Modify
+### File: `src/pages/Auth.tsx`
 
-| File | Changes |
-|------|---------|
-| `src/pages/Auth.tsx` | Remove Outlook OAuth, change email input to prefix-only with fixed `@iimb.ac.in` suffix |
+1. **Delete** the `EmailPrefixInput` component definition (lines 118-133)
+2. **Replace** `<EmailPrefixInput id="email" />` on line 177 and line 197 with the raw JSX:
 
-No database changes needed.
+```tsx
+<div className="flex items-center rounded-lg border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background">
+  <Input
+    id="email"
+    type="text"
+    placeholder="yourname"
+    value={emailPrefix}
+    onChange={(e) => setEmailPrefix(e.target.value.toLowerCase().trim())}
+    className="border-0 rounded-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+    required
+  />
+  <span className="px-3 text-sm text-muted-foreground whitespace-nowrap border-l border-border bg-muted/50">
+    @iimb.ac.in
+  </span>
+</div>
+```
+
+No other files affected. Single file, ~15-line change.
 
