@@ -5,14 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, Lock, KeyRound, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, Lock, KeyRound, ShieldCheck, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DMLogo from "@/components/DMLogo";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAuth } from "@/contexts/AuthContext";
+import { Progress } from "@/components/ui/progress";
 
 type Step = "login" | "signup" | "forgot" | "verify";
+
+interface VerifyStep {
+  label: string;
+  status: "pending" | "active" | "done" | "error";
+}
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -22,15 +27,20 @@ export default function Auth() {
   const [emailPrefix, setEmailPrefix] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otpValue, setOtpValue] = useState("");
-  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Verification progress state
+  const [verifySteps, setVerifySteps] = useState<VerifyStep[]>([
+    { label: "Sending verification email…", status: "pending" },
+    { label: "Verifying your IIMB account…", status: "pending" },
+    { label: "Verified! Welcome to Digi Mitra", status: "pending" },
+  ]);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   const email = `${emailPrefix}@iimb.ac.in`;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        // Check if email is verified
         supabase
           .from("profiles")
           .select("email_verified")
@@ -40,61 +50,73 @@ export default function Auth() {
             if (data?.email_verified) {
               navigate("/");
             } else if (data) {
-              // Logged in but not verified
               setStep("verify");
-              sendVerificationCode();
+              runAutoVerify();
             }
           });
       }
     });
   }, [navigate]);
 
-  // Cooldown timer
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendCooldown]);
+  const resetVerifySteps = () => {
+    setVerifySteps([
+      { label: "Sending verification email…", status: "pending" },
+      { label: "Verifying your IIMB account…", status: "pending" },
+      { label: "Verified! Welcome to Digi Mitra", status: "pending" },
+    ]);
+    setVerifyError(null);
+  };
 
-  const sendVerificationCode = useCallback(async () => {
+  const updateVerifyStep = (index: number, status: VerifyStep["status"]) => {
+    setVerifySteps((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, status } : s))
+    );
+  };
+
+  const runAutoVerify = useCallback(async () => {
+    resetVerifySteps();
+    setVerifyError(null);
+
+    // Step 1: Sending email
+    updateVerifyStep(0, "active");
+    await new Promise((r) => setTimeout(r, 600));
+
     try {
       const { data, error } = await supabase.functions.invoke("send-verification-code");
-      if (error) throw error;
-      setResendCooldown(60);
-      if (data?.fallback && data?.code) {
-        // Email couldn't be sent (Resend test mode) — show code directly
-        toast.success(`Your verification code is: ${data.code}`, { duration: 30000 });
-      } else {
-        toast.success("Verification code sent! Check your email.");
-      }
-    } catch (err: any) {
-      if (err?.message?.includes("wait")) {
-        toast.error("Please wait before requesting another code");
-      } else {
-        toast.error("Failed to send verification code");
-        console.error(err);
-      }
-    }
-  }, []);
 
-  const verifyCode = useCallback(async () => {
-    if (otpValue.length !== 6) { toast.error("Enter the 6-digit code"); return; }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-code", {
-        body: { code: otpValue },
-      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      toast.success("Email verified! Welcome to Digi Mitra!");
-      await refreshProfile();
-      navigate("/");
+
+      updateVerifyStep(0, "done");
+
+      // Step 2: Verifying
+      updateVerifyStep(1, "active");
+      await new Promise((r) => setTimeout(r, 800));
+
+      if (data?.verified) {
+        updateVerifyStep(1, "done");
+
+        // Step 3: Success
+        updateVerifyStep(2, "done");
+        await refreshProfile();
+
+        // Brief pause to show success
+        await new Promise((r) => setTimeout(r, 1500));
+        toast.success("Email verified! Welcome to Digi Mitra!");
+        navigate("/");
+      } else {
+        throw new Error(data?.error || "Verification failed");
+      }
     } catch (err: any) {
-      toast.error(err.message || "Invalid or expired code");
-    } finally {
-      setLoading(false);
+      console.error("Auto-verify error:", err);
+      const errorMsg = err.message || "Verification failed. Please try again.";
+      setVerifyError(errorMsg);
+      // Mark current active step as error
+      setVerifySteps((prev) =>
+        prev.map((s) => (s.status === "active" ? { ...s, status: "error" } : s))
+      );
     }
-  }, [otpValue, navigate, refreshProfile]);
+  }, [navigate, refreshProfile]);
 
   const loginWithPassword = useCallback(async () => {
     if (!emailPrefix.trim() || !password) { toast.error("Please enter email and password"); return; }
@@ -102,7 +124,6 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      // Check verification status
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Login failed");
       const { data: prof } = await supabase
@@ -115,11 +136,11 @@ export default function Auth() {
         navigate("/");
       } else {
         setStep("verify");
-        sendVerificationCode();
+        runAutoVerify();
       }
     } catch (error: any) { toast.error(error.message || "Invalid credentials"); }
     finally { setLoading(false); }
-  }, [email, emailPrefix, password, navigate, sendVerificationCode]);
+  }, [email, emailPrefix, password, navigate, runAutoVerify]);
 
   const signUpWithPassword = useCallback(async () => {
     if (!emailPrefix.trim()) { toast.error("Please enter your email prefix"); return; }
@@ -129,14 +150,13 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      // Account created with auto-confirm, now verify email
       setStep("verify");
       // Small delay to let profile trigger fire
       await new Promise((r) => setTimeout(r, 1000));
-      await sendVerificationCode();
+      await runAutoVerify();
     } catch (error: any) { toast.error(error.message || "Signup failed"); }
     finally { setLoading(false); }
-  }, [email, emailPrefix, password, confirmPassword, sendVerificationCode]);
+  }, [email, emailPrefix, password, confirmPassword, runAutoVerify]);
 
   const resetPassword = useCallback(async () => {
     if (!emailPrefix.trim()) { toast.error("Please enter your email prefix"); return; }
@@ -165,7 +185,7 @@ export default function Auth() {
       case "login": return "Welcome back";
       case "signup": return "Create Account";
       case "forgot": return "Reset Password";
-      case "verify": return "Verify Your Email";
+      case "verify": return "Verifying Your Account";
     }
   };
 
@@ -174,12 +194,13 @@ export default function Auth() {
       case "login": return "Sign in to continue";
       case "signup": return "Join Digi Mitra with your IIMB email";
       case "forgot": return "We'll send a reset link to your inbox";
-      case "verify": return "Enter the 6-digit code sent to your @iimb.ac.in email";
+      case "verify": return "Please wait while we verify your @iimb.ac.in email";
     }
   };
 
   const goBack = () => {
-    setPassword(""); setConfirmPassword(""); setOtpValue("");
+    setPassword(""); setConfirmPassword("");
+    resetVerifySteps();
     setStep("login");
   };
 
@@ -199,6 +220,8 @@ export default function Auth() {
       </span>
     </div>
   );
+
+  const progressValue = verifySteps.filter((s) => s.status === "done").length / verifySteps.length * 100;
 
   return (
     <div className="min-h-screen flex">
@@ -268,35 +291,57 @@ export default function Auth() {
 
               {step === "verify" && (
                 <div className="space-y-6">
-                  <div className="flex justify-center">
-                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
+                  <Progress value={progressValue} className="h-2" />
+
+                  <div className="space-y-4">
+                    {verifySteps.map((vs, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: vs.status === "pending" ? 0.4 : 1, x: 0 }}
+                        transition={{ delay: i * 0.1, duration: 0.3 }}
+                        className="flex items-center gap-3"
+                      >
+                        {vs.status === "done" ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        ) : vs.status === "active" ? (
+                          <Loader2 className="h-5 w-5 text-primary shrink-0 animate-spin" />
+                        ) : vs.status === "error" ? (
+                          <div className="h-5 w-5 rounded-full bg-destructive/20 flex items-center justify-center shrink-0">
+                            <span className="text-destructive text-xs font-bold">!</span>
+                          </div>
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-muted shrink-0" />
+                        )}
+                        <span className={cn(
+                          "text-sm",
+                          vs.status === "done" && "text-foreground font-medium",
+                          vs.status === "active" && "text-foreground",
+                          vs.status === "error" && "text-destructive",
+                          vs.status === "pending" && "text-muted-foreground"
+                        )}>
+                          {vs.label}
+                        </span>
+                      </motion.div>
+                    ))}
                   </div>
-                  <Button
-                    className="w-full rounded-lg font-semibold"
-                    disabled={loading || otpValue.length !== 6}
-                    onClick={verifyCode}
-                  >
-                    {loading ? "Verifying…" : "Verify Code"}
-                  </Button>
-                  <div className="text-center">
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
-                      disabled={resendCooldown > 0}
-                      onClick={sendVerificationCode}
+
+                  {verifyError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3"
                     >
-                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
-                    </button>
-                  </div>
+                      <p className="text-sm text-destructive text-center">{verifyError}</p>
+                      <Button
+                        className="w-full rounded-lg font-semibold"
+                        onClick={runAutoVerify}
+                      >
+                        Retry Verification
+                      </Button>
+                    </motion.div>
+                  )}
+
                   <button
                     type="button"
                     className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
