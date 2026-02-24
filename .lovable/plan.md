@@ -1,195 +1,161 @@
 
 
-# Comprehensive UI/UX Overhaul -- Final Professional Version
+# Replace Dummy Data with Real T4 Course Data + Add "Ask Mitra Ronnie" AI Chat
 
-## Logo Fix
+## Part 1: Seed Real IIMB T4 Course Data
 
-The current `DMLogo.tsx` uses a single combined image (`dm-logo.png`) with `object-position` to show light/dark variants. This approach is fragile and the current asset appears broken. The user has now provided **two separate logo images** (light and dark).
+The T4 Course Selector GitHub repo contains **47 actual IIMB Term 4 elective courses** with rich metadata: faculty names, official codes, areas (domains), demand ratios, peer sentiment reviews, course outlines, and grading breakdowns. Currently the app uses 4 fake sample courses. We will replace ALL dummy/sample data with this real data.
 
-**Fix:**
-- Copy `user-uploads://image-2.png` to `src/assets/dm-logo-light.png` (crimson DM on white -- for light theme)
-- Copy `user-uploads://image-3.png` to `src/assets/dm-logo-dark.png` (white DM on dark -- for dark theme)
-- Rewrite `DMLogo.tsx` to import both images and conditionally render based on `resolvedTheme`
-- Remove the old `object-position` hack entirely
+### 1A. Database Migration -- Expand Domain Enum + Seed Courses
 
-## Search: Inline Dropdown Instead of Separate Dialog
+The existing `course_domain` enum only has 8 values. The T4 data has 13 areas. We need to add: `public_policy`, `interdisciplinary`, `information_systems`, `language`, `communication`, `entrepreneurship`.
 
-The user reports the search "opens elsewhere not in same bar." Currently `AISearchDialog` opens as a floating modal at `top-[12vh]`. The fix is to anchor results directly below the search bar in the Navbar as a dropdown.
+**Migration 1: Expand enum + seed 47 courses**
 
-**Fix:**
-- Convert the Navbar search button into an expandable inline input
-- Show search results as a dropdown anchored directly below the search bar (not a floating dialog)
-- Keep the same two-tier search logic (instant DB + AI deep search)
-- On mobile, keep the full-screen approach but position it from the top bar
+Map the T4 areas to domains:
+- `Strat` → `strategy`
+- `Econ` → `economics`
+- `PP` → `public_policy` (new)
+- `Interdis` → `interdisciplinary` (new)
+- `F&A` → `finance`
+- `DS` → `analytics`
+- `Mktg` → `marketing`
+- `POM` → `operations`
+- `IS` → `information_systems` (new)
+- `Lang` → `language` (new)
+- `Mcomm` → `communication` (new)
+- `OBHRM` → `hr`
+- `Entre` → `entrepreneurship` (new)
 
-## Identified UI/UX Problems and Fixes
+Insert all 47 courses with: `code` (official code like CS757), `name`, `professor` (faculty), `term` = "Term 4", `category` = "elective", `domain`, `description` (from outline array joined), `avg_rating` (derived from sentiment: recommended=4.2, caution=3.2, not_recommended=2.5, null=3.5).
 
-### Dark-Mode Color Issues (Critical)
+### 1B. Seed Course Reviews from T4 Review Text
 
-1. **PostCard flair colors are light-mode only** -- `bg-blue-50 text-blue-700 border-blue-200` etc. appear washed out or invisible in dark mode
-   - Fix: Change to opacity-based colors: `bg-blue-500/10 text-blue-400 border-blue-500/20`
+For courses that have `reviewText` in the T4 data, create a corresponding course review in `course_reviews` using a system user. Each review includes the peer sentiment text, a derived rating, and tags based on sentiment.
 
-2. **CreditsPrompt uses `font-bold`** instead of project standard `font-semibold`
-   - Fix: Change to `font-semibold`
+### 1C. Replace All Sample/Mock Data Files
 
-3. **Subreddit page uses `rounded-lg`** instead of project standard `rounded-xl`
-   - Fix: Standardize all card borders to `rounded-xl`
+**`src/lib/sample-data.ts`**: Replace 4 fake courses with a subset of real T4 courses (for fallback display). Replace fake internship/exchange/papers/tips data with IIMB-specific real data.
 
-4. **Subreddit page uses `max-w-5xl`** which breaks the narrow-feed layout
-   - Fix: Change to `max-w-2xl` to match the rest of the app
+**`src/lib/sample-detail-data.ts`**: Replace fake reviews with realistic reviews derived from the T4 course data.
 
-### Typography and Spacing
+**`src/lib/mock-data.ts`**: Replace 10 generic mock posts with realistic IIMB-specific posts that reference actual T4 courses, real faculty names, and actual course codes.
 
-5. **NotFound page has `min-h-screen`** which conflicts with AppLayout's own min-h-screen, causing double viewport
-   - Fix: Remove `min-h-screen`, use padding instead
+### 1D. Update Domain Filter Options
 
-6. **NotFound page uses `bg-muted`** background which clashes with AppLayout's `bg-background`
-   - Fix: Remove the background, use transparent
+**`src/pages/Academics.tsx`**: Add the new domains to `DOMAIN_OPTIONS`: Public Policy, Interdisciplinary, IS, Language, Communication, Entrepreneurship.
 
-7. **AuthGuardDialog says "Only @iimb.ac.in" but Auth page accepts @gmail.com too**
-   - Fix: Update the copy to "IIMB or affiliated email"
+## Part 2: "Ask Mitra Ronnie" -- RAG-Powered AI Chat
 
-8. **PostCard body strip removes markdown characters crudely** with regex `/[*#_]/g` which strips underscores from normal text
-   - Fix: Use a more targeted regex that only strips markdown formatting sequences
+Build an AI assistant that uses platform content (posts, course reviews, courses, campus tips) as context to answer student queries.
 
-### Component Consistency
+### 2A. Edge Function: `ask-mitra`
 
-9. **FilterPills use `rounded-full`** while CategoryTabs use `rounded-lg`
-   - Fix: Standardize FilterPills to `rounded-lg`
+Create `supabase/functions/ask-mitra/index.ts`:
+- Accepts `{ question: string, history?: { role: string, content: string }[] }`
+- Fetches relevant context from the database:
+  1. Search `posts` for keyword matches on the question (top 10)
+  2. Search `courses` for relevant course info (top 5)
+  3. Search `course_reviews` joined with courses for review context (top 5)
+  4. Search `campus_tips` for campus-related queries (top 5)
+- Builds a system prompt with the retrieved context as RAG
+- Calls Lovable AI Gateway (`google/gemini-3-flash-preview`) with streaming
+- Returns streamed SSE response
 
-10. **SortBar uses `rounded-full`** while everything else uses `rounded-lg`
-    - Fix: Change to `rounded-lg`
+### 2B. Frontend: Chat UI Component
 
-11. **BottomNav has a "Built by Ronnie T" text** taking space in the navigation area -- looks unprofessional
-    - Fix: Remove from BottomNav (it already exists in the desktop footer)
+**`src/components/AskMitraChat.tsx`**: A floating chat button (bottom-right on desktop, above FAB on mobile) that opens a slide-up chat panel:
+- Chat input with send button
+- Message bubbles (user + assistant) with markdown rendering
+- Streaming token-by-token display
+- "Powered by Digi Mitra AI" footer
+- Persisted in session (not across page loads)
 
-12. **BottomNav has unused `searchOpen` state** -- the search dialog in BottomNav is never triggered
-    - Fix: Clean up the dead code
+**`src/hooks/useAskMitra.ts`**: Hook managing chat state, streaming, and message history.
 
-13. **QuickActionCard has nested `<button>` inside `<button>`** -- invalid HTML, causes accessibility issues
-    - Fix: Change outer element to `<div>` with `onClick` and `role="button"`
+### 2C. Integration Points
 
-### Search UX
-
-14. **Search dialog backdrop `bg-foreground/20`** looks muddy in light mode
-    - Fix: Use `bg-black/40` for consistent overlay
-
-15. **Search dialog `showAIHint` is always true** (`instantResults.length >= 0` is always true)
-    - Fix: Only show when there's a query AND results exist: `instantResults.length > 0`
-
-16. **Search input placeholder too long on mobile** -- "Search posts, courses, companies..." truncates
-    - Fix: Shorten to "Search..."
-
-### Page-Level Issues
-
-17. **Subreddit page sidebar only shows on `lg:` screens** but the main content area is `max-w-5xl` which looks stretched
-    - Fix: With `max-w-2xl`, remove the sidebar entirely (it duplicates Home page info)
-
-18. **Profile page `max-w-lg`** while rest of app is `max-w-2xl` -- inconsistent width
-    - Fix: Change to `max-w-2xl` for consistency
-
-19. **Home page's mobile FAB overlaps with BottomNav** -- `bottom-20` may not account for safe area
-    - Fix: Adjust to `bottom-24` for safe clearance
-
-20. **ExploreSheet grid is `grid-cols-1`** which wastes space
-    - Fix: Keep as-is (it's a bottom sheet, single column is correct for touch targets)
-
-### Interaction Issues
-
-21. **PostCard entire card is wrapped in `<Link>`** but has nested `<button>` click handlers -- `e.stopPropagation` prevents link navigation sometimes
-    - Fix: Keep but ensure all nested buttons properly stop propagation (already done)
-
-22. **Theme toggle shows "Theme" text only on `sm:` screens** but the label is small and easy to miss
-    - Fix: Always show icon, remove text label, keep the popover for selection
-
-23. **Notification panel `max-h-96` is hardcoded** which may clip on small screens
-    - Fix: Use `max-h-[calc(100vh-8rem)]` for responsive height
-
----
+- Add the chat button to `src/pages/Home.tsx` and `src/components/layout/AppLayout.tsx`
+- Register the edge function in `supabase/config.toml`
+- The AI uses ONLY platform data as context -- no hallucinated answers about courses that don't exist
 
 ## Files to Create
 
 | File | Purpose |
 |------|---------|
-| `src/assets/dm-logo-light.png` | Light theme logo (crimson DM on white) |
-| `src/assets/dm-logo-dark.png` | Dark theme logo (white DM on dark) |
+| `supabase/functions/ask-mitra/index.ts` | RAG-powered AI chat edge function |
+| `src/components/AskMitraChat.tsx` | Floating chat UI with streaming |
+| `src/hooks/useAskMitra.ts` | Chat state + streaming logic |
 
 ## Files to Modify
 
-| File | Key Changes |
-|------|-------------|
-| `src/components/DMLogo.tsx` | Use two separate logo images, conditional on theme |
-| `src/components/layout/Navbar.tsx` | Inline search with dropdown results below the bar |
-| `src/components/search/AISearchDialog.tsx` | Refactor to dropdown panel anchored to search bar |
-| `src/components/feed/PostCard.tsx` | Dark-mode-safe flair colors |
-| `src/components/layout/BottomNav.tsx` | Remove "Built by" text, remove dead search code |
-| `src/components/feed/CreditsPrompt.tsx` | `font-bold` to `font-semibold` |
-| `src/components/shared/FilterPills.tsx` | `rounded-full` to `rounded-lg` |
-| `src/components/feed/SortBar.tsx` | `rounded-full` to `rounded-lg` |
-| `src/pages/Subreddit.tsx` | `max-w-5xl` to `max-w-2xl`, remove sidebar, `rounded-lg` to `rounded-xl` |
-| `src/pages/NotFound.tsx` | Remove `min-h-screen` and `bg-muted` |
-| `src/pages/Profile.tsx` | `max-w-lg` to `max-w-2xl` |
-| `src/pages/Home.tsx` | FAB `bottom-20` to `bottom-24` |
-| `src/components/AuthGuardDialog.tsx` | Fix email domain copy |
-| `src/components/NotificationPanel.tsx` | Responsive max-height |
-| `src/components/home/QuickActionCard.tsx` | Fix nested button HTML |
-| `src/components/ThemeToggle.tsx` | Remove "Theme" text label, keep clean icon |
+| File | Changes |
+|------|---------|
+| `src/lib/sample-data.ts` | Replace all dummy data with real IIMB T4 course data |
+| `src/lib/sample-detail-data.ts` | Replace fake reviews with T4-sourced reviews |
+| `src/lib/mock-data.ts` | Replace mock posts with realistic IIMB content referencing real courses |
+| `src/pages/Academics.tsx` | Add 6 new domain filter pills |
+| `src/components/layout/AppLayout.tsx` | Add AskMitraChat component |
+| `supabase/config.toml` | Register `ask-mitra` function |
+
+## Database Migrations
+
+1. Add 6 new values to `course_domain` enum
+2. Insert 47 real T4 courses into `courses` table
+3. Insert peer reviews from T4 reviewText into `course_reviews`
 
 ## Technical Details
 
-### DMLogo with two separate images
+### RAG Context Retrieval (in ask-mitra edge function)
 
 ```typescript
-import { useTheme } from "next-themes";
-import logoLight from "@/assets/dm-logo-light.png";
-import logoDark from "@/assets/dm-logo-dark.png";
+// Search posts for relevant context
+const { data: posts } = await supabase
+  .from("posts")
+  .select("title, body, category, course_name, company_name")
+  .eq("moderation_status", "approved")
+  .or(`title.ilike.%${keyword}%,body.ilike.%${keyword}%`)
+  .order("upvote_count", { ascending: false })
+  .limit(10);
 
-export default function DMLogo({ size = 32, className = "" }: DMLogoProps) {
-  const { resolvedTheme } = useTheme();
-  const src = resolvedTheme === "dark" ? logoDark : logoLight;
-  return (
-    <div className={className} style={{ width: size, height: size, flexShrink: 0 }}>
-      <img src={src} alt="Digi Mitra" style={{ width: "100%", height: "100%", objectFit: "contain" }} draggable={false} />
-    </div>
-  );
-}
+// Get course info
+const { data: courses } = await supabase
+  .from("courses")
+  .select("code, name, professor, domain, description, avg_rating")
+  .or(`name.ilike.%${keyword}%,code.ilike.%${keyword}%,description.ilike.%${keyword}%`)
+  .limit(5);
+
+// Build RAG context string
+const context = [
+  ...posts.map(p => `[Post] ${p.title}: ${p.body?.slice(0, 200)}`),
+  ...courses.map(c => `[Course] ${c.code} ${c.name} by ${c.professor} (${c.domain}): ${c.description}`),
+].join("\n\n");
 ```
 
-### Inline Search Dropdown
+### Streaming Chat Pattern
 
-Instead of a fixed-position modal, the search will render as a positioned dropdown below the search input in the Navbar:
+Uses the standard Lovable AI streaming pattern via SSE, with the system prompt containing RAG context:
 
 ```typescript
-// In Navbar.tsx - the search area becomes:
-<div className="flex-1 flex justify-center relative" ref={searchContainerRef}>
-  {searchOpen ? (
-    <div className="relative w-full max-w-xs">
-      <input autoFocus value={query} onChange={...} className="w-full ..." />
-      {/* Dropdown anchored below */}
-      <div className="absolute top-full left-0 right-0 mt-1 rounded-xl border bg-card shadow-elevated max-h-[60vh] overflow-y-auto z-50">
-        {/* results here */}
-      </div>
-    </div>
-  ) : (
-    <button onClick={() => setSearchOpen(true)} className="...">Search...</button>
-  )}
-</div>
+const systemPrompt = `You are Mitra Ronnie, a helpful AI assistant for IIM Bangalore students on the Digi Mitra platform. 
+Answer questions using ONLY the following platform data. If you don't have enough info, say so honestly.
+
+PLATFORM DATA:
+${context}`;
 ```
 
-### Dark-mode-safe flair colors
+### Sample Real Course Data (from T4 repo)
 
-Replace all hardcoded light-mode flair colors:
-```typescript
-const FLAIR_COLORS: Record<string, string> = {
-  "Course Review": "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  "Experience Diary": "bg-violet-500/10 text-violet-500 border-violet-500/20",
-  "Company Review": "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-  "Interview Prep": "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  "Question": "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-  "Food & Cafes": "bg-orange-500/10 text-orange-500 border-orange-500/20",
-  "Study Spots": "bg-teal-500/10 text-teal-500 border-teal-500/20",
-  "End Term": "bg-rose-500/10 text-rose-500 border-rose-500/20",
-  "Pro Tip": "bg-lime-500/10 text-lime-500 border-lime-500/20",
-};
+```text
+CS757 - Corporate Strategy (Prof. Deepak Chandrashekar, Strategy, 1.7x demand)
+  "One of the best courses. Concept heavy. Excellent professor. Very useful for placements."
+
+EC747 - Business, Finance & Intl Economy (Prof. Anubha Dhasmana, Economics, 1.6x demand)
+  "Practical case study based economics course. WARNING: If you got cooked in Macro, skip this."
+
+DN714 - Zen and Mind Training (Prof. Dinesh Kumar, Interdisciplinary, 2.1x demand)
+  "No mid-term or end-term. Very easy to score. Just attend and stay alert."
 ```
+
+All 47 courses from the T4 selector will be seeded with their real faculty, codes, outlines, grading breakdowns, and peer reviews.
 
