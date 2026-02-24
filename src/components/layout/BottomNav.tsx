@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Compass, Plus, EyeOff, User } from "lucide-react";
+import { Home, LayoutGrid, Plus, EyeOff, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import ExploreSheet from "@/components/layout/ExploreSheet";
@@ -7,7 +7,7 @@ import { useState } from "react";
 
 const tabs = [
   { key: "/", icon: Home, label: "Home" },
-  { key: "/explore", icon: Compass, label: "Explore" },
+  { key: "/explore", icon: LayoutGrid, label: "Sections" },
   { key: "/submit", icon: Plus, label: "Post", accent: true },
   { key: "/gossip", icon: EyeOff, label: "Gossip" },
   { key: "/profile", icon: User, label: "Profile" },

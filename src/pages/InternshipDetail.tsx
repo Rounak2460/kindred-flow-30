@@ -43,8 +43,8 @@ export default function InternshipDetail() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      <button onClick={() => navigate("/internships")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-3.5 w-3.5" /> Internships
       </button>
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <div className="flex items-center gap-3 mb-3">
@@ -71,7 +71,7 @@ export default function InternshipDetail() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Intern Reviews ({reviews.length})</h2>
-        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit")}>
+        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate(`/submit?category=internships&companyId=${companyId}`)}>
           <PenLine className="h-3.5 w-3.5" /> Write Review
         </Button>
       </div>
