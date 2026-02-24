@@ -80,8 +80,14 @@ export default function Academics() {
         </div>
       ) : displayCourses.length === 0 ? (
         <div className="text-center py-16 bg-card border border-border rounded-xl">
+          <GraduationCap className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
           <p className="text-sm font-medium">No courses found</p>
-          <p className="text-xs text-muted-foreground mt-1">Try adjusting your filters</p>
+          <p className="text-xs text-muted-foreground mt-1">{search.trim() ? "Try a different search term" : "Try adjusting your filters"}</p>
+          {search.trim() && (
+            <Button size="sm" variant="outline" className="mt-3 rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=academics&newCourse=true")}>
+              Can't find your course? Add it →
+            </Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -38,8 +38,8 @@ export default function CourseDetail() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      <button onClick={() => navigate("/academics")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-3.5 w-3.5" /> Academics
       </button>
 
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
@@ -75,7 +75,7 @@ export default function CourseDetail() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Reviews ({reviews.length})</h2>
-        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit?category=academics")}>
+        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate(`/submit?category=academics&courseId=${courseId}`)}>
           <PenLine className="h-3.5 w-3.5" /> Write Review
         </Button>
       </div>

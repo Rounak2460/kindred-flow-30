@@ -20,7 +20,7 @@ export default function Profile() {
 
   useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
   useEffect(() => {
-    if (profile) { setForm({ name: profile.name || "", batch: profile.batch || "", section: profile.section || "", bio: (profile as any).bio || "" }); }
+    if (profile) { setForm({ name: profile.name || "", batch: profile.batch || "", section: profile.section || "", bio: profile.bio || "" }); }
   }, [profile]);
 
   if (loading || !user || !profile) {
@@ -38,7 +38,7 @@ export default function Profile() {
     setSaving(false);
   };
 
-  const bio = (profile as any).bio || "";
+  const bio = profile.bio || "";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">

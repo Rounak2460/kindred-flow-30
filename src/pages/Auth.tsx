@@ -4,9 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, ShieldCheck, Lock, KeyRound } from "lucide-react";
+import { ArrowLeft, Mail, Lock, KeyRound, MailCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DMLogo from "@/components/DMLogo";
@@ -14,8 +13,7 @@ import DMLogo from "@/components/DMLogo";
 type Step = "login" | "signup-email" | "verify-otp" | "set-password" | "forgot-otp";
 type OtpMode = "signup" | "forgot";
 
-const isValidEmail = (email: string) =>
-  email.endsWith("@iimb.ac.in") || email.endsWith("@gmail.com");
+const isValidEmail = (email: string) => email.endsWith("@iimb.ac.in");
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -25,7 +23,6 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [otp, setOtp] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -40,30 +37,33 @@ export default function Auth() {
     return () => clearTimeout(t);
   }, [cooldown]);
 
-  const sendOtp = useCallback(async () => {
-    if (!isValidEmail(email)) { toast.error("Please use a valid email address"); return; }
+  const sendMagicLink = useCallback(async () => {
+    if (!isValidEmail(email)) { toast.error("Only @iimb.ac.in emails are accepted"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: otpMode === "signup" } });
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: otpMode === "signup" },
+      });
       if (error) throw error;
-      toast.success("OTP sent! Check your email.");
+      toast.success("Login link sent! Check your email.");
       setStep("verify-otp");
       setCooldown(60);
-    } catch (error: any) { toast.error(error.message || "Failed to send OTP"); }
+    } catch (error: any) { toast.error(error.message || "Failed to send link"); }
     finally { setLoading(false); }
   }, [email, otpMode]);
 
-  const verifyOtp = useCallback(async () => {
-    if (otp.length !== 6) { toast.error("Please enter the 6-digit code"); return; }
+  const loginWithPassword = useCallback(async () => {
+    if (!email || !password) { toast.error("Please enter email and password"); return; }
     setLoading(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: "email" });
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      toast.success("Verified!");
-      setStep("set-password");
-    } catch (error: any) { toast.error(error.message || "Invalid or expired code"); }
+      toast.success("Welcome back!");
+      navigate("/");
+    } catch (error: any) { toast.error(error.message || "Invalid credentials"); }
     finally { setLoading(false); }
-  }, [email, otp]);
+  }, [email, password, navigate]);
 
   const setUserPassword = useCallback(async () => {
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
@@ -78,23 +78,11 @@ export default function Auth() {
     finally { setLoading(false); }
   }, [password, confirmPassword, otpMode, navigate]);
 
-  const loginWithPassword = useCallback(async () => {
-    if (!email || !password) { toast.error("Please enter email and password"); return; }
-    setLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
-      toast.success("Welcome back!");
-      navigate("/");
-    } catch (error: any) { toast.error(error.message || "Invalid credentials"); }
-    finally { setLoading(false); }
-  }, [email, password, navigate]);
-
   const stepIcon = () => {
     switch (step) {
       case "login": return <Lock className="h-5 w-5 text-primary" />;
       case "signup-email": case "forgot-otp": return <Mail className="h-5 w-5 text-primary" />;
-      case "verify-otp": return <ShieldCheck className="h-5 w-5 text-primary" />;
+      case "verify-otp": return <MailCheck className="h-5 w-5 text-primary" />;
       case "set-password": return <KeyRound className="h-5 w-5 text-primary" />;
     }
   };
@@ -104,7 +92,7 @@ export default function Auth() {
       case "login": return "Welcome back";
       case "signup-email": return "Create Account";
       case "forgot-otp": return "Reset Password";
-      case "verify-otp": return "Check your email";
+      case "verify-otp": return "Check your inbox";
       case "set-password": return otpMode === "signup" ? "Set Your Password" : "New Password";
     }
   };
@@ -112,15 +100,15 @@ export default function Auth() {
   const stepDescription = () => {
     switch (step) {
       case "login": return "Sign in to continue";
-      case "signup-email": return "We'll send a 6-digit code to verify";
-      case "forgot-otp": return "We'll send a reset code to your email";
-      case "verify-otp": return `Enter the code sent to ${email}`;
+      case "signup-email": return "We'll send a login link to your inbox";
+      case "forgot-otp": return "We'll send a reset link to your inbox";
+      case "verify-otp": return `We sent a login link to ${email}`;
       case "set-password": return "Choose a strong password";
     }
   };
 
   const goBack = () => {
-    setOtp(""); setPassword(""); setConfirmPassword("");
+    setPassword(""); setConfirmPassword("");
     if (step === "verify-otp" || step === "set-password") { setStep(otpMode === "signup" ? "signup-email" : "forgot-otp"); }
     else { setStep("login"); }
   };
@@ -183,30 +171,29 @@ export default function Auth() {
               )}
 
               {(step === "signup-email" || step === "forgot-otp") && (
-                <form onSubmit={(e) => { e.preventDefault(); sendOtp(); }} className="space-y-4">
+                <form onSubmit={(e) => { e.preventDefault(); sendMagicLink(); }} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="email" className="text-xs">Email</Label>
                     <Input id="email" type="email" placeholder="yourname@iimb.ac.in" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg bg-card border-border" required />
                   </div>
-                  <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Sending…" : "Send OTP"}</Button>
-                  <p className="text-center text-[11px] text-muted-foreground">@iimb.ac.in or @gmail.com emails accepted</p>
+                  <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Sending…" : "Send Link"}</Button>
+                  <p className="text-center text-[11px] text-muted-foreground">Only @iimb.ac.in emails accepted</p>
                   <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 pt-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back to Sign In</button>
                 </form>
               )}
 
               {step === "verify-otp" && (
-                <div className="space-y-4">
-                  <div className="flex justify-center">
-                    <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                      <InputOTPGroup>
-                        {[0, 1, 2, 3, 4, 5].map((i) => (<InputOTPSlot key={i} index={i} />))}
-                      </InputOTPGroup>
-                    </InputOTP>
+                <div className="space-y-5">
+                  <div className="flex flex-col items-center text-center py-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                      <MailCheck className="h-8 w-8 text-primary animate-pulse" />
+                    </div>
+                    <p className="text-sm text-foreground font-medium">Click the link in the email to continue</p>
+                    <p className="text-xs text-muted-foreground mt-1.5">Check your spam folder if you don't see it</p>
                   </div>
-                  <Button className="w-full rounded-lg font-semibold" disabled={loading || otp.length !== 6} onClick={verifyOtp}>{loading ? "Verifying…" : "Verify Code"}</Button>
                   <div className="flex items-center justify-between text-xs">
                     <button type="button" className="text-muted-foreground hover:text-foreground flex items-center gap-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back</button>
-                    <button type="button" className="text-primary font-medium hover:underline disabled:opacity-50" disabled={cooldown > 0} onClick={sendOtp}>{cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}</button>
+                    <button type="button" className="text-primary font-medium hover:underline disabled:opacity-50" disabled={cooldown > 0} onClick={sendMagicLink}>{cooldown > 0 ? `Resend in ${cooldown}s` : "Resend link"}</button>
                   </div>
                 </div>
               )}

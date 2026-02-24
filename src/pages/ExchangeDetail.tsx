@@ -37,8 +37,8 @@ export default function ExchangeDetail() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
-        <ArrowLeft className="h-3.5 w-3.5" /> Back
+      <button onClick={() => navigate("/exchange")} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground mb-4">
+        <ArrowLeft className="h-3.5 w-3.5" /> Exchange Programs
       </button>
       <div className="rounded-xl border border-border bg-card p-5 mb-4">
         <h1 className="text-lg font-semibold mb-1">{college.name}</h1>
@@ -58,7 +58,7 @@ export default function ExchangeDetail() {
 
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Student Diaries ({reviews.length})</h2>
-        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate("/submit")}>
+        <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate(`/submit?category=exchange&collegeId=${collegeId}`)}>
           <PenLine className="h-3.5 w-3.5" /> Write Diary
         </Button>
       </div>

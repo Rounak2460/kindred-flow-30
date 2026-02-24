@@ -157,6 +157,11 @@ export default function Navbar() {
           <DMLogo size={28} />
           <span className="hidden sm:inline text-sm font-semibold text-foreground tracking-tight">Digi Mitra</span>
           <span className="hidden sm:inline text-[9px] font-semibold bg-primary/10 text-primary px-1.5 py-0.5 rounded-md tracking-wide">IIMB</span>
+          {user && profile && (
+            <span className="sm:hidden inline-flex items-center gap-1 text-[10px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">
+              <Award className="h-3 w-3" />{profile.credits}
+            </span>
+          )}
         </Link>
 
         {/* Inline Search */}
@@ -273,7 +278,7 @@ export default function Navbar() {
           {user && <NotificationBell />}
           {user ? (
             <>
-              <Button variant="ghost" size="sm" className="hidden md:flex h-8 w-8 p-0 text-muted-foreground hover:bg-muted rounded-lg" onClick={() => navigate("/gossip")}><EyeOff className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="sm" className="hidden md:flex h-8 gap-1.5 px-3 text-muted-foreground hover:bg-muted rounded-lg text-xs" onClick={() => navigate("/gossip")}><EyeOff className="h-4 w-4" /> Gossip</Button>
               <Button variant="ghost" size="sm" className="hidden md:flex h-8 w-8 p-0 text-muted-foreground hover:bg-muted rounded-lg" onClick={() => navigate("/forms")}><FileText className="h-4 w-4" /></Button>
               <Button size="sm" className="hidden md:flex gap-1.5 h-8 text-xs rounded-lg font-semibold" onClick={() => navigate("/submit")}><Plus className="h-3.5 w-3.5" /> Post</Button>
               <DropdownMenu>
