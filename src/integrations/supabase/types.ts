@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookmarks: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       campus_tip_votes: {
         Row: {
           created_at: string
@@ -702,6 +726,56 @@ export type Database = {
           },
         ]
       }
+      interview_experiences: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          result: string
+          role: string
+          round_details: Json
+          tips: string
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          result?: string
+          role?: string
+          round_details?: Json
+          tips?: string
+          updated_at?: string
+          user_id: string
+          year?: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          result?: string
+          role?: string
+          round_details?: Json
+          tips?: string
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_experiences_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "placement_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           body: string
@@ -767,6 +841,112 @@ export type Database = {
         }
         Relationships: []
       }
+      placement_companies: {
+        Row: {
+          avg_package: string
+          created_at: string
+          created_by: string
+          description: string
+          domain: string
+          id: string
+          name: string
+          review_count: number
+          roles: string[]
+          updated_at: string
+        }
+        Insert: {
+          avg_package?: string
+          created_at?: string
+          created_by: string
+          description?: string
+          domain?: string
+          id?: string
+          name: string
+          review_count?: number
+          roles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          avg_package?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          domain?: string
+          id?: string
+          name?: string
+          review_count?: number
+          roles?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_index: number
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_index?: number
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      polls: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          id: string
+          options: string[]
+          post_id: string
+          question: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          options?: string[]
+          post_id: string
+          question: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          options?: string[]
+          post_id?: string
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "polls_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           body: string
@@ -782,6 +962,7 @@ export type Database = {
           flair: string | null
           id: string
           is_anonymous: boolean
+          metadata: Json | null
           moderation_reason: string | null
           moderation_status: string
           pinned: boolean
@@ -804,6 +985,7 @@ export type Database = {
           flair?: string | null
           id?: string
           is_anonymous?: boolean
+          metadata?: Json | null
           moderation_reason?: string | null
           moderation_status?: string
           pinned?: boolean
@@ -826,6 +1008,7 @@ export type Database = {
           flair?: string | null
           id?: string
           is_anonymous?: boolean
+          metadata?: Json | null
           moderation_reason?: string | null
           moderation_status?: string
           pinned?: boolean
@@ -841,13 +1024,17 @@ export type Database = {
           avatar_url: string | null
           batch: string
           bio: string
+          career_track: string
           created_at: string
           credits: number
+          current_term: string
           founding_contributor: boolean
           free_views_used: number
           gossip_member: boolean
           id: string
+          interests: string[]
           name: string
+          onboarding_complete: boolean
           section: string
           updated_at: string
           user_id: string
@@ -856,13 +1043,17 @@ export type Database = {
           avatar_url?: string | null
           batch?: string
           bio?: string
+          career_track?: string
           created_at?: string
           credits?: number
+          current_term?: string
           founding_contributor?: boolean
           free_views_used?: number
           gossip_member?: boolean
           id?: string
+          interests?: string[]
           name?: string
+          onboarding_complete?: boolean
           section?: string
           updated_at?: string
           user_id: string
@@ -871,13 +1062,17 @@ export type Database = {
           avatar_url?: string | null
           batch?: string
           bio?: string
+          career_track?: string
           created_at?: string
           credits?: number
+          current_term?: string
           founding_contributor?: boolean
           free_views_used?: number
           gossip_member?: boolean
           id?: string
+          interests?: string[]
           name?: string
+          onboarding_complete?: boolean
           section?: string
           updated_at?: string
           user_id?: string
