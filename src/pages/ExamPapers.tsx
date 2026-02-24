@@ -7,6 +7,7 @@ import { useExamPapers } from "@/hooks/useExamPapers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SAMPLE_PAPERS } from "@/lib/sample-data";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "All" },
@@ -27,8 +28,9 @@ export default function ExamPapers() {
   const navigate = useNavigate();
   const [examType, setExamType] = useState("all");
   const { data: papers = [], isLoading } = useExamPapers(examType);
+  const shouldShowSamples = useShouldShowSamples();
 
-  const showSamples = !isLoading && papers.length === 0;
+  const showSamples = !isLoading && papers.length === 0 && shouldShowSamples;
   const displayPapers = showSamples ? SAMPLE_PAPERS : papers;
 
   return (

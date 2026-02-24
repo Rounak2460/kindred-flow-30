@@ -10,6 +10,7 @@ import { SAMPLE_EXCHANGE } from "@/lib/sample-data";
 import { SAMPLE_EXCHANGE_REVIEWS } from "@/lib/sample-detail-data";
 import { generateAnonHandle } from "@/lib/anonymity";
 import { formatDistanceToNow } from "date-fns";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const MINI_BAR_COLORS = [
   { label: "Academics", key: "academics_rating" as const, color: "bg-blue-500" },
@@ -22,7 +23,8 @@ export default function ExchangeDetail() {
   const { collegeId } = useParams();
   const navigate = useNavigate();
 
-  const isSample = collegeId?.startsWith("sample-");
+  const shouldShowSamples = useShouldShowSamples();
+  const isSample = collegeId?.startsWith("sample-") && shouldShowSamples;
   const { data: dbCollege, isLoading } = useExchangeCollege(isSample ? undefined : collegeId);
   const { data: dbReviews = [] } = useExchangeReviews(isSample ? undefined : collegeId);
 

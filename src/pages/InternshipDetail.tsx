@@ -10,6 +10,7 @@ import { SAMPLE_INTERNSHIPS } from "@/lib/sample-data";
 import { SAMPLE_INTERNSHIP_REVIEWS } from "@/lib/sample-detail-data";
 import { generateAnonHandle } from "@/lib/anonymity";
 import { formatDistanceToNow } from "date-fns";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 function ratingColor(v: number) {
   if (v >= 4) return "text-emerald-500";
@@ -28,7 +29,8 @@ export default function InternshipDetail() {
   const { companyId } = useParams();
   const navigate = useNavigate();
 
-  const isSample = companyId?.startsWith("sample-");
+  const shouldShowSamples = useShouldShowSamples();
+  const isSample = companyId?.startsWith("sample-") && shouldShowSamples;
   const { data: dbCompany, isLoading } = useInternshipCompany(isSample ? undefined : companyId);
   const { data: dbReviews = [] } = useInternshipReviews(isSample ? undefined : companyId);
 

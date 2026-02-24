@@ -8,6 +8,7 @@ import { useInternshipCompanies } from "@/hooks/useInternshipCompanies";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { SAMPLE_INTERNSHIPS } from "@/lib/sample-data";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const DOMAIN_OPTIONS = [
   { value: "all", label: "All" },
@@ -24,8 +25,9 @@ export default function Internships() {
   const navigate = useNavigate();
   const [domain, setDomain] = useState("all");
   const { data: companies = [], isLoading } = useInternshipCompanies(domain);
+  const shouldShowSamples = useShouldShowSamples();
 
-  const showSamples = !isLoading && companies.length === 0;
+  const showSamples = !isLoading && companies.length === 0 && shouldShowSamples;
   const displayCompanies = showSamples ? SAMPLE_INTERNSHIPS : companies;
 
   return (

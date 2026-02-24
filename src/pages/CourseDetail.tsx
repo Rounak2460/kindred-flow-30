@@ -10,6 +10,7 @@ import { SAMPLE_COURSES } from "@/lib/sample-data";
 import { SAMPLE_COURSE_REVIEWS } from "@/lib/sample-detail-data";
 import { generateAnonHandle } from "@/lib/anonymity";
 import { formatDistanceToNow } from "date-fns";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 function ratingColor(v: number) {
   if (v >= 4) return "bg-emerald-500/15 text-emerald-500";
@@ -21,7 +22,8 @@ export default function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
 
-  const isSample = courseId?.startsWith("sample-");
+  const shouldShowSamples = useShouldShowSamples();
+  const isSample = courseId?.startsWith("sample-") && shouldShowSamples;
   const { data: dbCourse, isLoading: loadingCourse } = useCourse(isSample ? undefined : courseId);
   const { data: dbReviews = [], isLoading: loadingReviews } = useCourseReviews(isSample ? undefined : courseId);
 

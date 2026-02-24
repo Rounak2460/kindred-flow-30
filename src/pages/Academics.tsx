@@ -8,6 +8,7 @@ import StarRating from "@/components/shared/StarRating";
 import { useCourses } from "@/hooks/useCourses";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SAMPLE_COURSES } from "@/lib/sample-data";
+import { useShouldShowSamples } from "@/hooks/useShouldShowSamples";
 
 const CATEGORY_OPTIONS = [
   { value: "all", label: "All" },
@@ -39,8 +40,9 @@ export default function Academics() {
   const [domain, setDomain] = useState("all");
   const [search, setSearch] = useState("");
   const { data: courses = [], isLoading } = useCourses(category, domain, search);
+  const shouldShowSamples = useShouldShowSamples();
 
-  const showSamples = !isLoading && courses.length === 0 && !search.trim();
+  const showSamples = !isLoading && courses.length === 0 && !search.trim() && shouldShowSamples;
   const displayCourses = showSamples ? SAMPLE_COURSES : courses;
 
   return (
