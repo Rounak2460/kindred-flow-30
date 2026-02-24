@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,11 +23,12 @@ const MINI_BAR_COLORS = [
 export default function ExchangeDetail() {
   const { collegeId } = useParams();
   const navigate = useNavigate();
+  const [reviewSort, setReviewSort] = useState("newest");
 
   const shouldShowSamples = useShouldShowSamples();
   const isSample = collegeId?.startsWith("sample-") && shouldShowSamples;
   const { data: dbCollege, isLoading } = useExchangeCollege(isSample ? undefined : collegeId);
-  const { data: dbReviews = [] } = useExchangeReviews(isSample ? undefined : collegeId);
+  const { data: dbReviews = [] } = useExchangeReviews(isSample ? undefined : collegeId, reviewSort);
 
   const college = isSample ? SAMPLE_EXCHANGE.find(c => c.id === collegeId) : dbCollege;
   const reviews = isSample ? (SAMPLE_EXCHANGE_REVIEWS[collegeId!] || []) : dbReviews;
@@ -59,7 +61,13 @@ export default function ExchangeDetail() {
       )}
 
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold">Student Diaries ({reviews.length})</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold">Student Diaries ({reviews.length})</h2>
+          <div className="flex gap-1">
+            <button onClick={() => setReviewSort("newest")} className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${reviewSort === "newest" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Newest</button>
+            <button onClick={() => setReviewSort("top")} className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${reviewSort === "top" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Top Rated</button>
+          </div>
+        </div>
         <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate(`/submit?category=exchange&collegeId=${collegeId}`)}>
           <PenLine className="h-3.5 w-3.5" /> Write Diary
         </Button>

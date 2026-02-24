@@ -78,9 +78,11 @@ export function useNotifications() {
           setUnreadCount((c) => c + 1);
           toast(newNotif.title, {
             description: newNotif.body,
-            action: newNotif.post_id
-              ? { label: "View", onClick: () => { window.location.href = `/post/${newNotif.post_id}`; } }
-              : undefined,
+            action: newNotif.type === "message"
+              ? { label: "Open Chat", onClick: () => { window.location.href = "/chat"; } }
+              : newNotif.post_id
+                ? { label: "View", onClick: () => { window.location.href = `/post/${newNotif.post_id}`; } }
+                : undefined,
           });
         }
       )

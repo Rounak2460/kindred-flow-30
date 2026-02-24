@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, ArrowUp, Check } from "lucide-react";
+import { MessageSquare, ArrowUp, Check, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Notification } from "@/hooks/useNotifications";
 
@@ -22,6 +22,7 @@ const typeIcon: Record<string, typeof MessageSquare> = {
   comment: MessageSquare,
   upvote: ArrowUp,
   reply: MessageSquare,
+  message: MessageCircle,
 };
 
 export default function NotificationPanel({
@@ -34,7 +35,11 @@ export default function NotificationPanel({
 
   const handleClick = (n: Notification) => {
     if (!n.is_read) onMarkRead(n.id);
-    if (n.post_id) navigate(`/post/${n.post_id}`);
+    if (n.type === "message") {
+      navigate("/chat");
+    } else if (n.post_id) {
+      navigate(`/post/${n.post_id}`);
+    }
   };
 
   return (
@@ -70,7 +75,7 @@ export default function NotificationPanel({
               >
                 <div className={cn(
                   "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full",
-                  n.type === "upvote" ? "bg-green-500/10 text-green-500" : "bg-primary/10 text-primary"
+                  n.type === "upvote" ? "bg-green-500/10 text-green-500" : n.type === "message" ? "bg-blue-500/10 text-blue-500" : "bg-primary/10 text-primary"
                 )}>
                   <Icon className="h-3.5 w-3.5" />
                 </div>

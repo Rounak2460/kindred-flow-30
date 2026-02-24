@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, PenLine, Briefcase } from "lucide-react";
+import { ArrowLeft, PenLine, Briefcase, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FilterPills from "@/components/shared/FilterPills";
 import StarRating from "@/components/shared/StarRating";
@@ -24,7 +24,8 @@ const DOMAIN_OPTIONS = [
 export default function Internships() {
   const navigate = useNavigate();
   const [domain, setDomain] = useState("all");
-  const { data: companies = [], isLoading } = useInternshipCompanies(domain);
+  const [sort, setSort] = useState("rating");
+  const { data: companies = [], isLoading } = useInternshipCompanies(domain, sort);
   const shouldShowSamples = useShouldShowSamples();
 
   const showSamples = !isLoading && companies.length === 0 && shouldShowSamples;
@@ -51,6 +52,14 @@ export default function Internships() {
       </div>
       <div className="mb-5">
         <FilterPills options={DOMAIN_OPTIONS} selected={domain} onSelect={setDomain} />
+      </div>
+      <div className="flex items-center gap-2 mb-5">
+        <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+        <FilterPills options={[
+          { value: "rating", label: "Top Rated" },
+          { value: "reviews", label: "Most Reviewed" },
+          { value: "newest", label: "Newest" },
+        ]} selected={sort} onSelect={setSort} />
       </div>
 
       {isLoading ? (

@@ -5,11 +5,14 @@ import type { Database } from "@/integrations/supabase/types";
 type CourseCategory = Database["public"]["Enums"]["course_category"];
 type CourseDomain = Database["public"]["Enums"]["course_domain"];
 
-export function useCourses(category?: string, domain?: string, search?: string) {
+export function useCourses(category?: string, domain?: string, search?: string, sort: string = "rating") {
   return useQuery({
-    queryKey: ["courses", category, domain, search],
+    queryKey: ["courses", category, domain, search, sort],
     queryFn: async () => {
-      let q = supabase.from("courses").select("*").order("avg_rating", { ascending: false });
+      let q = supabase.from("courses").select("*");
+      if (sort === "reviews") q = q.order("review_count", { ascending: false });
+      else if (sort === "newest") q = q.order("created_at", { ascending: false });
+      else q = q.order("avg_rating", { ascending: false });
       if (category && category !== "all") q = q.eq("category", category as CourseCategory);
       if (domain && domain !== "all") q = q.eq("domain", domain as CourseDomain);
       if (search?.trim()) q = q.or(`name.ilike.%${search}%,code.ilike.%${search}%`);

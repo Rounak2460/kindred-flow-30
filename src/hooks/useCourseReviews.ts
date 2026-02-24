@@ -1,15 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useCourseReviews(courseId: string | undefined) {
+export function useCourseReviews(courseId: string | undefined, sort: string = "newest") {
   return useQuery({
-    queryKey: ["course-reviews", courseId],
+    queryKey: ["course-reviews", courseId, sort],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("course_reviews")
         .select("*")
-        .eq("course_id", courseId!)
-        .order("created_at", { ascending: false });
+        .eq("course_id", courseId!);
+      if (sort === "top") q = q.order("overall_rating", { ascending: false });
+      else q = q.order("created_at", { ascending: false });
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
