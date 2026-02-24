@@ -31,6 +31,19 @@ export default function Auth() {
     });
   }, [navigate]);
 
+  // Domain enforcement for OAuth logins
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "SIGNED_IN" && session?.user?.email) {
+        if (!isValidEmail(session.user.email)) {
+          await supabase.auth.signOut();
+          toast.error("Only @iimb.ac.in emails are allowed");
+        }
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (cooldown <= 0) return;
     const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
@@ -64,6 +77,20 @@ export default function Auth() {
     } catch (error: any) { toast.error(error.message || "Invalid credentials"); }
     finally { setLoading(false); }
   }, [email, password, navigate]);
+
+  const loginWithMicrosoft = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "azure",
+        options: {
+          scopes: "email openid profile",
+          redirectTo: window.location.origin + "/auth",
+        },
+      });
+      if (error) throw error;
+    } catch (error: any) { toast.error(error.message || "Failed to sign in with Microsoft"); setLoading(false); }
+  }, []);
 
   const setUserPassword = useCallback(async () => {
     if (password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
@@ -115,6 +142,31 @@ export default function Auth() {
 
   const stepNumber = step === "signup-email" || step === "forgot-otp" ? 1 : step === "verify-otp" ? 2 : step === "set-password" ? 3 : 0;
 
+  const MicrosoftButton = () => (
+    <button
+      type="button"
+      onClick={loginWithMicrosoft}
+      disabled={loading}
+      className="w-full flex items-center justify-center gap-2.5 rounded-lg border border-border bg-card hover:bg-muted px-4 py-2.5 text-sm font-medium text-foreground transition-colors disabled:opacity-50"
+    >
+      <svg className="h-4 w-4" viewBox="0 0 21 21" fill="none">
+        <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
+        <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
+      </svg>
+      Sign in with Outlook
+    </button>
+  );
+
+  const Divider = () => (
+    <div className="flex items-center gap-3 my-4">
+      <div className="flex-1 h-px bg-border" />
+      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">or</span>
+      <div className="flex-1 h-px bg-border" />
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex flex-1 items-center justify-center bg-card relative overflow-hidden border-r border-border">
@@ -153,33 +205,45 @@ export default function Auth() {
               </div>
 
               {step === "login" && (
-                <form onSubmit={(e) => { e.preventDefault(); loginWithPassword(); }} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-xs">Email</Label>
-                    <Input id="email" type="email" placeholder="yourname@iimb.ac.in" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg bg-card border-border" required />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="password" className="text-xs">Password</Label>
-                    <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-lg bg-card border-border" required />
-                  </div>
-                  <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Signing in…" : "Sign In"}</Button>
-                  <div className="flex items-center justify-between text-sm pt-1">
-                    <button type="button" className="text-primary hover:underline font-medium text-xs" onClick={() => { setOtpMode("signup"); setPassword(""); setStep("signup-email"); }}>New here? Sign up</button>
-                    <button type="button" className="text-muted-foreground hover:text-foreground text-xs" onClick={() => { setOtpMode("forgot"); setPassword(""); setStep("forgot-otp"); }}>Forgot password?</button>
-                  </div>
-                </form>
+                <div className="space-y-4">
+                  <MicrosoftButton />
+                  <Divider />
+                  <form onSubmit={(e) => { e.preventDefault(); loginWithPassword(); }} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Input id="email" type="email" placeholder="yourname@iimb.ac.in" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg bg-card border-border" required />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password" className="text-xs">Password</Label>
+                      <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-lg bg-card border-border" required />
+                    </div>
+                    <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Signing in…" : "Sign In"}</Button>
+                    <div className="flex items-center justify-between text-sm pt-1">
+                      <button type="button" className="text-primary hover:underline font-medium text-xs" onClick={() => { setOtpMode("signup"); setPassword(""); setStep("signup-email"); }}>New here? Sign up</button>
+                      <button type="button" className="text-muted-foreground hover:text-foreground text-xs" onClick={() => { setOtpMode("forgot"); setPassword(""); setStep("forgot-otp"); }}>Forgot password?</button>
+                    </div>
+                  </form>
+                </div>
               )}
 
               {(step === "signup-email" || step === "forgot-otp") && (
-                <form onSubmit={(e) => { e.preventDefault(); sendMagicLink(); }} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email" className="text-xs">Email</Label>
-                    <Input id="email" type="email" placeholder="yourname@iimb.ac.in" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg bg-card border-border" required />
-                  </div>
-                  <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Sending…" : "Send Link"}</Button>
-                  <p className="text-center text-[11px] text-muted-foreground">Only @iimb.ac.in emails accepted</p>
-                  <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 pt-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back to Sign In</button>
-                </form>
+                <div className="space-y-4">
+                  {step === "signup-email" && (
+                    <>
+                      <MicrosoftButton />
+                      <Divider />
+                    </>
+                  )}
+                  <form onSubmit={(e) => { e.preventDefault(); sendMagicLink(); }} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Input id="email" type="email" placeholder="yourname@iimb.ac.in" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-lg bg-card border-border" required />
+                    </div>
+                    <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Sending…" : "Send Link"}</Button>
+                    <p className="text-center text-[11px] text-muted-foreground">Only @iimb.ac.in emails accepted</p>
+                    <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 pt-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back to Sign In</button>
+                  </form>
+                </div>
               )}
 
               {step === "verify-otp" && (

@@ -11,6 +11,7 @@ export interface Comment {
   downvote_count: number;
   created_at: string;
   moderation_status: string;
+  is_anonymous: boolean;
   replies: Comment[];
 }
 
@@ -43,7 +44,7 @@ export function useComments(postId: string | undefined) {
       if (!postId) return [];
       const { data, error } = await supabase
         .from("comments")
-        .select("id, post_id, parent_id, user_id, body, upvote_count, downvote_count, created_at, moderation_status")
+        .select("id, post_id, parent_id, user_id, body, upvote_count, downvote_count, created_at, moderation_status, is_anonymous")
         .eq("post_id", postId)
         .eq("moderation_status", "approved")
         .order("created_at", { ascending: true });

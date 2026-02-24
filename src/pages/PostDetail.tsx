@@ -52,13 +52,25 @@ export default function PostDetail() {
   const [commentSort, setCommentSort] = useState<"best" | "new" | "top">("best");
   const [showAuth, setShowAuth] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [authorName, setAuthorName] = useState<string | null>(null);
 
   const initialScore = (post?.upvote_count ?? 0) - (post?.downvote_count ?? 0);
   const { score, userVote, vote, loadVote } = useVote(id ?? "", "post", initialScore);
 
   useEffect(() => { if (post) loadVote(); }, [post, loadVote]);
 
+  useEffect(() => {
+    if (!post || post.is_anonymous || !post.user_id) return;
+    supabase.from("profiles").select("name").eq("user_id", post.user_id).maybeSingle().then(({ data }) => {
+      if (data?.name) setAuthorName(data.name);
+    });
+  }, [post?.is_anonymous, post?.user_id]);
+
   const sortedComments = useMemo(() => sortComments(comments, commentSort), [comments, commentSort]);
+
+  const anonHandle = post ? generateAnonHandle(post.user_id) : "";
+  const displayName = post?.is_anonymous ? anonHandle : (authorName || anonHandle);
+  const contextLabel = post ? (post.course_name || post.company_name || post.college_name) : null;
 
   if (isError) {
     return (
@@ -89,9 +101,6 @@ export default function PostDetail() {
       </div>
     );
   }
-
-  const contextLabel = post.course_name || post.company_name || post.college_name;
-  const anonHandle = generateAnonHandle(post.user_id);
 
   const handleComment = async () => {
     if (!user) { setShowAuth(true); return; }
@@ -161,7 +170,11 @@ export default function PostDetail() {
             {CATEGORIES[post.category] || post.category}
           </span>
           <span>·</span>
-          <span>{anonHandle}</span>
+          {post.is_anonymous ? (
+            <span>{displayName}</span>
+          ) : (
+            <Link to={`/user/${post.user_id}`} className="font-medium text-primary hover:underline">{displayName}</Link>
+          )}
           <span>·</span>
           <span>{timeAgo(post.created_at)}</span>
         </div>
