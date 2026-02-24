@@ -115,7 +115,7 @@ export default function Auth() {
 
   const stepNumber = step === "signup-email" || step === "forgot-otp" ? 1 : step === "verify-otp" ? 2 : step === "set-password" ? 3 : 0;
 
-  const emailInput = (id: string) => (
+  const EmailPrefixInput = ({ id }: { id: string }) => (
     <div className="flex items-center rounded-lg border border-border bg-card overflow-hidden focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background">
       <Input
         id={id}
@@ -173,8 +173,8 @@ export default function Auth() {
                 <div className="space-y-4">
                   <form onSubmit={(e) => { e.preventDefault(); loginWithPassword(); }} className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="login-email" className="text-xs">Email</Label>
-                      {emailInput("login-email")}
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <EmailPrefixInput id="email" />
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="password" className="text-xs">Password</Label>
@@ -193,8 +193,8 @@ export default function Auth() {
                 <div className="space-y-4">
                   <form onSubmit={(e) => { e.preventDefault(); sendMagicLink(); }} className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="signup-email" className="text-xs">Email</Label>
-                      {emailInput("signup-email")}
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <EmailPrefixInput id="email" />
                     </div>
                     <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Sending…" : "Send Link"}</Button>
                     <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 pt-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back to Sign In</button>
