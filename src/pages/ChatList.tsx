@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { useOnlinePresence } from "@/hooks/usePresence";
 
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -22,6 +23,7 @@ export default function ChatList() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { data: conversations = [], isLoading } = useConversations();
+  const onlineUsers = useOnlinePresence();
 
   useEffect(() => { if (!loading && !user) navigate("/auth"); }, [loading, user, navigate]);
 
@@ -62,9 +64,14 @@ export default function ChatList() {
                   conv.unread && "bg-primary/5"
                 )}
               >
-                <Avatar className="h-10 w-10 flex-shrink-0">
-                  <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
-                </Avatar>
+                <div className="relative flex-shrink-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">{initials}</AvatarFallback>
+                  </Avatar>
+                  {onlineUsers.has(conv.other_user.user_id) && (
+                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-card" />
+                  )}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
                     <span className={cn("text-sm font-medium", conv.unread && "text-foreground")}>{conv.other_user.name}</span>
