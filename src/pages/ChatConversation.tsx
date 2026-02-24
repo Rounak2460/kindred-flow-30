@@ -7,6 +7,8 @@ import { ArrowLeft, Send } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useOnlinePresence } from "@/hooks/usePresence";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 
 function formatTime(dateStr: string) {
   const d = new Date(dateStr);
@@ -33,6 +35,9 @@ export default function ChatConversation() {
   const [text, setText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const [otherName, setOtherName] = useState("");
+  const [otherUserId, setOtherUserId] = useState<string | undefined>();
+  const onlineUsers = useOnlinePresence();
+  const { isOtherTyping, setTyping } = useTypingIndicator(conversationId, user?.id);
 
   useEffect(() => { if (!authLoading && !user) navigate("/auth"); }, [authLoading, user, navigate]);
 
@@ -46,6 +51,7 @@ export default function ChatConversation() {
         .eq("conversation_id", conversationId)
         .neq("user_id", user.id);
       if (parts?.length) {
+        setOtherUserId(parts[0].user_id);
         const { data: prof } = await supabase
           .from("profiles")
           .select("name")
@@ -67,6 +73,7 @@ export default function ChatConversation() {
   const handleSend = () => {
     if (!text.trim() || !conversationId) return;
     const body = text.trim();
+    setTyping(false);
     sendMessage.mutate(
       { conversationId, body },
       {
@@ -90,7 +97,12 @@ export default function ChatConversation() {
         <button onClick={() => navigate("/chat")} className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-sm font-semibold text-foreground">{otherName || "Chat"}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-foreground">{otherName || "Chat"}</h2>
+          {otherUserId && onlineUsers.has(otherUserId) && (
+            <span className="h-2 w-2 rounded-full bg-green-500 ring-2 ring-card" />
+          )}
+        </div>
       </div>
 
       {/* Messages */}
@@ -131,6 +143,13 @@ export default function ChatConversation() {
             );
           })
         )}
+        {isOtherTyping && (
+          <div className="flex gap-1 items-center px-4 py-2">
+            <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:0ms]" />
+            <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:150ms]" />
+            <span className="h-1.5 w-1.5 bg-muted-foreground/50 rounded-full animate-bounce [animation-delay:300ms]" />
+          </div>
+        )}
         <div ref={bottomRef} />
       </div>
 
@@ -139,7 +158,7 @@ export default function ChatConversation() {
         <div className="flex items-center gap-2">
           <textarea
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={(e) => { setText(e.target.value); setTyping(true); }}
             onKeyDown={handleKeyDown}
             placeholder="Type a message…"
             rows={1}
