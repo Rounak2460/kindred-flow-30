@@ -842,6 +842,12 @@ export type Database = {
         | "analytics"
         | "hr"
         | "general"
+        | "public_policy"
+        | "interdisciplinary"
+        | "information_systems"
+        | "language"
+        | "communication"
+        | "entrepreneurship"
       exam_type: "end_term" | "mid_term" | "quiz" | "case_analysis"
       exchange_region:
         | "europe"
@@ -1009,6 +1015,12 @@ export const Constants = {
         "analytics",
         "hr",
         "general",
+        "public_policy",
+        "interdisciplinary",
+        "information_systems",
+        "language",
+        "communication",
+        "entrepreneurship",
       ],
       exam_type: ["end_term", "mid_term", "quiz", "case_analysis"],
       exchange_region: [

@@ -1,8 +1,10 @@
 export const SAMPLE_COURSES = [
-  { id: "sample-1", code: "FIN301", name: "Corporate Finance", professor: "Prof. Sharma", term: "Term 3", category: "core" as const, domain: "finance" as const, avg_rating: 4.3, review_count: 12 },
-  { id: "sample-2", code: "MKT201", name: "Brand Management", professor: "Prof. Iyer", term: "Term 4", category: "elective" as const, domain: "marketing" as const, avg_rating: 4.7, review_count: 8 },
-  { id: "sample-3", code: "ANA401", name: "Data Science for Business", professor: "Prof. Menon", term: "Term 5", category: "elective" as const, domain: "analytics" as const, avg_rating: 4.1, review_count: 15 },
-  { id: "sample-4", code: "ECO101", name: "Microeconomics", professor: "Prof. Dutta", term: "Term 1", category: "core" as const, domain: "economics" as const, avg_rating: 3.8, review_count: 22 },
+  { id: "sample-1", code: "CS757", name: "Corporate Strategy", professor: "Prof. Deepak Chandrashekar", term: "Term 4", category: "elective" as const, domain: "strategy" as const, avg_rating: 4.2, review_count: 1 },
+  { id: "sample-2", code: "EC747", name: "Business, Finance and Intl Economy", professor: "Prof. Anubha Dhasmana", term: "Term 4", category: "elective" as const, domain: "economics" as const, avg_rating: 4.2, review_count: 1 },
+  { id: "sample-3", code: "DN714", name: "Zen and Mind Training", professor: "Prof. Dinesh Kumar & Nitesh Batra", term: "Term 4", category: "elective" as const, domain: "interdisciplinary" as const, avg_rating: 4.2, review_count: 1 },
+  { id: "sample-4", code: "PO705", name: "Supply Chain Management", professor: "Prof. Jishnu Hazra", term: "Term 4", category: "elective" as const, domain: "operations" as const, avg_rating: 4.2, review_count: 1 },
+  { id: "sample-5", code: "DS718", name: "Predictive and Generative AI", professor: "Prof. Naveen Kumar Bhansali", term: "Term 4", category: "elective" as const, domain: "analytics" as const, avg_rating: 3.2, review_count: 1 },
+  { id: "sample-6", code: "FI701", name: "Investments", professor: "Prof. Srijith Mohanan", term: "Term 4", category: "elective" as const, domain: "finance" as const, avg_rating: 4.2, review_count: 1 },
 ];
 
 export const SAMPLE_EXCHANGE = [
@@ -18,9 +20,9 @@ export const SAMPLE_INTERNSHIPS = [
 ];
 
 export const SAMPLE_PAPERS = [
-  { id: "sample-p1", title: "Corporate Finance End Term 2024", exam_type: "end_term" as const, year: 2024, vote_count: 34, file_url: "#", courses: { code: "FIN301", name: "Corporate Finance" } },
-  { id: "sample-p2", title: "Marketing Analytics Mid Term 2024", exam_type: "mid_term" as const, year: 2024, vote_count: 21, file_url: "#", courses: { code: "MKT301", name: "Marketing Analytics" } },
-  { id: "sample-p3", title: "Microeconomics Quiz 3", exam_type: "quiz" as const, year: 2024, vote_count: 15, file_url: "#", courses: { code: "ECO101", name: "Microeconomics" } },
+  { id: "sample-p1", title: "Corporate Strategy End Term 2024", exam_type: "end_term" as const, year: 2024, vote_count: 34, file_url: "#", courses: { code: "CS757", name: "Corporate Strategy" } },
+  { id: "sample-p2", title: "Supply Chain Management Mid Term 2024", exam_type: "mid_term" as const, year: 2024, vote_count: 21, file_url: "#", courses: { code: "PO705", name: "Supply Chain Management" } },
+  { id: "sample-p3", title: "Behavioral Economics Quiz 3", exam_type: "quiz" as const, year: 2024, vote_count: 15, file_url: "#", courses: { code: "EC745", name: "Behavioral Economics" } },
 ];
 
 export const SAMPLE_TIPS = [

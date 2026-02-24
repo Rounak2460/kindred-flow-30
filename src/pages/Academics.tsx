@@ -24,6 +24,12 @@ const DOMAIN_OPTIONS = [
   { value: "economics", label: "Economics" },
   { value: "analytics", label: "Analytics" },
   { value: "hr", label: "HR" },
+  { value: "public_policy", label: "Public Policy" },
+  { value: "interdisciplinary", label: "Interdisciplinary" },
+  { value: "information_systems", label: "IS" },
+  { value: "language", label: "Language" },
+  { value: "communication", label: "Communication" },
+  { value: "entrepreneurship", label: "Entrepreneurship" },
   { value: "general", label: "General" },
 ];
 
