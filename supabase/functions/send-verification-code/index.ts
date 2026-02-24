@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Digi Mitra <onboarding@resend.dev>",
+        from: "Digi Mitra <noreply@iimbdigimitra.org>",
         to: [email],
         subject: "Your Digi Mitra verification code",
         html: `
