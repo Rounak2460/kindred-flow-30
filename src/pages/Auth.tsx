@@ -5,28 +5,92 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { ArrowLeft, Mail, Lock, KeyRound } from "lucide-react";
+import { ArrowLeft, Mail, Lock, KeyRound, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import DMLogo from "@/components/DMLogo";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { useAuth } from "@/contexts/AuthContext";
 
-type Step = "login" | "signup" | "forgot";
+type Step = "login" | "signup" | "forgot" | "verify";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const { profile, refreshProfile } = useAuth();
   const [step, setStep] = useState<Step>("login");
   const [loading, setLoading] = useState(false);
   const [emailPrefix, setEmailPrefix] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [otpValue, setOtpValue] = useState("");
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const email = `${emailPrefix}@iimb.ac.in`;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate("/");
+      if (session) {
+        // Check if email is verified
+        supabase
+          .from("profiles")
+          .select("email_verified")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.email_verified) {
+              navigate("/");
+            } else if (data) {
+              // Logged in but not verified
+              setStep("verify");
+              sendVerificationCode();
+            }
+          });
+      }
     });
   }, [navigate]);
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
+
+  const sendVerificationCode = useCallback(async () => {
+    try {
+      const { error } = await supabase.functions.invoke("send-verification-code");
+      if (error) throw error;
+      setResendCooldown(60);
+      toast.success("Verification code sent! Check your email.");
+    } catch (err: any) {
+      // Handle rate limit
+      if (err?.message?.includes("wait")) {
+        toast.error("Please wait before requesting another code");
+      } else {
+        toast.error("Failed to send verification code");
+        console.error(err);
+      }
+    }
+  }, []);
+
+  const verifyCode = useCallback(async () => {
+    if (otpValue.length !== 6) { toast.error("Enter the 6-digit code"); return; }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-code", {
+        body: { code: otpValue },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Email verified! Welcome to Digi Mitra!");
+      await refreshProfile();
+      navigate("/");
+    } catch (err: any) {
+      toast.error(err.message || "Invalid or expired code");
+    } finally {
+      setLoading(false);
+    }
+  }, [otpValue, navigate, refreshProfile]);
 
   const loginWithPassword = useCallback(async () => {
     if (!emailPrefix.trim() || !password) { toast.error("Please enter email and password"); return; }
@@ -34,11 +98,24 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      toast.success("Welcome back!");
-      navigate("/");
+      // Check verification status
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Login failed");
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("email_verified")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (prof?.email_verified) {
+        toast.success("Welcome back!");
+        navigate("/");
+      } else {
+        setStep("verify");
+        sendVerificationCode();
+      }
     } catch (error: any) { toast.error(error.message || "Invalid credentials"); }
     finally { setLoading(false); }
-  }, [email, emailPrefix, password, navigate]);
+  }, [email, emailPrefix, password, navigate, sendVerificationCode]);
 
   const signUpWithPassword = useCallback(async () => {
     if (!emailPrefix.trim()) { toast.error("Please enter your email prefix"); return; }
@@ -48,11 +125,14 @@ export default function Auth() {
     try {
       const { error } = await supabase.auth.signUp({ email, password });
       if (error) throw error;
-      toast.success("Account created! Welcome to Digi Mitra!");
-      navigate("/");
+      // Account created with auto-confirm, now verify email
+      setStep("verify");
+      // Small delay to let profile trigger fire
+      await new Promise((r) => setTimeout(r, 1000));
+      await sendVerificationCode();
     } catch (error: any) { toast.error(error.message || "Signup failed"); }
     finally { setLoading(false); }
-  }, [email, emailPrefix, password, confirmPassword, navigate]);
+  }, [email, emailPrefix, password, confirmPassword, sendVerificationCode]);
 
   const resetPassword = useCallback(async () => {
     if (!emailPrefix.trim()) { toast.error("Please enter your email prefix"); return; }
@@ -72,6 +152,7 @@ export default function Auth() {
       case "login": return <Lock className="h-5 w-5 text-primary" />;
       case "signup": return <Mail className="h-5 w-5 text-primary" />;
       case "forgot": return <KeyRound className="h-5 w-5 text-primary" />;
+      case "verify": return <ShieldCheck className="h-5 w-5 text-primary" />;
     }
   };
 
@@ -80,6 +161,7 @@ export default function Auth() {
       case "login": return "Welcome back";
       case "signup": return "Create Account";
       case "forgot": return "Reset Password";
+      case "verify": return "Verify Your Email";
     }
   };
 
@@ -88,11 +170,12 @@ export default function Auth() {
       case "login": return "Sign in to continue";
       case "signup": return "Join Digi Mitra with your IIMB email";
       case "forgot": return "We'll send a reset link to your inbox";
+      case "verify": return "Enter the 6-digit code sent to your @iimb.ac.in email";
     }
   };
 
   const goBack = () => {
-    setPassword(""); setConfirmPassword("");
+    setPassword(""); setConfirmPassword(""); setOtpValue("");
     setStep("login");
   };
 
@@ -177,6 +260,50 @@ export default function Auth() {
                   <Button type="submit" className="w-full rounded-lg font-semibold" disabled={loading}>{loading ? "Creating account…" : "Create Account"}</Button>
                   <button type="button" className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1 pt-1" onClick={goBack}><ArrowLeft className="h-3 w-3" /> Back to Sign In</button>
                 </form>
+              )}
+
+              {step === "verify" && (
+                <div className="space-y-6">
+                  <div className="flex justify-center">
+                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <Button
+                    className="w-full rounded-lg font-semibold"
+                    disabled={loading || otpValue.length !== 6}
+                    onClick={verifyCode}
+                  >
+                    {loading ? "Verifying…" : "Verify Code"}
+                  </Button>
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+                      disabled={resendCooldown > 0}
+                      onClick={sendVerificationCode}
+                    >
+                      {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    className="w-full text-xs text-muted-foreground hover:text-foreground flex items-center justify-center gap-1"
+                    onClick={async () => {
+                      await supabase.auth.signOut();
+                      goBack();
+                    }}
+                  >
+                    <ArrowLeft className="h-3 w-3" /> Sign out & go back
+                  </button>
+                </div>
               )}
 
               {step === "forgot" && (

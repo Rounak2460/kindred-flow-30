@@ -21,14 +21,14 @@ export default function VoteButtons({
   size = "md",
   horizontal = false,
 }: VoteButtonsProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const [bouncing, setBouncing] = useState<"up" | "down" | null>(null);
 
   const handleUpvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) { setShowAuth(true); return; }
+    if (!user || !profile?.email_verified) { setShowAuth(true); return; }
     setBouncing("up");
     setTimeout(() => setBouncing(null), 250);
     onUpvote();
@@ -37,7 +37,7 @@ export default function VoteButtons({
   const handleDownvote = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) { setShowAuth(true); return; }
+    if (!user || !profile?.email_verified) { setShowAuth(true); return; }
     setBouncing("down");
     setTimeout(() => setBouncing(null), 250);
     onDownvote();
