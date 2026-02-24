@@ -1,71 +1,55 @@
 
 
-# Auto-Remove Sample Data After 25 Real Posts
+# Fix Chat: Send Message Not Working
 
-## How It Works
+## Issues Found
 
-The platform currently shows hardcoded sample data (courses, exchanges, internships, papers, tips, mock posts) as placeholders when database tables are empty. Instead of deleting data from the database (which has none -- samples are frontend-only), we need to stop showing these frontend placeholders once the platform has 25+ real posts.
+### 1. Silent Error Swallowing in `useSendMessage`
+The `useSendMessage` mutation in `src/hooks/useChat.ts` has no `onError` callback. If the Supabase insert fails (RLS violation, network error, auth expiry), the user sees **zero feedback** -- the text input clears, but nothing is sent. This is the most likely cause of "send message not working."
 
-## Approach: Backend-Driven Flag
+### 2. No Toast/Error Feedback in `ChatConversation.tsx`
+The `handleSend` function calls `sendMessage.mutate(...)` without passing `onError` or `onSuccess` callbacks. There is no user-visible indicator that a message failed to send.
 
-Create a simple database function + use the existing `useStats` hook to expose a `totalPosts` count. Each page that currently falls back to sample data will check: if `totalPosts >= 25`, show empty state instead of samples. This is automatic, one-time (once you cross 25, samples never return), and requires zero manual intervention.
+### 3. Email Input `.trim()` in onChange (Auth page)
+The `emailPrefix` onChange handler applies `.trim()` on every keystroke. While this doesn't cause the cursor-jumping bug (that was the component remount), it silently strips any spaces users might type. This is minor but noted.
 
----
+## Fix Plan
 
-## Technical Details
+### File: `src/hooks/useChat.ts`
 
-### 1. Modify `src/hooks/useStats.ts`
+**Add `onError` to `useSendMessage`**: Surface mutation errors so they can be caught by callers.
 
-Add `totalPosts` to the stats query -- a simple `COUNT(*)` from the `posts` table. This count is already being fetched in some form; we just need to expose it.
+### File: `src/pages/ChatConversation.tsx`
 
-### 2. Create a shared hook: `src/hooks/useShouldShowSamples.ts`
+**Add error handling to `handleSend`**: 
+- Use `sendMessage.mutate({ ... }, { onError: (e) => toast.error(e.message) })` to show a toast on failure
+- Don't clear the text input until the mutation succeeds (move `setText("")` to `onSuccess`)
+- Show a toast on error so the user knows what went wrong
 
-A tiny hook that:
-- Calls `useStats()` to get `totalPosts`
-- Returns `totalPosts < 25` (or `true` while loading, to avoid flash of empty state)
-
-### 3. Update 6 page files to use the flag
-
-Each page currently has logic like:
-```ts
-const showSamples = !isLoading && data.length === 0;
-const displayData = showSamples ? SAMPLE_DATA : data;
+Changes:
+```tsx
+const handleSend = () => {
+  if (!text.trim() || !conversationId) return;
+  const body = text.trim();
+  sendMessage.mutate(
+    { conversationId, body },
+    {
+      onSuccess: () => setText(""),
+      onError: (e: any) => toast.error(e.message || "Failed to send message"),
+    }
+  );
+};
 ```
 
-Change to:
-```ts
-const platformHasContent = !shouldShowSamples; // from hook
-const showSamples = !isLoading && data.length === 0 && !platformHasContent;
-const displayData = showSamples ? SAMPLE_DATA : data;
-```
+This also fixes the UX issue where text was cleared before confirming the message was sent.
 
-**Files to modify:**
-| File | Sample constant used |
-|------|---------------------|
-| `src/pages/Academics.tsx` | `SAMPLE_COURSES` |
-| `src/pages/Exchange.tsx` | `SAMPLE_EXCHANGE` |
-| `src/pages/Internships.tsx` | `SAMPLE_INTERNSHIPS` |
-| `src/pages/ExamPapers.tsx` | `SAMPLE_PAPERS` |
-| `src/pages/CampusLife.tsx` | `SAMPLE_TIPS` |
-| `src/pages/CourseDetail.tsx` | `SAMPLE_COURSES` + `SAMPLE_COURSE_REVIEWS` |
-| `src/pages/ExchangeDetail.tsx` | `SAMPLE_EXCHANGE` + `SAMPLE_EXCHANGE_REVIEWS` |
-| `src/pages/InternshipDetail.tsx` | `SAMPLE_INTERNSHIPS` + `SAMPLE_INTERNSHIP_REVIEWS` |
-
-### 4. Detail pages (`CourseDetail`, `ExchangeDetail`, `InternshipDetail`)
-
-These use `isSample = id?.startsWith("sample-")` to load sample detail data. Once `shouldShowSamples` is false, sample IDs will never appear in listing pages, so users can't navigate to them. But as a safety net, detail pages will also check the flag and show "not found" for sample IDs when the platform has 25+ posts.
-
-### 5. Mock posts in `mock-data.ts`
-
-`MOCK_POSTS` and `MOCK_COMMENTS` are not currently imported anywhere in page files (confirmed by search). They appear unused. No changes needed -- they're already dead code.
-
----
+**Add `import { toast } from "sonner"`** to ChatConversation.tsx.
 
 ## Summary
 
-- **No database migration needed** -- sample data lives only in frontend code
-- **No edge function needed** -- uses existing stats query
-- **Automatic** -- once 25+ posts exist, samples disappear forever
-- **No manual intervention** -- purely count-driven
-- **1 new file** (`useShouldShowSamples.ts`), **1 modified hook** (`useStats.ts`), **8 modified pages**
+| File | Change |
+|------|--------|
+| `src/pages/ChatConversation.tsx` | Add toast import, move `setText("")` to `onSuccess`, add `onError` toast, keep text on failure |
+
+One file, ~5-line change. No database changes needed.
 
