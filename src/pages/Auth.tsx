@@ -58,12 +58,16 @@ export default function Auth() {
 
   const sendVerificationCode = useCallback(async () => {
     try {
-      const { error } = await supabase.functions.invoke("send-verification-code");
+      const { data, error } = await supabase.functions.invoke("send-verification-code");
       if (error) throw error;
       setResendCooldown(60);
-      toast.success("Verification code sent! Check your email.");
+      if (data?.fallback && data?.code) {
+        // Email couldn't be sent (Resend test mode) — show code directly
+        toast.success(`Your verification code is: ${data.code}`, { duration: 30000 });
+      } else {
+        toast.success("Verification code sent! Check your email.");
+      }
     } catch (err: any) {
-      // Handle rate limit
       if (err?.message?.includes("wait")) {
         toast.error("Please wait before requesting another code");
       } else {

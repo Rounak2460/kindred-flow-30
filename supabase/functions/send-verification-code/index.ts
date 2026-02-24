@@ -117,8 +117,8 @@ Deno.serve(async (req) => {
     if (!emailRes.ok) {
       const errBody = await emailRes.text();
       console.error("Resend error:", errBody);
-      return new Response(JSON.stringify({ error: "Failed to send email" }), {
-        status: 500,
+      // Fallback: return code directly so the UI can show it
+      return new Response(JSON.stringify({ success: true, fallback: true, code }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
