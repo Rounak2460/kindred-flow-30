@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export interface Notification {
   id: string;
@@ -75,6 +76,12 @@ export function useNotifications() {
           const newNotif = payload.new as Notification;
           setNotifications((prev) => [newNotif, ...prev]);
           setUnreadCount((c) => c + 1);
+          toast(newNotif.title, {
+            description: newNotif.body,
+            action: newNotif.post_id
+              ? { label: "View", onClick: () => { window.location.href = `/post/${newNotif.post_id}`; } }
+              : undefined,
+          });
         }
       )
       .subscribe();
