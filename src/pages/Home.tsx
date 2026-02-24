@@ -1,79 +1,64 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Plus, GraduationCap, Globe, Briefcase, FileText, MapPin } from "lucide-react";
+import { RefreshCw, Plus } from "lucide-react";
 import PostCard from "@/components/feed/PostCard";
-import CategoryTabs from "@/components/feed/CategoryTabs";
-import SortBar from "@/components/feed/SortBar";
-import LeaderboardWidget from "@/components/feed/LeaderboardWidget";
-import FeedWelcome from "@/components/feed/FeedWelcome";
 import SkeletonCard from "@/components/feed/SkeletonCard";
-import QuickActionCard from "@/components/home/QuickActionCard";
 import { useAuth } from "@/contexts/AuthContext";
-import AuthGuardDialog from "@/components/AuthGuardDialog";
 import { usePosts } from "@/hooks/usePosts";
-import { useStats } from "@/hooks/useStats";
+import { cn } from "@/lib/utils";
+
+const TABS = [
+  { key: "all", label: "All" },
+  { key: "courses", label: "Courses" },
+  { key: "careers", label: "Careers" },
+  { key: "life", label: "Life" },
+];
+
+const TAB_CATEGORY_MAP: Record<string, string> = {
+  courses: "academics,papers",
+  careers: "internships,placements",
+  life: "campus,exchange,marketplace,events",
+};
 
 export default function Home() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const [category, setCategory] = useState("all");
-  const [sort, setSort] = useState<"hot" | "new" | "top">("hot");
-  const urlSearch = searchParams.get("q") || "";
-  const [search, setSearch] = useState(urlSearch);
-  const [showAuth, setShowAuth] = useState(false);
+  const [tab, setTab] = useState("all");
+  const [sort, setSort] = useState<"hot" | "new" | "top">("new");
 
-  useEffect(() => { setSearch(urlSearch); }, [urlSearch]);
-
-  const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort, search);
-  const { data: stats } = useStats();
-
-  const quickActions = [
-    { icon: GraduationCap, iconColor: "text-blue-500", iconBg: "bg-blue-500/10", title: "Courses", subtitle: "Peer-rated reviews", count: stats?.courseReviews ?? 0, countLabel: "reviews", to: "/academics", addTo: "/submit?category=academics" },
-    { icon: Globe, iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10", title: "Exchange", subtitle: "Global diaries", count: stats?.exchangeDiaries ?? 0, countLabel: "diaries", to: "/exchange", addTo: "/submit?category=exchange" },
-    { icon: Briefcase, iconColor: "text-amber-500", iconBg: "bg-amber-500/10", title: "Internships", subtitle: "Company intel", count: stats?.internshipReports ?? 0, countLabel: "reports", to: "/internships", addTo: "/submit?category=internships" },
-    { icon: FileText, iconColor: "text-violet-500", iconBg: "bg-violet-500/10", title: "Papers", subtitle: "Past exam papers", count: stats?.examPapers ?? 0, countLabel: "papers", to: "/exam-papers", addTo: "/submit?category=papers" },
-    { icon: MapPin, iconColor: "text-rose-500", iconBg: "bg-rose-500/10", title: "Campus", subtitle: "Survival guide", count: 0, countLabel: "tips", to: "/campus", addTo: "/submit?category=campus" },
-  ];
+  const category = tab === "all" ? "all" : (TAB_CATEGORY_MAP[tab] || "all");
+  const { data: posts = [], isLoading, isError, refetch } = usePosts(category, sort, "");
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-4">
-      {!user && <FeedWelcome />}
-
-      {/* Quick Actions */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-foreground">Explore</h2>
-          {user && (
-            <Button variant="ghost" size="sm" className="h-7 text-xs rounded-lg gap-1 text-primary hover:text-primary" onClick={() => navigate("/submit")}>
-              <Plus className="h-3 w-3" /> Contribute
-            </Button>
-          )}
+      {/* Filter tabs */}
+      <div className="flex items-center gap-1 mb-4">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={cn(
+              "px-3.5 py-1.5 text-xs font-medium rounded-lg transition-colors",
+              tab === t.key
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+        <div className="flex-1" />
+        <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+          <button onClick={() => setSort("new")} className={cn("px-2 py-1 rounded transition-colors", sort === "new" ? "text-foreground font-medium" : "hover:text-foreground")}>New</button>
+          <button onClick={() => setSort("top")} className={cn("px-2 py-1 rounded transition-colors", sort === "top" ? "text-foreground font-medium" : "hover:text-foreground")}>Top</button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {quickActions.map((a) => (
-            <QuickActionCard key={a.title} {...a} />
-          ))}
-        </div>
       </div>
 
-      {/* Community Feed */}
-      <div className="mb-3">
-        <h2 className="text-sm font-semibold text-foreground mb-3">Community Feed</h2>
-        <CategoryTabs selected={category} onSelect={setCategory} />
-      </div>
-
-      <div className="flex items-center justify-between mb-4">
-        <SortBar selected={sort} onSelect={setSort} />
-        {search.trim() && (
-          <span className="text-xs text-muted-foreground tabular-nums">{posts.length} result{posts.length !== 1 ? "s" : ""}</span>
-        )}
-      </div>
-
+      {/* Feed */}
       <div>
         {isError ? (
-          <div className="text-center py-16 bg-card border border-border rounded-xl">
+          <div className="text-center py-16 bg-card border border-border/50 rounded-xl">
             <p className="text-sm font-medium text-foreground mb-1">Something went wrong</p>
             <p className="text-xs text-muted-foreground mb-4">Could not load posts</p>
             <Button onClick={() => refetch()} size="sm" variant="outline" className="rounded-lg gap-1.5">
@@ -81,25 +66,21 @@ export default function Home() {
             </Button>
           </div>
         ) : isLoading ? (
-          <div>
+          <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
           </div>
         ) : posts.length === 0 ? (
-          <div className="text-center py-16 bg-card border border-border rounded-xl">
-            <p className="text-sm font-medium text-foreground mb-1">
-              {search.trim() ? `No results for "${search}"` : "No threads yet"}
-            </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              {search.trim() ? "Try different keywords" : "Be the first to start a conversation"}
-            </p>
-            {!search.trim() && user && (
+          <div className="text-center py-16 bg-card border border-border/50 rounded-xl">
+            <p className="text-sm font-medium text-foreground mb-1">No posts yet</p>
+            <p className="text-xs text-muted-foreground mb-4">Be the first to start a conversation</p>
+            {user && (
               <Button size="sm" className="rounded-lg gap-1.5" onClick={() => navigate("/submit")}>
                 <Plus className="h-3.5 w-3.5" /> Start a Thread
               </Button>
             )}
           </div>
         ) : (
-          <div>
+          <div className="space-y-3">
             {posts.map((post) => (
               <PostCard
                 key={post.id}
@@ -110,9 +91,6 @@ export default function Home() {
                 created_at={post.created_at} user_id={post.user_id} is_anonymous={post.is_anonymous}
               />
             ))}
-            <div className="mt-4">
-              <LeaderboardWidget />
-            </div>
           </div>
         )}
       </div>
@@ -121,14 +99,12 @@ export default function Home() {
       {user && (
         <button
           onClick={() => navigate("/submit")}
-          className="fixed bottom-24 right-4 md:hidden h-12 w-12 rounded-xl bg-primary text-primary-foreground shadow-elevated flex items-center justify-center z-40"
+          className="fixed bottom-20 right-4 md:hidden h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center z-40"
           aria-label="Create post"
         >
           <Plus className="h-5 w-5" />
         </button>
       )}
-
-      <AuthGuardDialog open={showAuth} onOpenChange={setShowAuth} action="create a post" />
     </div>
   );
 }
