@@ -157,42 +157,13 @@ export function useStartConversation() {
   return useCallback(async (otherUserId: string): Promise<string> => {
     if (!user) throw new Error("Not authenticated");
 
-    // Check if conversation already exists between the two users
-    const { data: myConvs } = await supabase
-      .from("conversation_participants")
-      .select("conversation_id")
-      .eq("user_id", user.id);
+    const { data, error } = await supabase
+      .rpc("start_conversation", { other_user_id: otherUserId });
 
-    if (myConvs?.length) {
-      const convIds = myConvs.map((c) => c.conversation_id);
-      const { data: otherConvs } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", otherUserId)
-        .in("conversation_id", convIds);
-
-      if (otherConvs?.length) {
-        return otherConvs[0].conversation_id;
-      }
-    }
-
-    // Create new conversation
-    const { data: conv, error: convErr } = await supabase
-      .from("conversations")
-      .insert({})
-      .select("id")
-      .single();
-    if (convErr) throw convErr;
-
-    // Add both participants
-    const { error: partErr } = await supabase.from("conversation_participants").insert([
-      { conversation_id: conv.id, user_id: user.id },
-      { conversation_id: conv.id, user_id: otherUserId },
-    ]);
-    if (partErr) throw partErr;
+    if (error) throw error;
 
     queryClient.invalidateQueries({ queryKey: ["conversations"] });
-    return conv.id;
+    return data as string;
   }, [user, queryClient]);
 }
 

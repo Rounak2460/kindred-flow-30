@@ -1112,6 +1112,7 @@ export type Database = {
     }
     Functions: {
       get_my_conversation_ids: { Args: never; Returns: string[] }
+      start_conversation: { Args: { other_user_id: string }; Returns: string }
     }
     Enums: {
       campus_category:
