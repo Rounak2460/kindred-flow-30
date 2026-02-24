@@ -112,7 +112,13 @@ export default function PostCard({
             {contextLabel && (
               <>
                 <span>·</span>
-                <span className="text-foreground/50">{contextLabel}</span>
+                <Link
+                  to={course_name ? "/academics" : company_name ? "/internships" : "/exchange"}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-foreground/50 hover:text-primary hover:underline"
+                >
+                  {contextLabel}
+                </Link>
               </>
             )}
           </div>

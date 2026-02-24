@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, PenLine, GraduationCap } from "lucide-react";
+import { ArrowLeft, Search, PenLine, GraduationCap, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FilterPills from "@/components/shared/FilterPills";
@@ -39,7 +39,8 @@ export default function Academics() {
   const [category, setCategory] = useState("all");
   const [domain, setDomain] = useState("all");
   const [search, setSearch] = useState("");
-  const { data: courses = [], isLoading } = useCourses(category, domain, search);
+  const [sort, setSort] = useState("rating");
+  const { data: courses = [], isLoading } = useCourses(category, domain, search, sort);
   const shouldShowSamples = useShouldShowSamples();
 
   const showSamples = !isLoading && courses.length === 0 && !search.trim() && shouldShowSamples;
@@ -71,9 +72,17 @@ export default function Academics() {
         <Input placeholder="Search courses..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 h-9 text-sm rounded-lg bg-card border-border" />
       </div>
 
-      <div className="space-y-3 mb-5">
+      <div className="space-y-3 mb-4">
         <FilterPills options={CATEGORY_OPTIONS} selected={category} onSelect={setCategory} />
         <FilterPills options={DOMAIN_OPTIONS} selected={domain} onSelect={setDomain} />
+      </div>
+      <div className="flex items-center gap-2 mb-5">
+        <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+        <FilterPills options={[
+          { value: "rating", label: "Top Rated" },
+          { value: "reviews", label: "Most Reviewed" },
+          { value: "newest", label: "Newest" },
+        ]} selected={sort} onSelect={setSort} />
       </div>
 
       {isLoading ? (

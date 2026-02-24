@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, PenLine, IndianRupee, Building2, BookOpen, Users, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,11 +29,12 @@ const RATING_META = [
 export default function InternshipDetail() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const [reviewSort, setReviewSort] = useState("newest");
 
   const shouldShowSamples = useShouldShowSamples();
   const isSample = companyId?.startsWith("sample-") && shouldShowSamples;
   const { data: dbCompany, isLoading } = useInternshipCompany(isSample ? undefined : companyId);
-  const { data: dbReviews = [] } = useInternshipReviews(isSample ? undefined : companyId);
+  const { data: dbReviews = [] } = useInternshipReviews(isSample ? undefined : companyId, reviewSort);
 
   const company = isSample ? SAMPLE_INTERNSHIPS.find(c => c.id === companyId) : dbCompany;
   const reviews = isSample ? (SAMPLE_INTERNSHIP_REVIEWS[companyId!] || []) : dbReviews;
@@ -72,7 +74,13 @@ export default function InternshipDetail() {
       )}
 
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold">Intern Reviews ({reviews.length})</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm font-semibold">Intern Reviews ({reviews.length})</h2>
+          <div className="flex gap-1">
+            <button onClick={() => setReviewSort("newest")} className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${reviewSort === "newest" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Newest</button>
+            <button onClick={() => setReviewSort("top")} className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${reviewSort === "top" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>Top Rated</button>
+          </div>
+        </div>
         <Button size="sm" variant="outline" className="rounded-lg gap-1.5 text-xs" onClick={() => navigate(`/submit?category=internships&companyId=${companyId}`)}>
           <PenLine className="h-3.5 w-3.5" /> Write Review
         </Button>

@@ -4,11 +4,14 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Domain = Database["public"]["Enums"]["internship_domain"];
 
-export function useInternshipCompanies(domain?: string) {
+export function useInternshipCompanies(domain?: string, sort: string = "rating") {
   return useQuery({
-    queryKey: ["internship-companies", domain],
+    queryKey: ["internship-companies", domain, sort],
     queryFn: async () => {
-      let q = supabase.from("internship_companies").select("*").order("avg_rating", { ascending: false });
+      let q = supabase.from("internship_companies").select("*");
+      if (sort === "reviews") q = q.order("review_count", { ascending: false });
+      else if (sort === "newest") q = q.order("created_at", { ascending: false });
+      else q = q.order("avg_rating", { ascending: false });
       if (domain && domain !== "all") q = q.eq("domain", domain as Domain);
       const { data, error } = await q;
       if (error) throw error;
