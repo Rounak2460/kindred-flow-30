@@ -5,23 +5,7 @@ export const SAMPLE_COURSE_REVIEWS: Record<string, Array<{
   difficulty_rating: number; relevance_rating: number; workload_rating: number;
   review_text: string; tags: string[]; tips: string | null;
   helpful_count: number; created_at: string; updated_at: string;
-}>> = {
-  "sample-1": [
-    { id: "cr-1", course_id: "sample-1", user_id: "u-anon-1", overall_rating: 4, difficulty_rating: 4, relevance_rating: 5, workload_rating: 3, review_text: "Prof. Sharma makes DCF analysis intuitive. The group project on M&A valuation was genuinely useful — we modeled a real deal. Grading is fair if you attend classes.", tags: ["well-structured", "practical", "fair-grading"], tips: "Start the M&A project early and use Damodaran's templates for DCF.", helpful_count: 14, created_at: "2025-11-10T10:00:00Z", updated_at: "2025-11-10T10:00:00Z" },
-    { id: "cr-2", course_id: "sample-1", user_id: "u-anon-2", overall_rating: 5, difficulty_rating: 3, relevance_rating: 5, workload_rating: 4, review_text: "Best finance course in the curriculum. The capital structure module is brilliant. Guest lectures from CFOs added real-world context that textbooks can't provide.", tags: ["must-take", "guest-lectures", "career-relevant"], tips: "Read Brealey & Myers chapters before each class — prof assumes you've read them.", helpful_count: 22, created_at: "2025-10-05T14:30:00Z", updated_at: "2025-10-05T14:30:00Z" },
-    { id: "cr-3", course_id: "sample-1", user_id: "u-anon-3", overall_rating: 4, difficulty_rating: 5, relevance_rating: 4, workload_rating: 4, review_text: "Challenging but rewarding. The derivatives module was particularly tough — needs strong quant foundations. Office hours are very helpful, don't skip them.", tags: ["challenging", "quant-heavy"], tips: null, helpful_count: 8, created_at: "2025-09-18T09:15:00Z", updated_at: "2025-09-18T09:15:00Z" },
-  ],
-  "sample-2": [
-    { id: "cr-4", course_id: "sample-2", user_id: "u-anon-4", overall_rating: 5, difficulty_rating: 2, relevance_rating: 5, workload_rating: 3, review_text: "Prof. Iyer is phenomenal — her brand audit framework became my go-to in summer internship. Light workload but high learning. Class participation matters a lot.", tags: ["inspiring-prof", "practical", "light-workload"], tips: "Pick a brand you're passionate about for the audit project — you'll present it 3 times.", helpful_count: 18, created_at: "2025-11-22T16:00:00Z", updated_at: "2025-11-22T16:00:00Z" },
-    { id: "cr-5", course_id: "sample-2", user_id: "u-anon-5", overall_rating: 4, difficulty_rating: 2, relevance_rating: 4, workload_rating: 2, review_text: "Great elective if you're marketing-inclined. Case studies from Indian FMCG brands are super relatable. The brand equity measurement module was a bit dry though.", tags: ["good-elective", "case-studies"], tips: "Read the Keller brand equity chapter thoroughly — the quiz is based on it.", helpful_count: 11, created_at: "2025-10-14T11:00:00Z", updated_at: "2025-10-14T11:00:00Z" },
-  ],
-  "sample-3": [
-    { id: "cr-6", course_id: "sample-3", user_id: "u-anon-6", overall_rating: 4, difficulty_rating: 4, relevance_rating: 5, workload_rating: 5, review_text: "Heavy workload but worth every hour. Prof. Menon's Python labs are intense — you'll go from zero to building ML models. The Kaggle competition was the highlight.", tags: ["heavy-workload", "python", "hands-on"], tips: "Set up your Python environment in week 1. Use Google Colab if your laptop is slow.", helpful_count: 31, created_at: "2025-12-01T08:00:00Z", updated_at: "2025-12-01T08:00:00Z" },
-  ],
-  "sample-4": [
-    { id: "cr-7", course_id: "sample-4", user_id: "u-anon-7", overall_rating: 4, difficulty_rating: 3, relevance_rating: 4, workload_rating: 3, review_text: "Solid foundations course. Prof. Dutta's style is methodical — every concept builds on the previous one. Game theory module is the most fun part.", tags: ["foundational", "methodical"], tips: "Don't skip the problem sets — they're the best exam prep.", helpful_count: 15, created_at: "2025-08-20T13:00:00Z", updated_at: "2025-08-20T13:00:00Z" },
-  ],
-};
+}>> = {};
 
 export const SAMPLE_EXCHANGE_REVIEWS: Record<string, Array<{
   id: string; college_id: string; user_id: string;
