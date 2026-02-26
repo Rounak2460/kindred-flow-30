@@ -1,27 +1,39 @@
 
 
-# Plan: Remove All Dummy/Sample Data from Frontend
+# Plan: Delete Dummy Posts from Database
 
 ## Problem
-Sample data arrays for Exchange, Internships, Exam Papers, Campus Tips, and their detail reviews still contain hardcoded dummy entries. Although the threshold mechanism (31 posts > 25) should hide them, the data still exists and could flash during loading. User wants it fully purged.
+15 seed/dummy posts exist in the `posts` table with fake user IDs (`00000000-aaaa-bbbb-cccc-*`). These show on the community feed with no profile names (network requests confirm empty responses for these user IDs).
 
-## Changes
+## Dummy Posts to Delete (15 total)
+All posts where `user_id::text LIKE '00000000-aaaa-bbbb-cccc-%'`:
+- "Esade Barcelona — The exchange I almost didn't apply for"
+- "Marketing Management Mid Term 2024 — Pattern analysis"
+- "NUS Singapore — the practical guide"
+- "Weekend getaways under ₹5000 from Bangalore"
+- "Microeconomics End Term 2024 — with solutions and analysis"
+- "Best study spots ranked — from a night owl"
+- "Ultimate food guide for new PGP students — save this post"
+- "Goldman Sachs IBD — Summer Analyst honest breakdown"
+- "Bain vs BCG — did both interviews, got one offer"
+- "HEC Paris exchange — A semester that changed my perspective"
+- "Operations Management — The underrated core"
+- "McKinsey Summer Internship — What they don't tell you in PPTs"
+- "Which marketing electives are actually useful?"
+- "Honest review of Corporate Finance with Prof. Srinivasan"
+- "Data Science elective is being revamped"
 
-### 1. Clear all sample arrays in `src/lib/sample-data.ts`
-- `SAMPLE_EXCHANGE` → `[]`
-- `SAMPLE_INTERNSHIPS` → `[]`
-- `SAMPLE_PAPERS` → `[]`
-- `SAMPLE_TIPS` → `[]`
-(SAMPLE_COURSES is already `[]`)
+## Implementation
+1. **SQL migration**: Delete all posts, comments, and votes associated with fake user IDs (`00000000-aaaa-bbbb-cccc-%`). Also delete the fake profile entries if any exist.
 
-### 2. Clear all sample review data in `src/lib/sample-detail-data.ts`
-- `SAMPLE_EXCHANGE_REVIEWS` → `{}`
-- `SAMPLE_INTERNSHIP_REVIEWS` → `{}`
-(SAMPLE_COURSE_REVIEWS is already `{}`)
+Single migration with:
+```sql
+DELETE FROM votes WHERE user_id::text LIKE '00000000-aaaa-bbbb-cccc-%';
+DELETE FROM comments WHERE user_id::text LIKE '00000000-aaaa-bbbb-cccc-%';
+DELETE FROM comments WHERE post_id::text LIKE '00000000-0000-0000-0000-0000000000%';
+DELETE FROM posts WHERE user_id::text LIKE '00000000-aaaa-bbbb-cccc-%';
+DELETE FROM profiles WHERE user_id::text LIKE '00000000-aaaa-bbbb-cccc-%';
+```
 
-### 3. Remove unused mock data file `src/lib/mock-data.ts`
-- `MOCK_POSTS` and `MOCK_COMMENTS` are defined but never imported anywhere — delete the entire file or clear the arrays. Safer to clear the arrays since the file also exports `CATEGORIES`, `FLAIRS`, and `timeAgo` which may be used elsewhere.
-
-### 4. No database changes needed
-Real data already exists in the database (31 posts, 20+ courses with reviews). The frontend hooks fetch from the database correctly.
+No frontend code changes needed — once the rows are gone, the feed will only show real user posts.
 
